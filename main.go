@@ -1,21 +1,25 @@
 package main
 
 import (
+	"log"
+
+	"github.com/g3techlabs/revit-api/config"
 	"github.com/g3techlabs/revit-api/db"
+	"github.com/g3techlabs/revit-api/router"
+	"github.com/g3techlabs/revit-api/utils"
 	"github.com/gofiber/fiber/v2"
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	godotenv.Load()
+	config.LoadDotEnv()
 
-	db.Setup()
+	utils.Validator.RegisterValidation("uperandlowerrunes", utils.HasUperAndLowerCase)
 
 	app := fiber.New()
 
-	app.Get("/", func(context *fiber.Ctx) error {
-		return context.SendString("Hello world!")
-	})
+	db.Connect()
 
-	app.Listen(":3000")
+	router.SetupRoutes(app)
+
+	log.Fatal(app.Listen(":3000"))
 }

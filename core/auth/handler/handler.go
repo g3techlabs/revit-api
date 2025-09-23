@@ -1,0 +1,10 @@
+package handler
+
+import (
+	"github.com/g3techlabs/revit-api/core/auth/services"
+	"github.com/gofiber/fiber/v2"
+)
+
+func RegisterUser(ctx *fiber.Ctx) error {
+	return services.RegisterUser(ctx)
+}
