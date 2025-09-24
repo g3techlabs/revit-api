@@ -8,7 +8,5 @@ import (
 func SetupRoutes(app *fiber.App) {
 	api := app.Group("/auth")
 	api.Post("/register", handler.RegisterUser)
-	api.Get("/login", func(ctx *fiber.Ctx) error {
-		return ctx.SendString("Logou")
-	})
+	api.Post("/login", handler.Login)
 }

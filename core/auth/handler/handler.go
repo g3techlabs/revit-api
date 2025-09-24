@@ -8,3 +8,7 @@ import (
 func RegisterUser(ctx *fiber.Ctx) error {
 	return services.RegisterUser(ctx)
 }
+
+func Login(ctx *fiber.Ctx) error {
+	return services.Login(ctx)
+}

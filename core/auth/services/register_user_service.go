@@ -3,7 +3,7 @@ package services
 import (
 	"fmt"
 
-	"github.com/g3techlabs/revit-api/core/users/dto"
+	usersDto "github.com/g3techlabs/revit-api/core/users/dto"
 	usersRepository "github.com/g3techlabs/revit-api/core/users/repository"
 	"github.com/g3techlabs/revit-api/db/models"
 	"github.com/g3techlabs/revit-api/utils"
@@ -14,7 +14,7 @@ import (
 type User = models.User
 
 func RegisterUser(ctx *fiber.Ctx) error {
-	var createUserDTO dto.CreateUser
+	var createUserDTO usersDto.CreateUser
 
 	if err := ctx.BodyParser(&createUserDTO); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -67,13 +67,13 @@ func verifyUniqueFieldsAvailability(nickname string, email string) (error, error
 }
 
 func isNicknameAvailable(nickname string) bool {
-	nicknameAlreadyInUse, _ := usersRepository.FindUserByNickname(nickname)
-	return nicknameAlreadyInUse == nil
+	foundUser, _ := usersRepository.FindUserByNickname(nickname)
+	return foundUser == nil
 }
 
 func isEmailAvailable(email string) bool {
-	emailAlreadyInUse, _ := usersRepository.FindUserByEmail(email)
-	return emailAlreadyInUse == nil
+	foundUser, _ := usersRepository.FindUserByEmail(email)
+	return foundUser == nil
 }
 
 func hashPassword(password string) (string, error) {
@@ -82,7 +82,7 @@ func hashPassword(password string) (string, error) {
 	return string(bytes), err
 }
 
-func parseDtoToUserEntity(dto dto.CreateUser) User {
+func parseDtoToUserEntity(dto usersDto.CreateUser) User {
 	user := User{
 		Name:     dto.Name,
 		Email:    dto.Email,
@@ -93,8 +93,8 @@ func parseDtoToUserEntity(dto dto.CreateUser) User {
 	return user
 }
 
-func parseEntityToUserResponse(user User) dto.UserCreatedResponse {
-	userResponse := dto.UserCreatedResponse{
+func parseEntityToUserResponse(user User) usersDto.UserCreatedResponse {
+	userResponse := usersDto.UserCreatedResponse{
 		ID:         user.ID,
 		Name:       user.Name,
 		Email:      user.Email,
