@@ -80,30 +80,35 @@ func findUserByIdentifier(identifier string) (*models.User, error) {
 }
 
 func generateTokens(id uint) (string, string, error) {
-	accessTokenSecret := config.Get("ACCESS_SECRET")
-	refreshTokenSecret := config.Get("REFRESH_SECRET")
+	var accessTokenSecret string = config.Get("ACCESS_SECRET")
+	var refreshTokenSecret string = config.Get("REFRESH_SECRET")
+	var accessTokenExpirationInHours int = config.GetIntVariable("ACCESS_TOKEN_EXPIRATION")
+	var refreshTokenExpirationInHours int = config.GetIntVariable("REFRESH_TOKEN_EXPIRES_IN")
 
-	rawAccessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": id,
-		"exp":     time.Now().Add(time.Hour * 24 * 7).Unix(),
-	})
+	accessTokenClaims := buildJwtClaims(id, accessTokenExpirationInHours)
+	refreshTokenClaims := buildJwtClaims(id, refreshTokenExpirationInHours)
 
-	accessToken, err := rawAccessToken.SignedString([]byte(accessTokenSecret))
-
+	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessTokenClaims)
+	accessTokenString, err := accessToken.SignedString([]byte(accessTokenSecret))
 	if err != nil {
 		return "", "", err
 	}
 
-	rawRefreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": id,
-		"exp":     time.Now().Add(time.Hour).Unix(),
-	})
-
-	refreshToken, err := rawRefreshToken.SignedString([]byte(refreshTokenSecret))
-
+	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshTokenClaims)
+	refreshTokenString, err := refreshToken.SignedString([]byte(refreshTokenSecret))
 	if err != nil {
 		return "", "", nil
 	}
 
-	return accessToken, refreshToken, nil
+	return accessTokenString, refreshTokenString, nil
+}
+
+func buildJwtClaims(userId uint, expirationInHours int) dto.JwtClaims {
+	return dto.JwtClaims{
+		UserID: userId,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * time.Duration(expirationInHours))),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
 }

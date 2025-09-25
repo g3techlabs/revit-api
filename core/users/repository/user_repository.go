@@ -45,3 +45,18 @@ func FindUserByEmail(email string) (*User, error) {
 
 	return &user, nil
 }
+
+func FindUserById(id uint) (*User, error) {
+	db := db.Db
+	var user User
+
+	result := db.Where("id = ?", id).First(&user)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+	}
+
+	return &user, nil
+}

@@ -18,7 +18,7 @@ func Get(key string) string {
 func GetIntVariable(key string) int {
 	value, err := strconv.Atoi(os.Getenv(key))
 	if err != nil {
-		panic("Error parsing " + key + " to int type")
+		panic("Error parsing " + key + " to int type: " + err.Error())
 	}
 	return value
 }
