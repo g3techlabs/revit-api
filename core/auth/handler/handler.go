@@ -12,3 +12,7 @@ func RegisterUser(ctx *fiber.Ctx) error {
 func Login(ctx *fiber.Ctx) error {
 	return services.Login(ctx)
 }
+
+func RefreshTokens(ctx *fiber.Ctx) error {
+	return services.RefreshTokens(ctx)
+}
