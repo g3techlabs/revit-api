@@ -32,7 +32,7 @@ func Connect() {
 
 	fmt.Println("Successfully connected to the database")
 
-	err = Db.AutoMigrate(&models.User{})
+	err = Db.AutoMigrate(&models.User{}, &models.ResetToken{})
 	if err != nil {
 		panic("Error during migrations:" + err.Error())
 	}

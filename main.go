@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 
-	"github.com/g3techlabs/revit-api/config"
 	"github.com/g3techlabs/revit-api/db"
 	"github.com/g3techlabs/revit-api/router"
 	"github.com/g3techlabs/revit-api/utils"
@@ -11,8 +10,6 @@ import (
 )
 
 func main() {
-	config.LoadDotEnv()
-
 	utils.Validator.RegisterValidation("uperandlowerrunes", utils.HasUperAndLowerCase)
 
 	app := fiber.New()

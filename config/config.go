@@ -7,7 +7,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func LoadDotEnv() {
+func init() {
 	godotenv.Load()
 }
 
