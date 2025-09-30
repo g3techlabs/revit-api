@@ -27,7 +27,7 @@ func RefreshTokens(ctx *fiber.Ctx) error {
 		return http.Unauthorized(ctx, "Not authenticated")
 	}
 
-	accessToken, refreshToken, err := token.GenerateTokens(userId)
+	accessToken, refreshToken, err := token.GenerateAuthTokens(userId)
 	if err != nil {
 		return http.InternalError(ctx)
 	}

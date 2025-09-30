@@ -60,3 +60,11 @@ func FindUserById(id uint) (*User, error) {
 
 	return &user, nil
 }
+
+func UpdateUserPassword(id uint, newPassword string) error {
+	db := db.Db
+
+	result := db.Table("users").Where("id = ?", id).Update("password", newPassword)
+
+	return result.Error
+}

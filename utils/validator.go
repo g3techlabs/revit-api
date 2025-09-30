@@ -8,7 +8,7 @@ import (
 
 var Validator = validator.New()
 
-func ValidateStruct(s interface{}) []string {
+func ValidateStruct(s any) []string {
 	var errors []string
 
 	err := Validator.Struct(s)

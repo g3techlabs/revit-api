@@ -42,7 +42,7 @@ func Login(ctx *fiber.Ctx) error {
 		})
 	}
 
-	accessToken, refreshToken, err := token.GenerateTokens(user.ID)
+	accessToken, refreshToken, err := token.GenerateAuthTokens(user.ID)
 	if err != nil {
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}

@@ -16,3 +16,11 @@ func Login(ctx *fiber.Ctx) error {
 func RefreshTokens(ctx *fiber.Ctx) error {
 	return services.RefreshTokens(ctx)
 }
+
+func SendResetPasswordEmail(ctx *fiber.Ctx) error {
+	return services.SendResetPasswordEmailService(ctx)
+}
+
+func ResetPassword(ctx *fiber.Ctx) error {
+	return services.ResetPasswordService(ctx)
+}
