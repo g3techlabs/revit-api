@@ -1,14 +1,30 @@
 package repository
 
 import (
+	"github.com/g3techlabs/revit-api/core/users/models"
 	"github.com/g3techlabs/revit-api/db"
-	"github.com/g3techlabs/revit-api/db/models"
 	"gorm.io/gorm"
 )
 
-type User = models.User
+type UserRepository interface {
+	RegisterUser(user *models.User) error
+	FindUserByNickname(nickname string) (*models.User, error)
+	FindUserByEmail(email string) (*models.User, error)
+	FindUserById(id uint) (*models.User, error)
+	UpdateUserPassword(id uint, newPassword string) error
+}
 
-func RegisterUser(user *User) error {
+type userRepository struct {
+	db *gorm.DB
+}
+
+func NewUserRepository() UserRepository {
+	return &userRepository{
+		db: db.Db,
+	}
+}
+
+func (ur userRepository) RegisterUser(user *models.User) error {
 	db := db.Db
 
 	result := db.Create(&user)
@@ -16,9 +32,9 @@ func RegisterUser(user *User) error {
 	return result.Error
 }
 
-func FindUserByNickname(nickname string) (*User, error) {
+func (ur userRepository) FindUserByNickname(nickname string) (*models.User, error) {
 	db := db.Db
-	var user User
+	var user models.User
 
 	result := db.Where("nickname = ?", nickname).First(&user)
 
@@ -31,9 +47,9 @@ func FindUserByNickname(nickname string) (*User, error) {
 	return &user, nil
 }
 
-func FindUserByEmail(email string) (*User, error) {
+func (ur userRepository) FindUserByEmail(email string) (*models.User, error) {
 	db := db.Db
-	var user User
+	var user models.User
 
 	result := db.Where("email = ?", email).First(&user)
 
@@ -46,9 +62,9 @@ func FindUserByEmail(email string) (*User, error) {
 	return &user, nil
 }
 
-func FindUserById(id uint) (*User, error) {
+func (ur userRepository) FindUserById(id uint) (*models.User, error) {
 	db := db.Db
-	var user User
+	var user models.User
 
 	result := db.Where("id = ?", id).First(&user)
 
@@ -61,7 +77,7 @@ func FindUserById(id uint) (*User, error) {
 	return &user, nil
 }
 
-func UpdateUserPassword(id uint, newPassword string) error {
+func (ur userRepository) UpdateUserPassword(id uint, newPassword string) error {
 	db := db.Db
 
 	result := db.Table("users").Where("id = ?", id).Update("password", newPassword)

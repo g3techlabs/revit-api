@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/g3techlabs/revit-api/config"
-	"github.com/g3techlabs/revit-api/db/models"
+	"github.com/g3techlabs/revit-api/core/users/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"

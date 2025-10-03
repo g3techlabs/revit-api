@@ -1,15 +1,21 @@
 package router
 
 import (
-	"github.com/g3techlabs/revit-api/core/auth/handler"
+	"github.com/g3techlabs/revit-api/core/auth/services"
+	"github.com/g3techlabs/revit-api/core/mail"
+	"github.com/g3techlabs/revit-api/core/token"
+	"github.com/g3techlabs/revit-api/core/users/repository"
 	"github.com/gofiber/fiber/v2"
 )
 
 func SetupRoutes(app *fiber.App) {
-	auth := app.Group("/auth")
-	auth.Post("/register", handler.RegisterUser)
-	auth.Post("/login", handler.Login)
-	auth.Post("/refresh", handler.RefreshTokens)
-	auth.Post("/send-reset-password-email", handler.SendResetPasswordEmail)
-	auth.Post("/reset-password", handler.ResetPassword)
+
+	userRepo := repository.NewUserRepository()
+
+	emailService := mail.NewEmailService()
+	tokenService := token.NewTokenService()
+	authService := services.NewAuthService(userRepo, emailService, tokenService)
+
+	api := app.Group("/api")
+	AuthRoutes(api, authService)
 }

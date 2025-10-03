@@ -1,6 +1,6 @@
-package dto
+package input
 
-type Login struct {
+type LoginCredentials struct {
 	Identifier string `json:"identifier" validate:"required"`
 	Password   string `json:"password" validate:"required"`
 }

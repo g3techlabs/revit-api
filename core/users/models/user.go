@@ -2,6 +2,8 @@ package models
 
 import (
 	"time"
+
+	"github.com/g3techlabs/revit-api/core/users/response"
 )
 
 type User struct {
@@ -17,4 +19,16 @@ type User struct {
 
 func (User) TableName() string {
 	return "users"
+}
+
+func (u User) ToUserCreatedResponse() *response.UserCreatedResponse {
+	return &response.UserCreatedResponse{
+		ID:         u.ID,
+		Name:       u.Name,
+		Email:      u.Email,
+		Nickname:   u.Nickname,
+		ProfilePic: u.ProfilePic,
+		CreatedAt:  u.CreatedAt,
+		UpdatedAt:  u.UpdatedAt,
+	}
 }

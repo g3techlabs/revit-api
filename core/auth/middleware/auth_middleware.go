@@ -3,30 +3,30 @@ package middleware
 import (
 	"strings"
 
+	"github.com/g3techlabs/revit-api/core/token"
 	"github.com/g3techlabs/revit-api/core/users/repository"
-	"github.com/g3techlabs/revit-api/utils/http"
-	"github.com/g3techlabs/revit-api/utils/token"
+	"github.com/g3techlabs/revit-api/utils/generics"
 	"github.com/gofiber/fiber/v2"
 )
 
-func JWTAuth() fiber.Handler {
+func Auth(userRepository repository.UserRepository, tokenService token.ITokenService) fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
 		accessToken, err := ExtractBearerToken(ctx)
 		if err != nil {
-			return http.Unauthorized(ctx, err.Error())
+			return err
 		}
 
-		claims, err := token.ValidateAccessToken(accessToken)
+		claims, err := tokenService.ValidateAccessToken(accessToken)
 		if err != nil {
-			return http.Unauthorized(ctx, "Invalid or expired token")
+			return generics.Unauthorized("Invalid or expired token")
 		}
 
 		userId := claims.UserID
-		user, err := repository.FindUserById(userId)
+		user, err := userRepository.FindUserById(userId)
 		if err != nil {
-			return http.InternalError(ctx)
+			return generics.InternalError()
 		} else if user == nil {
-			return http.Unauthorized(ctx, "Not authenticated")
+			return generics.Unauthorized("Not authenticated")
 		}
 
 		return ctx.Next()
