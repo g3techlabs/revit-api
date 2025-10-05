@@ -11,4 +11,5 @@ var customMessages = map[string]string{
 	"alphanum": "Field %s must contain only alphanumeric characters",
 	"oneof":    "Invalid value for field %s",
 	"password": "Field %s must contain at least 8 characteres and one upper and lower letter",
+	"datetime": "Field %s must be a date of ISO 8601 format (YYYY-MM-DD)",
 }

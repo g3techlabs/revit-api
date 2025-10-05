@@ -24,7 +24,11 @@ func (as *AuthService) RegisterUser(input *usersInput.CreateUser) (*usersRespons
 	}
 	input.Password = hashedPassword
 
-	user := input.ToUserModel()
+	user, err := input.ToUserModel()
+	if err != nil {
+		return nil, generics.InternalError()
+	}
+
 	err = as.userRepo.RegisterUser(user)
 	if err != nil {
 		return nil, generics.InternalError()

@@ -13,6 +13,7 @@ type User struct {
 	Nickname   string `gorm:"unique;not null"`
 	Password   string `gorm:"not null"`
 	ProfilePic *string
+	Birthdate  *time.Time
 	CreatedAt  time.Time `gorm:"not null;default:current_timestamp"`
 	UpdatedAt  time.Time `gorm:"not null"`
 }
@@ -28,6 +29,7 @@ func (u User) ToUserCreatedResponse() *response.UserCreatedResponse {
 		Email:      u.Email,
 		Nickname:   u.Nickname,
 		ProfilePic: u.ProfilePic,
+		Birthdate:  u.Birthdate,
 		CreatedAt:  u.CreatedAt,
 		UpdatedAt:  u.UpdatedAt,
 	}

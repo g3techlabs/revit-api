@@ -9,6 +9,8 @@ import (
 	"github.com/wneessen/go-mail"
 )
 
+// TODO: Integrar fila com Redis para envio de emails
+
 type IEmailService interface {
 	SendPassResetEmail(to, name, deepLink string, expiration int) error
 }
