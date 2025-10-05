@@ -13,9 +13,9 @@ type User struct {
 	Nickname   string `gorm:"unique;not null"`
 	Password   string `gorm:"not null"`
 	ProfilePic *string
-	Birthdate  *time.Time
-	CreatedAt  time.Time `gorm:"not null;default:current_timestamp"`
-	UpdatedAt  time.Time `gorm:"not null"`
+	Birthdate  *time.Time `gorm:"type:date"`
+	CreatedAt  time.Time  `gorm:"not null;default:current_timestamp"`
+	UpdatedAt  time.Time  `gorm:"not null"`
 }
 
 func (User) TableName() string {

@@ -46,8 +46,12 @@ func defaultErrorMessage(err validator.FieldError) string {
 
 func NewValidator() *validator.Validate {
 	validator := validator.New()
-	if err := validator.RegisterValidation("password", password); err != nil {
+	if err := validator.RegisterValidation("password", Password); err != nil {
 		return nil
 	}
+	if err := validator.RegisterValidation("profilepic", ProfilePic); err != nil {
+		return nil
+	}
+
 	return validator
 }

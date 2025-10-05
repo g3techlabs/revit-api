@@ -20,7 +20,7 @@ func (input CreateUser) ToUserModel() (*models.User, error) {
 	if input.Birthdate != nil && *input.Birthdate != "" {
 		t, err := time.Parse("2006-01-02", *input.Birthdate)
 		if err != nil {
-			return nil, err // retorna erro se a string não estiver no formato correto
+			return nil, err
 		}
 		birthdate = &t
 	}

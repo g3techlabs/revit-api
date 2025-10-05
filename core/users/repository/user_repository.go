@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"time"
+
 	"github.com/g3techlabs/revit-api/core/users/models"
 	"github.com/g3techlabs/revit-api/db"
 	"gorm.io/gorm"
@@ -12,6 +14,7 @@ type UserRepository interface {
 	FindUserByEmail(email string) (*models.User, error)
 	FindUserById(id uint) (*models.User, error)
 	UpdateUserPassword(id uint, newPassword string) error
+	Update(id uint, name, profilePic *string, birthdate *time.Time) error
 }
 
 type userRepository struct {
@@ -24,19 +27,16 @@ func NewUserRepository() UserRepository {
 	}
 }
 
-func (ur userRepository) RegisterUser(user *models.User) error {
-	db := db.Db
-
-	result := db.Create(&user)
+func (ur *userRepository) RegisterUser(user *models.User) error {
+	result := ur.db.Create(&user)
 
 	return result.Error
 }
 
-func (ur userRepository) FindUserByNickname(nickname string) (*models.User, error) {
-	db := db.Db
+func (ur *userRepository) FindUserByNickname(nickname string) (*models.User, error) {
 	var user models.User
 
-	result := db.Where("nickname = ?", nickname).First(&user)
+	result := ur.db.Where("nickname = ?", nickname).First(&user)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -47,11 +47,10 @@ func (ur userRepository) FindUserByNickname(nickname string) (*models.User, erro
 	return &user, nil
 }
 
-func (ur userRepository) FindUserByEmail(email string) (*models.User, error) {
-	db := db.Db
+func (ur *userRepository) FindUserByEmail(email string) (*models.User, error) {
 	var user models.User
 
-	result := db.Where("email = ?", email).First(&user)
+	result := ur.db.Where("email = ?", email).First(&user)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -62,11 +61,10 @@ func (ur userRepository) FindUserByEmail(email string) (*models.User, error) {
 	return &user, nil
 }
 
-func (ur userRepository) FindUserById(id uint) (*models.User, error) {
-	db := db.Db
+func (ur *userRepository) FindUserById(id uint) (*models.User, error) {
 	var user models.User
 
-	result := db.Where("id = ?", id).First(&user)
+	result := ur.db.Where("id = ?", id).First(&user)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -77,10 +75,30 @@ func (ur userRepository) FindUserById(id uint) (*models.User, error) {
 	return &user, nil
 }
 
-func (ur userRepository) UpdateUserPassword(id uint, newPassword string) error {
-	db := db.Db
+func (ur *userRepository) UpdateUserPassword(id uint, newPassword string) error {
+	result := ur.db.Table("users").Where("id = ?", id).Update("password", newPassword)
 
-	result := db.Table("users").Where("id = ?", id).Update("password", newPassword)
+	return result.Error
+}
+
+func (ur *userRepository) Update(id uint, name, profilePic *string, birthdate *time.Time) error {
+	data := map[string]interface{}{}
+
+	if name != nil {
+		data["name"] = *name
+	}
+	if birthdate != nil {
+		data["birthdate"] = *birthdate
+	}
+	if profilePic != nil {
+		data["profile_pic"] = *profilePic
+	}
+
+	if len(data) == 0 {
+		return nil
+	}
+
+	result := ur.db.Table("users").Where("id = ?", id).Updates(data)
 
 	return result.Error
 }

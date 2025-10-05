@@ -28,6 +28,7 @@ func Auth(userRepository repository.UserRepository, tokenService token.ITokenSer
 		} else if user == nil {
 			return generics.Unauthorized("Not authenticated")
 		}
+		ctx.Locals("userId", user.ID)
 
 		return ctx.Next()
 	}
