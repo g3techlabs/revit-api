@@ -5,7 +5,7 @@ import (
 
 	"github.com/g3techlabs/revit-api/core/token"
 	"github.com/g3techlabs/revit-api/core/users/repository"
-	"github.com/g3techlabs/revit-api/utils/generics"
+	"github.com/g3techlabs/revit-api/response/generics"
 	"github.com/gofiber/fiber/v2"
 )
 

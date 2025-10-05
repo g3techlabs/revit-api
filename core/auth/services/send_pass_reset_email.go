@@ -6,13 +6,17 @@ import (
 
 	"github.com/g3techlabs/revit-api/config"
 	"github.com/g3techlabs/revit-api/core/auth/input"
-	"github.com/g3techlabs/revit-api/utils/generics"
+	"github.com/g3techlabs/revit-api/response/generics"
 )
 
 var resetTokenExpirationInMinutes int = config.GetIntVariable("RESET_TOKEN_EXPIRATION")
 var appName = config.Get("APP_NAME")
 
-func (as *AuthService) SendPassResetEmail(input input.Identifier) error {
+func (as *AuthService) SendPassResetEmail(input *input.Identifier) error {
+	if err := as.validator.Struct(input); err != nil {
+		return err
+	}
+
 	user, err := as.findUserByIdentifier(input.Identifier)
 	if err != nil {
 		return generics.InternalError()

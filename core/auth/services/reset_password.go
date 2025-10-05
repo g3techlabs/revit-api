@@ -2,11 +2,14 @@ package services
 
 import (
 	"github.com/g3techlabs/revit-api/core/auth/input"
+	"github.com/g3techlabs/revit-api/response/generics"
 	"github.com/g3techlabs/revit-api/utils"
-	"github.com/g3techlabs/revit-api/utils/generics"
 )
 
-func (as *AuthService) ResetPassword(input input.ResetPassword) error {
+func (as *AuthService) ResetPassword(input *input.ResetPassword) error {
+	if err := as.validator.Struct(input); err != nil {
+		return err
+	}
 
 	claims, err := as.tokenService.ValidateResetPassToken(input.ResetToken)
 	if err != nil {

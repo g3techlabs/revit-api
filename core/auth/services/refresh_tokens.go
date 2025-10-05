@@ -2,7 +2,7 @@ package services
 
 import (
 	"github.com/g3techlabs/revit-api/core/auth/response"
-	"github.com/g3techlabs/revit-api/utils/generics"
+	"github.com/g3techlabs/revit-api/response/generics"
 )
 
 func (as *AuthService) RefreshTokens(refreshToken string) (*response.AuthTokensResponse, error) {

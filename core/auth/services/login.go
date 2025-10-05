@@ -6,11 +6,15 @@ import (
 	"github.com/g3techlabs/revit-api/core/auth/input"
 	response "github.com/g3techlabs/revit-api/core/auth/response"
 	"github.com/g3techlabs/revit-api/core/users/models"
+	"github.com/g3techlabs/revit-api/response/generics"
 	"github.com/g3techlabs/revit-api/utils"
-	"github.com/g3techlabs/revit-api/utils/generics"
 )
 
-func (as *AuthService) Login(loginCredentials input.LoginCredentials) (*response.AuthTokensResponse, error) {
+func (as *AuthService) Login(loginCredentials *input.LoginCredentials) (*response.AuthTokensResponse, error) {
+	if err := as.validator.Struct(loginCredentials); err != nil {
+		return nil, err
+	}
+
 	user, err := as.findUserByIdentifier(loginCredentials.Identifier)
 	if err != nil {
 		return nil, generics.InternalError()

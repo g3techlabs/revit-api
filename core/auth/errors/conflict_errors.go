@@ -1,13 +1,22 @@
 package errors
 
-type ConflictErrors struct {
-	Errors map[string]string
-}
+import (
+	"github.com/g3techlabs/revit-api/response"
+)
 
-func (e *ConflictErrors) Error() string {
-	return "Conflict errors"
-}
-
-func NewConflictErrors(errs map[string]string) *ConflictErrors {
-	return &ConflictErrors{Errors: errs}
+func NewConflictError(emailTaken, nicknameTaken bool) error {
+	errs := make(map[string]string)
+	if emailTaken {
+		errs["email"] = "already taken"
+	}
+	if nicknameTaken {
+		errs["nickname"] = "already taken"
+	}
+	if len(errs) == 0 {
+		return nil
+	}
+	return &response.CustomError{
+		StatusCode: 409,
+		Details:    errs,
+	}
 }

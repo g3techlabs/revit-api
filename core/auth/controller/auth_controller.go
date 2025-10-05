@@ -5,7 +5,6 @@ import (
 	"github.com/g3techlabs/revit-api/core/auth/middleware"
 	"github.com/g3techlabs/revit-api/core/auth/services"
 	usersInput "github.com/g3techlabs/revit-api/core/users/input"
-	"github.com/g3techlabs/revit-api/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -20,17 +19,11 @@ func NewAuthController(authService services.IAuthService) *AuthController {
 }
 
 func (c *AuthController) RegisterUser(ctx *fiber.Ctx) error {
-	var input usersInput.CreateUser
+	input := new(usersInput.CreateUser)
 
-	if err := ctx.BodyParser(&input); err != nil {
+	if err := ctx.BodyParser(input); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body:" + err.Error(),
-		})
-	}
-
-	if errors := utils.ValidateStruct(input); len(errors) > 0 {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"errors": errors,
 		})
 	}
 
@@ -45,17 +38,11 @@ func (c *AuthController) RegisterUser(ctx *fiber.Ctx) error {
 }
 
 func (c AuthController) Login(ctx *fiber.Ctx) error {
-	var input input.LoginCredentials
+	input := new(input.LoginCredentials)
 
-	if err := ctx.BodyParser(&input); err != nil {
+	if err := ctx.BodyParser(input); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body" + err.Error(),
-		})
-	}
-
-	if errors := utils.ValidateStruct(input); len(errors) > 0 {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"errors": errors,
 		})
 	}
 
@@ -82,17 +69,11 @@ func (c AuthController) RefreshTokens(ctx *fiber.Ctx) error {
 }
 
 func (c AuthController) SendPassResetEmail(ctx *fiber.Ctx) error {
-	var input input.Identifier
+	input := new(input.Identifier)
 
-	if err := ctx.BodyParser(&input); err != nil {
+	if err := ctx.BodyParser(input); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body: " + err.Error(),
-		})
-	}
-
-	if errs := utils.ValidateStruct(input); len(errs) > 0 {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"errors": errs,
 		})
 	}
 
@@ -105,17 +86,11 @@ func (c AuthController) SendPassResetEmail(ctx *fiber.Ctx) error {
 }
 
 func (c AuthController) ResetPassword(ctx *fiber.Ctx) error {
-	var input input.ResetPassword
+	input := new(input.ResetPassword)
 
 	if err := ctx.BodyParser(&input); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body: " + err.Error(),
-		})
-	}
-
-	if errs := utils.ValidateStruct(input); len(errs) > 0 {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"errors": errs,
 		})
 	}
 

@@ -1,26 +1,21 @@
 package services
 
 import (
-	"fmt"
-
 	"github.com/g3techlabs/revit-api/core/auth/errors"
 	usersInput "github.com/g3techlabs/revit-api/core/users/input"
 	usersResponse "github.com/g3techlabs/revit-api/core/users/response"
+	"github.com/g3techlabs/revit-api/response/generics"
 	"github.com/g3techlabs/revit-api/utils"
-	"github.com/g3techlabs/revit-api/utils/generics"
 )
 
-func (as *AuthService) RegisterUser(input usersInput.CreateUser) (*usersResponse.UserCreatedResponse, error) {
-	conflictErrs := make(map[string]string)
-	nicknameErr, emailErr := as.verifyUniqueFieldsAvailability(input.Nickname, input.Email)
-	if nicknameErr != nil {
-		conflictErrs["nickname"] = nicknameErr.Error()
+func (as *AuthService) RegisterUser(input *usersInput.CreateUser) (*usersResponse.UserCreatedResponse, error) {
+	if err := as.validator.Struct(input); err != nil {
+		return nil, err
 	}
-	if emailErr != nil {
-		conflictErrs["email"] = emailErr.Error()
-	}
-	if len(conflictErrs) > 0 {
-		return nil, errors.NewConflictErrors(conflictErrs)
+
+	nicknameTaken, emailTaken := as.verifyUniqueFieldsAvailability(input.Nickname, input.Email)
+	if nicknameTaken || emailTaken {
+		return nil, errors.NewConflictError(emailTaken, nicknameTaken)
 	}
 
 	hashedPassword, err := utils.HashPassword(input.Password)
@@ -40,27 +35,16 @@ func (as *AuthService) RegisterUser(input usersInput.CreateUser) (*usersResponse
 	return userResponse, nil
 }
 
-func (as AuthService) verifyUniqueFieldsAvailability(nickname string, email string) (error, error) {
-	var emailError error
-	var nicknameError error
-
-	if !as.isNicknameAvailable(nickname) {
-		nicknameError = fmt.Errorf("nickname already in use")
-	}
-
-	if !as.isEmailAvailable(email) {
-		emailError = fmt.Errorf("email already in use")
-	}
-
-	return nicknameError, emailError
+func (as AuthService) verifyUniqueFieldsAvailability(nickname string, email string) (bool, bool) {
+	return as.isNicknameTaken(nickname), as.isEmailTaken(email)
 }
 
-func (as AuthService) isNicknameAvailable(nickname string) bool {
+func (as AuthService) isNicknameTaken(nickname string) bool {
 	foundUser, _ := as.userRepo.FindUserByNickname(nickname)
-	return foundUser == nil
+	return foundUser != nil
 }
 
-func (as AuthService) isEmailAvailable(email string) bool {
+func (as AuthService) isEmailTaken(email string) bool {
 	foundUser, _ := as.userRepo.FindUserByEmail(email)
-	return foundUser == nil
+	return foundUser != nil
 }
