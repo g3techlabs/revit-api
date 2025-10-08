@@ -10,11 +10,14 @@ import (
 	"github.com/g3techlabs/revit-api/core/token"
 	"github.com/g3techlabs/revit-api/core/users/repository"
 	"github.com/g3techlabs/revit-api/core/users/service"
+	"github.com/g3techlabs/revit-api/utils"
 	"github.com/g3techlabs/revit-api/validation"
 	"github.com/gofiber/fiber/v2"
 )
 
 func SetupRoutes(app *fiber.App) {
+	utils.Log.Info("Setting up routes...")
+
 	validator := validation.NewValidator()
 	storageClient := config.NewS3Client()
 
@@ -30,4 +33,6 @@ func SetupRoutes(app *fiber.App) {
 	api := app.Group("/api")
 	AuthRoutes(api, authService)
 	UserRoutes(api, userService, userRepo, tokenService)
+
+	utils.Log.Info("Routes successfully set up.")
 }

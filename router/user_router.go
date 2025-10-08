@@ -6,10 +6,13 @@ import (
 	"github.com/g3techlabs/revit-api/core/users/controller"
 	"github.com/g3techlabs/revit-api/core/users/repository"
 	"github.com/g3techlabs/revit-api/core/users/service"
+	"github.com/g3techlabs/revit-api/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
 func UserRoutes(router fiber.Router, us service.IUserService, userRepository repository.UserRepository, ts token.ITokenService) {
+	utils.Log.Info("Setting up USER routes...")
+
 	userController := controller.NewUserController(us)
 
 	user := router.Group("/user", middleware.Auth(userRepository, ts))
@@ -17,4 +20,6 @@ func UserRoutes(router fiber.Router, us service.IUserService, userRepository rep
 	user.Patch("/", userController.UpdateUser)
 	user.Patch("/profile-pic", userController.UpdateProfilePic)
 	user.Post("/profile-pic/presign", userController.PresignProfilePic)
+
+	utils.Log.Info("USER routes successfully set up.")
 }

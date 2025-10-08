@@ -5,12 +5,15 @@ import (
 
 	"github.com/g3techlabs/revit-api/config"
 	"github.com/g3techlabs/revit-api/core/users/models"
+	"github.com/g3techlabs/revit-api/utils"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 )
 
 func Connect() {
+	utils.Log.Info("Connecting to the database...")
+
 	var err error
 
 	dbHost := config.Get("DATABASE_HOST")
@@ -25,16 +28,15 @@ func Connect() {
 			SingularTable: true,
 		},
 	})
-
 	if err != nil {
-		panic("Database connection gone wrong" + err.Error())
+		utils.Log.Fatalf("Database connection gone wrong: %v", err)
 	}
 
-	fmt.Println("Successfully connected to the database")
+	utils.Log.Info("Successfully connected to the database")
 
 	err = Db.AutoMigrate(&models.User{})
 	if err != nil {
 		panic("Error during migrations:" + err.Error())
 	}
-	fmt.Println("Database successfully migrated")
+	utils.Log.Info("Database successfully migrated.")
 }

@@ -18,7 +18,7 @@ func (us *UserService) PresignProfilePic(id uint, input *input.PresignProfilePic
 
 	presignedUrl, err := us.storageService.GeneratePresignedURL(profilePicKey, input.ContentType)
 	if err != nil {
-		// TODO: log error
+		us.Log.Errorf("Error generating presigned URL for USER ID %d profile picture: %s", id, err.Error())
 		return nil, generics.InternalError()
 	}
 
