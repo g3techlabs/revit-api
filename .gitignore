@@ -1,1 +1,26 @@
+# Binários do Go
+/bin/
+/*.exe
+/*.exe~ 
+/*.dll
+/*.so
+/*.dylib
+
+# Cache do Go
+/pkg/
+/*.test
+
+# IDEs
+.vscode/
+.idea/
+
+# Arquivos do sistema
+.DS_Store
+*.log
+
+# Air
+tmp/
+
+# Docker
+docker-compose.override.yml
 .env

@@ -10,9 +10,11 @@ import (
 )
 
 func UserRoutes(router fiber.Router, us service.IUserService, userRepository repository.UserRepository, ts token.ITokenService) {
-	authController := controller.NewUserController(us)
+	userController := controller.NewUserController(us)
 
-	user := router.Group("/user")
+	user := router.Group("/user", middleware.Auth(userRepository, ts))
 
-	user.Patch("/", middleware.Auth(userRepository, ts), authController.UpdateUser)
+	user.Patch("/", userController.UpdateUser)
+	user.Patch("/profile-pic", userController.UpdateProfilePic)
+	user.Post("/profile-pic/presign", userController.PresignProfilePic)
 }

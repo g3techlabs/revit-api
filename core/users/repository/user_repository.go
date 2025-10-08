@@ -14,7 +14,8 @@ type UserRepository interface {
 	FindUserByEmail(email string) (*models.User, error)
 	FindUserById(id uint) (*models.User, error)
 	UpdateUserPassword(id uint, newPassword string) error
-	Update(id uint, name, profilePic *string, birthdate *time.Time) error
+	UpdateUserProfilePic(id uint, newProfilePic string) error
+	Update(id uint, name *string, birthdate *time.Time) error
 }
 
 type userRepository struct {
@@ -81,7 +82,13 @@ func (ur *userRepository) UpdateUserPassword(id uint, newPassword string) error 
 	return result.Error
 }
 
-func (ur *userRepository) Update(id uint, name, profilePic *string, birthdate *time.Time) error {
+func (ur *userRepository) UpdateUserProfilePic(id uint, newProfilePic string) error {
+	result := ur.db.Table("users").Where("id = ?", id).Update("profile_pic", newProfilePic)
+
+	return result.Error
+}
+
+func (ur *userRepository) Update(id uint, name *string, birthdate *time.Time) error {
 	data := map[string]interface{}{}
 
 	if name != nil {
@@ -89,9 +96,6 @@ func (ur *userRepository) Update(id uint, name, profilePic *string, birthdate *t
 	}
 	if birthdate != nil {
 		data["birthdate"] = *birthdate
-	}
-	if profilePic != nil {
-		data["profile_pic"] = *profilePic
 	}
 
 	if len(data) == 0 {

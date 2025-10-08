@@ -1,0 +1,23 @@
+# Binários e cache do Go
+/bin/
+/pkg/
+/*.test
+
+# IDEs e configs locais
+.vscode/
+.idea/
+
+# Logs e temp
+*.log
+tmp/
+
+# Git
+.git
+.gitignore
+
+# Arquivos de ambiente
+.env
+.env.example
+
+# Dockerfiles e compose extras (opcional)
+docker-compose.override.yml

@@ -7,7 +7,7 @@ func Conflict(message string) error {
 }
 
 func InternalError() error {
-	return fiber.NewError(fiber.StatusInternalServerError)
+	return fiber.NewError(fiber.StatusInternalServerError, "Something went wrong unexpectedly")
 }
 
 func Unauthorized(message string) error {
