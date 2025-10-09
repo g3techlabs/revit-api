@@ -15,7 +15,7 @@ type UserRepository interface {
 	FindUserByEmail(email string) (*models.User, error)
 	FindUserById(id uint) (*models.User, error)
 	UpdateUserPassword(id uint, newPassword string) error
-	UpdateUserProfilePic(id uint, newProfilePic string) error
+	UpdateUserProfilePic(id uint, newProfilePic *string) error
 	Update(id uint, name *string, birthdate *time.Time) error
 	GetUsers(page uint, limit uint, nickname string) (*[]models.User, error)
 }
@@ -84,7 +84,7 @@ func (ur *userRepository) UpdateUserPassword(id uint, newPassword string) error 
 	return result.Error
 }
 
-func (ur *userRepository) UpdateUserProfilePic(id uint, newProfilePic string) error {
+func (ur *userRepository) UpdateUserProfilePic(id uint, newProfilePic *string) error {
 	result := ur.db.Table("users").Where("id = ?", id).Update("profile_pic", newProfilePic)
 
 	return result.Error

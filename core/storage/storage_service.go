@@ -18,6 +18,7 @@ import (
 type StorageService interface {
 	PresignPutObjectURL(objectKey string, contentType string) (string, error)
 	DoesObjectExist(objectKey string) error
+	DeleteObject(objectKey string) error
 }
 
 type S3Service struct {
@@ -95,5 +96,33 @@ func (s *S3Service) DoesObjectExist(objectKey string) error {
 		}
 	}
 	s.log.Errorf("Error checking if object exists in S3: %s", err.Error())
+	return generics.InternalError()
+}
+
+func (s *S3Service) DeleteObject(objectKey string) error {
+	_, err := s.Client.DeleteObject(s.Context, &s3.DeleteObjectInput{
+		Bucket: &s.bucket,
+		Key:    &objectKey,
+	})
+	if err == nil {
+		return nil
+	}
+
+	var responseError *http.ResponseError
+	if errors.As(err, &responseError) {
+		switch responseError.HTTPStatusCode() {
+		case 404:
+			s.log.Errorf("Object not found in S3: %s", err.Error())
+			return generics.InternalError()
+		case 403:
+			s.log.Errorf("Error of permission in HeadObject operation: %s", err.Error())
+			return generics.InternalError()
+		default:
+			s.log.Errorf("Error checking if object exists in S3: %s", err.Error())
+			return generics.InternalError()
+		}
+	}
+
+	s.log.Errorf("Error deleting object in S3: %s", err.Error())
 	return generics.InternalError()
 }
