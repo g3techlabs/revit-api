@@ -3,22 +3,26 @@ package service
 import (
 	"fmt"
 
+	"github.com/g3techlabs/revit-api/core/users/errors"
 	"github.com/g3techlabs/revit-api/core/users/input"
 	"github.com/g3techlabs/revit-api/core/users/response"
 	"github.com/g3techlabs/revit-api/response/generics"
 )
 
-func (us *UserService) PresignProfilePic(id uint, input *input.PresignProfilePic) (*response.ProfilePicPresignedURL, error) {
+func (us *UserService) PresignProfilePic(userId uint, input *input.PresignProfilePic) (*response.ProfilePicPresignedURL, error) {
 	if err := us.validator.Struct(input); err != nil {
 		return nil, err
 	}
 
 	extension := us.mapContentTypeToExtension(input.ContentType)
-	profilePicKey := fmt.Sprintf("%d-pp%s", id, extension)
+	if extension == "" {
+		return nil, errors.InvalidFileExtensionError()
+	}
+	profilePicKey := fmt.Sprintf("users/%d/profile%s", userId, extension)
 
-	presignedUrl, err := us.storageService.GeneratePresignedURL(profilePicKey, input.ContentType)
+	presignedUrl, err := us.storageService.PresignPutObjectURL(profilePicKey, input.ContentType)
 	if err != nil {
-		us.Log.Errorf("Error generating presigned URL for USER ID %d profile picture: %s", id, err.Error())
+		us.Log.Errorf("Error generating presigned URL for USER ID %d profile picture: %s", userId, err.Error())
 		return nil, generics.InternalError()
 	}
 

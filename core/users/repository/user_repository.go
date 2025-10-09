@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/g3techlabs/revit-api/core/users/models"
@@ -16,6 +17,7 @@ type UserRepository interface {
 	UpdateUserPassword(id uint, newPassword string) error
 	UpdateUserProfilePic(id uint, newProfilePic string) error
 	Update(id uint, name *string, birthdate *time.Time) error
+	GetUsers(page uint, limit uint, nickname string) (*[]models.User, error)
 }
 
 type userRepository struct {
@@ -105,4 +107,19 @@ func (ur *userRepository) Update(id uint, name *string, birthdate *time.Time) er
 	result := ur.db.Table("users").Where("id = ?", id).Updates(data)
 
 	return result.Error
+}
+
+func (ur *userRepository) GetUsers(page uint, limit uint, nickname string) (*[]models.User, error) {
+	users := new([]models.User)
+
+	pattern := fmt.Sprintf("%%%s%%", nickname)
+
+	query := ur.db.Model(users).Where("nickname LIKE ?", pattern).Limit(int(limit)).Offset(int((page - 1))).Find(&users)
+
+	if query.Error != nil {
+		return nil, query.Error
+	}
+
+	return users, nil
+
 }

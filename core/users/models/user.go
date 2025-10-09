@@ -24,7 +24,6 @@ func (User) TableName() string {
 
 func (u User) ToUserCreatedResponse() *response.UserCreatedResponse {
 	return &response.UserCreatedResponse{
-		ID:         u.ID,
 		Name:       u.Name,
 		Email:      u.Email,
 		Nickname:   u.Nickname,
@@ -32,5 +31,15 @@ func (u User) ToUserCreatedResponse() *response.UserCreatedResponse {
 		Birthdate:  u.Birthdate,
 		CreatedAt:  u.CreatedAt,
 		UpdatedAt:  u.UpdatedAt,
+	}
+}
+
+func (u User) ToGetUserResponse() *response.GetUserResponse {
+	return &response.GetUserResponse{
+		ID:            u.ID,
+		Name:          u.Name,
+		Nickname:      u.Nickname,
+		ProfilePicUrl: u.ProfilePic,
+		Since:         &u.CreatedAt,
 	}
 }
