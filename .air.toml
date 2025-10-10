@@ -45,7 +45,7 @@ post_cmd = []
 # Array of commands to run before each build
 pre_cmd = []
 # Rerun binary or not
-rerun = false
+rerun = true
 # Delay after each execution
 rerun_delay = 500
 # Send Interrupt signal before killing process (windows does not support this feature)

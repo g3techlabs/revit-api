@@ -3,7 +3,7 @@ package input
 import (
 	"time"
 
-	"github.com/g3techlabs/revit-api/core/users/models"
+	"github.com/g3techlabs/revit-api/db/models"
 )
 
 type CreateUser struct {

@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/g3techlabs/revit-api/core/users/models"
 	"github.com/g3techlabs/revit-api/db"
+	"github.com/g3techlabs/revit-api/db/models"
 	"gorm.io/gorm"
 )
 

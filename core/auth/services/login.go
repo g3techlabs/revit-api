@@ -6,7 +6,7 @@ import (
 	"github.com/g3techlabs/revit-api/core/auth/errors"
 	"github.com/g3techlabs/revit-api/core/auth/input"
 	response "github.com/g3techlabs/revit-api/core/auth/response"
-	"github.com/g3techlabs/revit-api/core/users/models"
+	"github.com/g3techlabs/revit-api/db/models"
 	"github.com/g3techlabs/revit-api/response/generics"
 	"github.com/g3techlabs/revit-api/utils"
 )
