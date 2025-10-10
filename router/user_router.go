@@ -18,6 +18,7 @@ func UserRoutes(router fiber.Router, us service.IUserService, userRepository rep
 	user := router.Group("/user", middleware.Auth(userRepository, ts))
 
 	user.Get("/", userController.GetUsers)
+	user.Get("/:id", userController.GetUser)
 	user.Patch("/", userController.UpdateUser)
 	user.Post("/profile-pic/", userController.RequestProfilePicUpdate)
 	user.Patch("/profile-pic", userController.ConfirmNewProfilePic)

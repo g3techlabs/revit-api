@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"strconv"
+
 	"github.com/g3techlabs/revit-api/core/users/input"
 	"github.com/g3techlabs/revit-api/core/users/service"
 	"github.com/g3techlabs/revit-api/response/generics"
@@ -94,4 +96,23 @@ func (uc *UserController) GetUsers(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(users)
+}
+
+func (uc *UserController) GetUser(ctx *fiber.Ctx) error {
+	idParam := ctx.Params("id")
+
+	idUint64, err := strconv.ParseUint(idParam, 10, 64)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid ID",
+		})
+	}
+	id := uint(idUint64)
+
+	response, err := uc.userService.GetUser(id)
+	if err != nil {
+		return err
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(response)
 }

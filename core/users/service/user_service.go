@@ -14,6 +14,7 @@ type IUserService interface {
 	RequestProfilePicUpdate(id uint, input *input.RequestProfilePicUpdate) (*response.ProfilePicPresignedURL, error)
 	ConfirmNewProfilePic(id uint, input *input.ConfirmNewProfilePic) error
 	GetUsers(params *input.GetUsersQuery) (*[]response.GetUserResponse, error)
+	GetUser(userId uint) (*response.GetUserResponse, error)
 }
 
 type UserService struct {
