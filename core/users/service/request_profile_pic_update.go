@@ -35,6 +35,8 @@ func (us *UserService) mapContentTypeToExtension(contentType string) string {
 		return ".jpg"
 	case "image/png":
 		return ".png"
+	case "image/webp":
+		return ".webp"
 	default:
 		return ""
 	}

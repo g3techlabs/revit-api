@@ -13,4 +13,5 @@ var customMessages = map[string]string{
 	"password":   "Field %s must contain at least 8 characteres and one upper and lower letter",
 	"datetime":   "Field %s must be a date of ISO 8601 format (YYYY-MM-DD)",
 	"profilepic": "Type of image not supported",
+	"lowercase":  "Field %s must be all lowercase characters",
 }

@@ -1,6 +1,8 @@
 package services
 
 import (
+	"strings"
+
 	"github.com/g3techlabs/revit-api/core/auth/errors"
 	usersInput "github.com/g3techlabs/revit-api/core/users/input"
 	usersResponse "github.com/g3techlabs/revit-api/core/users/response"
@@ -20,17 +22,22 @@ func (as *AuthService) RegisterUser(input *usersInput.CreateUser) (*usersRespons
 
 	hashedPassword, err := utils.HashPassword(input.Password)
 	if err != nil {
+		as.log.Error("Error hashing password: ", err.Error())
 		return nil, generics.InternalError()
 	}
 	input.Password = hashedPassword
 
+	input.Name, input.Nickname = strings.ToLower(input.Name), strings.ToLower(input.Nickname)
+
 	user, err := input.ToUserModel()
 	if err != nil {
+		as.log.Error("Error parsing birthdate from CreateUser to UserModel: ", err.Error())
 		return nil, generics.InternalError()
 	}
 
 	err = as.userRepo.RegisterUser(user)
 	if err != nil {
+		as.log.Error("Error registering user: ", err.Error())
 		return nil, generics.InternalError()
 	}
 

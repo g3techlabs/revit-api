@@ -9,6 +9,7 @@ import (
 	"github.com/g3techlabs/revit-api/core/users/repository"
 	usersResponse "github.com/g3techlabs/revit-api/core/users/response"
 	"github.com/go-playground/validator/v10"
+	"github.com/sirupsen/logrus"
 )
 
 type IAuthService interface {
@@ -24,6 +25,7 @@ type AuthService struct {
 	emailService mail.IEmailService
 	tokenService token.ITokenService
 	validator    *validator.Validate
+	log          *logrus.Logger
 }
 
 func NewAuthService(validate *validator.Validate, userRepo repository.UserRepository, emailService mail.IEmailService, tokenService token.ITokenService) IAuthService {

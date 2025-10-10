@@ -33,7 +33,7 @@ func ProfilePic(fl validator.FieldLevel) bool {
 
 	contentType := file.Header.Get("Content-Type")
 	switch contentType {
-	case "image/png", "image/jpeg", "image/jpg", "image/webp":
+	case "image/png", "image/jpeg", "image/webp":
 		return true
 	default:
 		return false
