@@ -17,7 +17,7 @@ func (as *AuthService) SendPassResetEmail(input *input.Identifier) error {
 		return err
 	}
 
-	user, err := as.findUserByIdentifier(input.Identifier)
+	user, err := as.findUserByIdentifier(input.Identifier, input.IdentifierType)
 	if err != nil {
 		return generics.InternalError()
 	} else if user == nil {

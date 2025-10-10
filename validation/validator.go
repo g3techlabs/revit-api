@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	authInput "github.com/g3techlabs/revit-api/core/auth/input"
 	"github.com/go-playground/validator/v10"
 )
 
@@ -46,6 +47,9 @@ func defaultErrorMessage(err validator.FieldError) string {
 
 func NewValidator() *validator.Validate {
 	validator := validator.New()
+
+	validator.RegisterStructValidation(IdentifierTypeValidation, authInput.LoginCredentials{})
+	validator.RegisterStructValidation(IdentifierTypeValidation, authInput.Identifier{})
 	if err := validator.RegisterValidation("password", Password); err != nil {
 		return nil
 	}

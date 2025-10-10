@@ -3,6 +3,7 @@ package services
 import (
 	"net/mail"
 
+	"github.com/g3techlabs/revit-api/core/auth/errors"
 	"github.com/g3techlabs/revit-api/core/auth/input"
 	response "github.com/g3techlabs/revit-api/core/auth/response"
 	"github.com/g3techlabs/revit-api/core/users/models"
@@ -15,7 +16,7 @@ func (as *AuthService) Login(loginCredentials *input.LoginCredentials) (*respons
 		return nil, err
 	}
 
-	user, err := as.findUserByIdentifier(loginCredentials.Identifier)
+	user, err := as.findUserByIdentifier(loginCredentials.Identifier, loginCredentials.IdentifierType)
 	if err != nil {
 		return nil, generics.InternalError()
 	} else if user == nil {
@@ -42,16 +43,23 @@ func isAnEmail(value string) bool {
 	return err == nil
 }
 
-func (as *AuthService) findUserByIdentifier(identifier string) (*models.User, error) {
-	isIdentifierAnEmail := isAnEmail(identifier)
-
+func (as *AuthService) findUserByIdentifier(identifier string, identifierType string) (*models.User, error) {
 	user, err := new(models.User), *new(error)
-	if isIdentifierAnEmail {
-		user, err = as.userRepo.FindUserByEmail(identifier)
 
-	} else {
-		user, err = as.userRepo.FindUserByNickname(identifier)
+	if identifierType == "email" {
+		if !isAnEmail(identifier) {
+			return nil, errors.NotAnEmail()
+		}
+
+		user, err = as.userRepo.FindUserByEmail(identifier)
+		if err != nil {
+			return nil, err
+		}
+
+		return user, nil
 	}
+
+	user, err = as.userRepo.FindUserByNickname(identifier)
 
 	return user, err
 }

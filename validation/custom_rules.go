@@ -2,6 +2,8 @@ package validation
 
 import (
 	"mime/multipart"
+	"net/mail"
+	"reflect"
 	"regexp"
 
 	"github.com/go-playground/validator/v10"
@@ -37,5 +39,40 @@ func ProfilePic(fl validator.FieldLevel) bool {
 		return true
 	default:
 		return false
+	}
+}
+
+func IdentifierTypeValidation(sl validator.StructLevel) {
+	val := reflect.ValueOf(sl.Current().Interface())
+
+	identifierField := val.FieldByName("Identifier")
+	identifierTypeField := val.FieldByName("IdentifierType")
+
+	if !identifierField.IsValid() || !identifierTypeField.IsValid() {
+		return
+	}
+
+	identifier := identifierField.String()
+	identifierType := identifierTypeField.String()
+
+	_, err := mail.ParseAddress(identifier)
+
+	switch identifierType {
+	case "email":
+		if err != nil {
+			sl.ReportError(identifier, "Identifier", "identifier", "notanemail", "")
+		}
+
+	case "nickname":
+		if err == nil {
+			sl.ReportError(identifier, "Identifier", "identifier", "notanickname", "")
+			return
+		}
+		if len(identifier) < 3 {
+			return
+		}
+
+	default:
+		return
 	}
 }
