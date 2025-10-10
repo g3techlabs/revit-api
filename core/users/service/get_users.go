@@ -11,7 +11,7 @@ import (
 
 var cloudFrontUrl = config.Get("AWS_CLOUDFRONT_URL")
 
-func (us *UserService) GetUsers(params *input.GetUsersQuery) ([]response.GetUserResponse, error) {
+func (us *UserService) GetUsers(params *input.GetUsersQuery) (*[]response.GetUserResponse, error) {
 	if err := us.validator.Struct(params); err != nil {
 		return nil, err
 	}
@@ -31,7 +31,7 @@ func (us *UserService) GetUsers(params *input.GetUsersQuery) ([]response.GetUser
 		response = append(response, *user.ToGetUserResponse())
 	}
 
-	return response, nil
+	return &response, nil
 }
 
 func (us *UserService) mountProfilePicURL(objectKey string) *string {

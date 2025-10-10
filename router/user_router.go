@@ -17,9 +17,10 @@ func UserRoutes(router fiber.Router, us service.IUserService, userRepository rep
 
 	user := router.Group("/user", middleware.Auth(userRepository, ts))
 
+	user.Get("/", userController.GetUsers)
 	user.Patch("/", userController.UpdateUser)
-	user.Patch("/profile-pic", userController.UpdateProfilePic)
-	user.Post("/profile-pic/presign", userController.PresignProfilePic)
+	user.Post("/profile-pic/", userController.RequestProfilePicUpdate)
+	user.Patch("/profile-pic", userController.ConfirmNewProfilePic)
 
 	utils.Log.Info("USER routes successfully set up.")
 }

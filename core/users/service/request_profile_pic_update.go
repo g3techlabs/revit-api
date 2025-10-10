@@ -9,7 +9,7 @@ import (
 	"github.com/g3techlabs/revit-api/response/generics"
 )
 
-func (us *UserService) PresignProfilePic(userId uint, input *input.PresignProfilePic) (*response.ProfilePicPresignedURL, error) {
+func (us *UserService) RequestProfilePicUpdate(userId uint, input *input.RequestProfilePicUpdate) (*response.ProfilePicPresignedURL, error) {
 	if err := us.validator.Struct(input); err != nil {
 		return nil, err
 	}

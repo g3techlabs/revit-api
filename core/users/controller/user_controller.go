@@ -36,8 +36,8 @@ func (uc *UserController) UpdateUser(ctx *fiber.Ctx) error {
 	return ctx.SendStatus(fiber.StatusNoContent)
 }
 
-func (uc *UserController) PresignProfilePic(ctx *fiber.Ctx) error {
-	input := new(input.PresignProfilePic)
+func (uc *UserController) RequestProfilePicUpdate(ctx *fiber.Ctx) error {
+	input := new(input.RequestProfilePicUpdate)
 
 	if err := ctx.BodyParser(input); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -50,7 +50,7 @@ func (uc *UserController) PresignProfilePic(ctx *fiber.Ctx) error {
 		return generics.Unauthorized("Invalid or non-existent auth token")
 	}
 
-	response, err := uc.userService.PresignProfilePic(userId, input)
+	response, err := uc.userService.RequestProfilePicUpdate(userId, input)
 	if err != nil {
 		return err
 	}
@@ -58,8 +58,8 @@ func (uc *UserController) PresignProfilePic(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusCreated).JSON(response)
 }
 
-func (uc *UserController) UpdateProfilePic(ctx *fiber.Ctx) error {
-	input := new(input.UpdateProfilePic)
+func (uc *UserController) ConfirmNewProfilePic(ctx *fiber.Ctx) error {
+	input := new(input.ConfirmNewProfilePic)
 
 	if err := ctx.BodyParser(input); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -72,9 +72,26 @@ func (uc *UserController) UpdateProfilePic(ctx *fiber.Ctx) error {
 		return generics.Unauthorized("Invalid or non-existent auth token")
 	}
 
-	if err := uc.userService.UpdateProfilePic(userId, input); err != nil {
+	if err := uc.userService.ConfirmNewProfilePic(userId, input); err != nil {
 		return err
 	}
 
 	return ctx.SendStatus(fiber.StatusNoContent)
+}
+
+func (uc *UserController) GetUsers(ctx *fiber.Ctx) error {
+	query := new(input.GetUsersQuery)
+
+	if err := ctx.QueryParser(query); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid query parameters: " + err.Error(),
+		})
+	}
+
+	users, err := uc.userService.GetUsers(query)
+	if err != nil {
+		return err
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(users)
 }

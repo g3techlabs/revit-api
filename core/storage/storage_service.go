@@ -27,7 +27,6 @@ type S3Service struct {
 	Context              context.Context
 	bucket               string
 	presignPutExpiration int
-	presginGetExpiration int
 	log                  *logrus.Logger
 }
 
@@ -38,7 +37,6 @@ func NewS3Service(client *s3.Client, presignClient *s3.PresignClient, c context.
 		Context:              c,
 		bucket:               config.Get("AWS_BUCKET_NAME"),
 		presignPutExpiration: config.GetIntVariable("PRESIGNED_PUT_URL_EXPIRATION"),
-		presginGetExpiration: config.GetIntVariable("PRESIGNED_GET_URL_EXPIRATION"),
 	}
 	s3Client.initBucket(s3Client.bucket)
 	return s3Client

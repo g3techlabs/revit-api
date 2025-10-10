@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/g3techlabs/revit-api/core/users/models"
@@ -111,15 +112,25 @@ func (ur *userRepository) Update(id uint, name *string, birthdate *time.Time) er
 
 func (ur *userRepository) GetUsers(page uint, limit uint, nickname string) (*[]models.User, error) {
 	users := new([]models.User)
+	pattern := fmt.Sprintf("%%%s%%", strings.ToLower(nickname))
 
-	pattern := fmt.Sprintf("%%%s%%", nickname)
+	query := ur.db.Model(users).Where("nickname LIKE ?", pattern)
 
-	query := ur.db.Model(users).Where("nickname LIKE ?", pattern).Limit(int(limit)).Offset(int((page - 1))).Find(&users)
+	if limit > 0 {
+		offset := 0
+		if page > 0 {
+			offset = int((page - 1) * limit)
+		}
+		query = query.Limit(int(limit)).Offset(offset)
+	}
+
+	if err := query.Find(&users).Error; err != nil {
+		return nil, err
+	}
 
 	if query.Error != nil {
 		return nil, query.Error
 	}
 
 	return users, nil
-
 }
