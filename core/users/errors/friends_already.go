@@ -4,7 +4,7 @@ import "github.com/g3techlabs/revit-api/response"
 
 func FriendsAlready() error {
 	return &response.CustomError{
-		Message:    "Users are friends already",
+		Message:    "Users either have a pending friendship request or are friends already",
 		StatusCode: 409,
 	}
 }

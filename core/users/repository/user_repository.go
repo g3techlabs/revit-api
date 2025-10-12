@@ -143,7 +143,7 @@ func (ur *userRepository) AreFriends(userId, destinataryId uint) (bool, error) {
 
 	var exists bool
 	result := ur.db.
-		Table("friendships").
+		Table("friendship").
 		Select("count(*) > 0").
 		Where(
 			"(requester_id = ? AND receiver_id = ?) OR (requester_id = ? AND receiver_id = ?)",

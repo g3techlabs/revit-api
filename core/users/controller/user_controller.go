@@ -116,3 +116,24 @@ func (uc *UserController) GetUser(ctx *fiber.Ctx) error {
 
 	return ctx.Status(fiber.StatusOK).JSON(response)
 }
+
+func (uc *UserController) RequestFriendship(ctx *fiber.Ctx) error {
+	destinataryParam := ctx.Params("id")
+
+	destinataryUint64, err := strconv.ParseUint(destinataryParam, 10, 64)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid destinatary ID")
+	}
+	destinataryId := uint(destinataryUint64)
+
+	userId, ok := ctx.Locals("userId").(uint)
+	if !ok {
+		return generics.Unauthorized("Invalid or non-existent auth token")
+	}
+
+	if err := uc.userService.RequestFriendship(userId, destinataryId); err != nil {
+		return err
+	}
+
+	return ctx.SendStatus(fiber.StatusNoContent)
+}

@@ -6,6 +6,17 @@ import (
 )
 
 func (us *UserService) RequestFriendship(userId, destinataryId uint) error {
+	if userId == destinataryId {
+		return errors.DestinatarySameAsRequester()
+	}
+
+	destinataryUser, err := us.userRepo.FindUserById(destinataryId)
+	if err != nil {
+		return generics.InternalError()
+	} else if destinataryUser == nil {
+		return errors.DestinataryNotFound()
+	}
+
 	areFriends, err := us.userRepo.AreFriends(userId, destinataryId)
 	if err != nil {
 		return generics.InternalError()
