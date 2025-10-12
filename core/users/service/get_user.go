@@ -12,7 +12,7 @@ func (us *UserService) GetUser(userId uint) (*response.GetUserResponse, error) {
 		us.Log.Errorf("Error searching for user %d", userId)
 		return nil, generics.InternalError()
 	} else if user == nil {
-		return nil, errors.UserNotFound()
+		return nil, errors.UserNotFound("User not found")
 	}
 
 	response := user.ToGetUserResponse()

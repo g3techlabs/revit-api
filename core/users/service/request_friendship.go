@@ -14,7 +14,7 @@ func (us *UserService) RequestFriendship(userId, destinataryId uint) error {
 	if err != nil {
 		return generics.InternalError()
 	} else if destinataryUser == nil {
-		return errors.DestinataryNotFound()
+		return errors.UserNotFound("Destinatary was not found")
 	}
 
 	areFriends, err := us.userRepo.AreFriends(userId, destinataryId)

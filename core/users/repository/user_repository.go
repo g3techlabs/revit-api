@@ -10,6 +10,10 @@ import (
 	"gorm.io/gorm"
 )
 
+const acceptedStatusId uint = 1
+const pendingStatusId uint = 2
+const deniedStatusId uint = 3
+
 type UserRepository interface {
 	RegisterUser(user *models.User) error
 	FindUserByNickname(nickname string) (*models.User, error)
@@ -21,6 +25,7 @@ type UserRepository interface {
 	GetUsers(page uint, limit uint, nickname string) (*[]models.User, error)
 	AreFriends(userId, destintaryId uint) (bool, error)
 	RequestFriendship(userId, destinataryId uint) error
+	AcceptFriendshipRequest(userId, requesterId uint) error
 }
 
 type userRepository struct {
@@ -138,9 +143,6 @@ func (ur *userRepository) GetUsers(page uint, limit uint, nickname string) (*[]m
 }
 
 func (ur *userRepository) AreFriends(userId, destinataryId uint) (bool, error) {
-	var acceptedStatusId uint = 1
-	var pendingStatusId uint = 2
-
 	var exists bool
 	result := ur.db.
 		Table("friendship").
@@ -159,10 +161,30 @@ func (ur *userRepository) RequestFriendship(userId, destinataryId uint) error {
 	friendship := models.Friendship{
 		RequesterID:    userId,
 		ReceiverID:     destinataryId,
-		InviteStatusID: 2,
+		InviteStatusID: pendingStatusId,
 	}
 
 	result := ur.db.Create(&friendship)
 	return result.Error
+}
 
+func (ur *userRepository) AcceptFriendshipRequest(userId, requesterId uint) error {
+	newData := map[string]any{
+		"invite_status_id": acceptedStatusId,
+		"friends_since":    time.Now().UTC(),
+	}
+
+	result := ur.db.
+		Model(&models.Friendship{}).
+		Where("requester_id = ? AND receiver_id = ? AND invite_status_id = ?", requesterId, userId, pendingStatusId).
+		Updates(newData)
+
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("friendship request was not found")
+	}
+
+	return result.Error
 }

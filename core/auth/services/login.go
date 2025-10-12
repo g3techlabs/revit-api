@@ -57,9 +57,9 @@ func (as *AuthService) findUserByIdentifier(identifier string, identifierType st
 		}
 
 		return user, nil
+	} else {
+		user, err = as.userRepo.FindUserByNickname(identifier)
 	}
-
-	user, err = as.userRepo.FindUserByNickname(identifier)
 
 	return user, err
 }
