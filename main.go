@@ -5,6 +5,7 @@ import (
 
 	"github.com/g3techlabs/revit-api/config"
 	"github.com/g3techlabs/revit-api/db"
+	"github.com/g3techlabs/revit-api/db/seeders"
 	"github.com/g3techlabs/revit-api/router"
 	"github.com/gofiber/fiber/v2"
 )
@@ -13,6 +14,7 @@ func main() {
 	app := fiber.New(config.NewFiberConfig())
 
 	db.Connect()
+	seeders.ExecuteAll()
 
 	router.SetupRoutes(app)
 

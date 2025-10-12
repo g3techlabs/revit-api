@@ -19,6 +19,8 @@ type UserRepository interface {
 	UpdateUserProfilePic(id uint, newProfilePic *string) error
 	Update(id uint, name *string, birthdate *time.Time) error
 	GetUsers(page uint, limit uint, nickname string) (*[]models.User, error)
+	AreFriends(userId, destintaryId uint) (bool, error)
+	RequestFriendship(userId, destinataryId uint) error
 }
 
 type userRepository struct {
@@ -133,4 +135,34 @@ func (ur *userRepository) GetUsers(page uint, limit uint, nickname string) (*[]m
 	}
 
 	return users, nil
+}
+
+func (ur *userRepository) AreFriends(userId, destinataryId uint) (bool, error) {
+	var acceptedStatusId uint = 1
+	var pendingStatusId uint = 2
+
+	var exists bool
+	result := ur.db.
+		Table("friendships").
+		Select("count(*) > 0").
+		Where(
+			"(requester_id = ? AND receiver_id = ?) OR (requester_id = ? AND receiver_id = ?)",
+			userId, destinataryId, destinataryId, userId,
+		).
+		Where("invite_status_id IN (?, ?)", acceptedStatusId, pendingStatusId).
+		Scan(&exists)
+
+	return exists, result.Error
+}
+
+func (ur *userRepository) RequestFriendship(userId, destinataryId uint) error {
+	friendship := models.Friendship{
+		RequesterID:    userId,
+		ReceiverID:     destinataryId,
+		InviteStatusID: 2,
+	}
+
+	result := ur.db.Create(&friendship)
+	return result.Error
+
 }

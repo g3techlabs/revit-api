@@ -10,8 +10,8 @@ services:
       - postgres
     volumes:
       - .:/app
-      - .:/app/tmp
-    command: ["air", "-c", ".air.toml"]
+    working_dir: /app
+    command: ["go", "run", "main.go"]
 
   postgres:
     image: postgres:18
