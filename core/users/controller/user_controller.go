@@ -138,7 +138,7 @@ func (uc *UserController) RequestFriendship(ctx *fiber.Ctx) error {
 	return ctx.SendStatus(fiber.StatusNoContent)
 }
 
-func (uc *UserController) AcceptFriendshipRequest(ctx *fiber.Ctx) error {
+func (uc *UserController) AnswerFriendshipRequest(ctx *fiber.Ctx) error {
 	requesterParam := ctx.Params("requesterId")
 
 	requesterUint64, err := strconv.ParseUint(requesterParam, 10, 64)
@@ -152,9 +152,15 @@ func (uc *UserController) AcceptFriendshipRequest(ctx *fiber.Ctx) error {
 		return generics.Unauthorized("Invalid or non-existent auth token")
 	}
 
-	if err := uc.userService.AcceptFriendshipRequest(userId, requesterId); err != nil {
+	answer := new(input.FriendshipRequestAnswer)
+	if err := ctx.BodyParser(answer); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body")
+	}
+
+	response, err := uc.userService.AnswerFriendshipRequest(userId, requesterId, answer)
+	if err != nil {
 		return err
 	}
 
-	return ctx.SendStatus(fiber.StatusNoContent)
+	return ctx.Status(fiber.StatusNoContent).JSON(response)
 }

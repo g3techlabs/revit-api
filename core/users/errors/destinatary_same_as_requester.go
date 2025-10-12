@@ -2,9 +2,9 @@ package errors
 
 import "github.com/g3techlabs/revit-api/response"
 
-func DestinatarySameAsRequester() error {
+func RequesterAndDestinataryAreTheSame() error {
 	return &response.CustomError{
-		Message:    "Destinatary is the same as the user",
+		Message:    "Requester and destinatary are the same",
 		StatusCode: 400,
 	}
 }

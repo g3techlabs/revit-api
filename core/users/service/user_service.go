@@ -16,7 +16,7 @@ type IUserService interface {
 	GetUsers(params *input.GetUsersQuery) (*[]response.GetUserResponse, error)
 	GetUser(userId uint) (*response.GetUserResponse, error)
 	RequestFriendship(userId, destinataryId uint) error
-	AcceptFriendshipRequest(userId, requesterId uint) error
+	AnswerFriendshipRequest(userId, requesterId uint, answer *input.FriendshipRequestAnswer) (*response.FriendshipRequestAnswered, error)
 }
 
 type UserService struct {

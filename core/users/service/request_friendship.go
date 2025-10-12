@@ -7,7 +7,7 @@ import (
 
 func (us *UserService) RequestFriendship(userId, destinataryId uint) error {
 	if userId == destinataryId {
-		return errors.DestinatarySameAsRequester()
+		return errors.RequesterAndDestinataryAreTheSame()
 	}
 
 	destinataryUser, err := us.userRepo.FindUserById(destinataryId)

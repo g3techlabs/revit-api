@@ -12,7 +12,7 @@ import (
 
 const acceptedStatusId uint = 1
 const pendingStatusId uint = 2
-const deniedStatusId uint = 3
+const rejectedStatusId uint = 3
 
 type UserRepository interface {
 	RegisterUser(user *models.User) error
@@ -26,6 +26,7 @@ type UserRepository interface {
 	AreFriends(userId, destintaryId uint) (bool, error)
 	RequestFriendship(userId, destinataryId uint) error
 	AcceptFriendshipRequest(userId, requesterId uint) error
+	RejectFriendshipRequest(userId, requesterId uint) error
 }
 
 type userRepository struct {
@@ -178,6 +179,22 @@ func (ur *userRepository) AcceptFriendshipRequest(userId, requesterId uint) erro
 		Model(&models.Friendship{}).
 		Where("requester_id = ? AND receiver_id = ? AND invite_status_id = ?", requesterId, userId, pendingStatusId).
 		Updates(newData)
+
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("friendship request was not found")
+	}
+
+	return result.Error
+}
+
+func (ur *userRepository) RejectFriendshipRequest(userId, requesterId uint) error {
+	result := ur.db.
+		Model(&models.Friendship{}).
+		Where("requester_id = ? AND receiver_id = ? AND invite_status_id = ?", requesterId, userId, pendingStatusId).
+		Update("invite_status_id", rejectedStatusId)
 
 	if result.Error != nil {
 		return result.Error

@@ -23,7 +23,7 @@ func UserRoutes(router fiber.Router, us service.IUserService, userRepository rep
 	user.Post("/profile-pic/", userController.RequestProfilePicUpdate)
 	user.Patch("/profile-pic", userController.ConfirmNewProfilePic)
 	user.Post("/friendship/:destinataryId", userController.RequestFriendship)
-	user.Patch("/friendship/:requesterId", userController.AcceptFriendshipRequest)
+	user.Patch("/friendship/:requesterId", userController.AnswerFriendshipRequest)
 
 	utils.Log.Info("USER routes successfully set up.")
 }
