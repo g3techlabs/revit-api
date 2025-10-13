@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/g3techlabs/revit-api/core/users/response"
 	"github.com/g3techlabs/revit-api/db"
 	"github.com/g3techlabs/revit-api/db/models"
 	"gorm.io/gorm"
@@ -23,6 +24,7 @@ type UserRepository interface {
 	UpdateUserProfilePic(id uint, newProfilePic *string) error
 	Update(id uint, name *string, birthdate *time.Time) error
 	GetUsers(page uint, limit uint, nickname string) (*[]models.User, error)
+	GetFriends(userId, page, limit uint, nickname string) (*[]response.Friend, error)
 	AreFriends(userId, destintaryId uint) (bool, error)
 	RequestFriendship(userId, destinataryId uint) error
 	AcceptFriendshipRequest(userId, requesterId uint) error
@@ -143,6 +145,44 @@ func (ur *userRepository) GetUsers(page uint, limit uint, nickname string) (*[]m
 	return users, nil
 }
 
+func (ur *userRepository) GetFriends(userId uint, page uint, limit uint, nickname string) (*[]response.Friend, error) {
+	friends := new([]response.Friend)
+	pattern := fmt.Sprintf("%%%s%%", strings.ToLower(nickname))
+
+	subQuery := ur.db.
+		Table("friendship").
+		Select(`
+		CASE 
+			WHEN requester_id = ? THEN receiver_id
+			WHEN receiver_id = ? THEN requester_id
+		END AS friend_id,
+		friends_since
+	`, userId, userId).
+		Where("(requester_id = ? OR receiver_id = ?)", userId, userId).
+		Where("invite_status_id = ?", acceptedStatusId).
+		Where("removed_at IS NULL")
+
+	query := ur.db.
+		Table("users").
+		Select("users.id, users.name, users.nickname, users.email, users.profile_pic, users.created_at AS since, sub.friends_since").
+		Joins("JOIN (?) AS sub ON sub.friend_id = users.id", subQuery).
+		Where("LOWER(users.nickname) LIKE ?", pattern)
+
+	if limit > 0 {
+		offset := 0
+		if page > 0 {
+			offset = int((page - 1) * limit)
+		}
+		query = query.Limit(int(limit)).Offset(offset)
+	}
+
+	if err := query.Scan(&friends).Error; err != nil {
+		return nil, err
+	}
+
+	return friends, nil
+}
+
 func (ur *userRepository) AreFriends(userId, destinataryId uint) (bool, error) {
 	var exists bool
 	result := ur.db.
@@ -152,7 +192,7 @@ func (ur *userRepository) AreFriends(userId, destinataryId uint) (bool, error) {
 			"(requester_id = ? AND receiver_id = ?) OR (requester_id = ? AND receiver_id = ?)",
 			userId, destinataryId, destinataryId, userId,
 		).
-		Where("invite_status_id IN (?, ?)", acceptedStatusId, pendingStatusId).
+		Where("invite_status_id IN (?, ?) AND removed_at IS NULL", acceptedStatusId, pendingStatusId).
 		Scan(&exists)
 
 	return exists, result.Error

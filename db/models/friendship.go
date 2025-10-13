@@ -7,6 +7,8 @@ type Friendship struct {
 	ReceiverID     uint `gorm:"primaryKey"`
 	FriendsSince   *time.Time
 	InviteStatusID uint `gorm:"not null"`
+	RemovedAt      *time.Time
+	RemovedByID    *uint
 
 	RequesterIDRef uint         `gorm:"column:requester_id"`
 	ReceiverIDRef  uint         `gorm:"column:receiver_id"`
@@ -15,4 +17,5 @@ type Friendship struct {
 	// For preventing infinite recursion
 	Requester *User `gorm:"foreignKey:RequesterID;references:ID;-" json:"-"`
 	Receiver  *User `gorm:"foreignKey:ReceiverID;references:ID;-" json:"-"`
+	RemovedBy *User `gorm:"foreignKey:RemovedByID;references:ID;constraint:OnDelete:SET NULL;" json:"-"`
 }

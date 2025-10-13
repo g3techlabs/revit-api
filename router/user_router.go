@@ -17,13 +17,15 @@ func UserRoutes(router fiber.Router, us service.IUserService, userRepository rep
 
 	user := router.Group("/user", middleware.Auth(userRepository, ts))
 
+	user.Get("/friendship/", userController.GetFriends)
+	user.Post("/friendship/:destinataryId", userController.RequestFriendship)
+	user.Patch("/friendship/:requesterId", userController.AnswerFriendshipRequest)
+
 	user.Get("/", userController.GetUsers)
 	user.Get("/:id", userController.GetUser)
 	user.Patch("/", userController.UpdateUser)
 	user.Post("/profile-pic/", userController.RequestProfilePicUpdate)
 	user.Patch("/profile-pic", userController.ConfirmNewProfilePic)
-	user.Post("/friendship/:destinataryId", userController.RequestFriendship)
-	user.Patch("/friendship/:requesterId", userController.AnswerFriendshipRequest)
 
 	utils.Log.Info("USER routes successfully set up.")
 }

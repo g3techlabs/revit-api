@@ -15,6 +15,7 @@ type IUserService interface {
 	ConfirmNewProfilePic(id uint, input *input.ConfirmNewProfilePic) error
 	GetUsers(params *input.GetUsersQuery) (*[]response.GetUserResponse, error)
 	GetUser(userId uint) (*response.GetUserResponse, error)
+	GetFriends(userId uint, params *input.GetUsersQuery) (*[]response.Friend, error)
 	RequestFriendship(userId, destinataryId uint) error
 	AnswerFriendshipRequest(userId, requesterId uint, answer *input.FriendshipRequestAnswer) (*response.FriendshipRequestAnswered, error)
 }

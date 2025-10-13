@@ -117,6 +117,28 @@ func (uc *UserController) GetUser(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusOK).JSON(response)
 }
 
+func (uc *UserController) GetFriends(ctx *fiber.Ctx) error {
+	query := new(input.GetUsersQuery)
+
+	if err := ctx.QueryParser(query); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid query parameters: " + err.Error(),
+		})
+	}
+
+	userId, ok := ctx.Locals("userId").(uint)
+	if !ok {
+		return generics.Unauthorized("Invalid or non-existent auth token")
+	}
+
+	friends, err := uc.userService.GetFriends(userId, query)
+	if err != nil {
+		return err
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(friends)
+}
+
 func (uc *UserController) RequestFriendship(ctx *fiber.Ctx) error {
 	destinataryParam := ctx.Params("destinataryId")
 
