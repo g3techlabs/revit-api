@@ -186,3 +186,24 @@ func (uc *UserController) AnswerFriendshipRequest(ctx *fiber.Ctx) error {
 
 	return ctx.Status(fiber.StatusNoContent).JSON(response)
 }
+
+func (uc *UserController) RemoveFriendship(ctx *fiber.Ctx) error {
+	friendParam := ctx.Params("friendId")
+
+	friendUint64, err := strconv.ParseUint(friendParam, 10, 64)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid friend ID")
+	}
+	friendId := uint(friendUint64)
+
+	userId, ok := ctx.Locals("userId").(uint)
+	if !ok {
+		return generics.Unauthorized("Invalid or non-existent auth token")
+	}
+
+	if err := uc.userService.RemoveFriendship(userId, friendId); err != nil {
+		return err
+	}
+
+	return ctx.SendStatus(fiber.StatusNoContent)
+}

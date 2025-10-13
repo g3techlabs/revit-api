@@ -29,6 +29,7 @@ type UserRepository interface {
 	RequestFriendship(userId, destinataryId uint) error
 	AcceptFriendshipRequest(userId, requesterId uint) error
 	RejectFriendshipRequest(userId, requesterId uint) error
+	RemoveFriendship(userId, friendId uint) error
 }
 
 type userRepository struct {
@@ -241,6 +242,27 @@ func (ur *userRepository) RejectFriendshipRequest(userId, requesterId uint) erro
 	}
 	if result.RowsAffected == 0 {
 		return fmt.Errorf("friendship request was not found")
+	}
+
+	return result.Error
+}
+
+func (ur *userRepository) RemoveFriendship(userId, friendId uint) error {
+	now := time.Now()
+
+	result := ur.db.Model(&models.Friendship{}).
+		Where(
+			"(requester_id = ? AND receiver_id = ?) OR (requester_id = ? AND receiver_id = ?)",
+			userId, friendId, friendId, userId,
+		).
+		Where("invite_status_id = ? AND removed_at IS NULL", acceptedStatusId).
+		Updates(map[string]interface{}{
+			"removed_at":    now,
+			"removed_by_id": userId,
+		})
+
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("friendship was not found")
 	}
 
 	return result.Error

@@ -16,10 +16,12 @@ func UserRoutes(router fiber.Router, us service.IUserService, userRepository rep
 	userController := controller.NewUserController(us)
 
 	user := router.Group("/user", middleware.Auth(userRepository, ts))
+	friendship := user.Group("/friendship")
 
-	user.Get("/friendship/", userController.GetFriends)
-	user.Post("/friendship/:destinataryId", userController.RequestFriendship)
-	user.Patch("/friendship/:requesterId", userController.AnswerFriendshipRequest)
+	friendship.Get("/", userController.GetFriends)
+	friendship.Post("/:destinataryId", userController.RequestFriendship)
+	friendship.Patch("/:requesterId", userController.AnswerFriendshipRequest)
+	friendship.Delete("/:friendId", userController.RemoveFriendship)
 
 	user.Get("/", userController.GetUsers)
 	user.Get("/:id", userController.GetUser)
