@@ -9,6 +9,35 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+type IValidator interface {
+	Validate(data any) error
+}
+
+type CustomValidator struct {
+	validator *validator.Validate
+}
+
+func NewValidator() IValidator {
+	validator := validator.New()
+
+	validator.RegisterStructValidation(IdentifierTypeValidation, authInput.LoginCredentials{})
+	validator.RegisterStructValidation(IdentifierTypeValidation, authInput.Identifier{})
+	if err := validator.RegisterValidation("password", Password); err != nil {
+		return nil
+	}
+	if err := validator.RegisterValidation("profilepic", ProfilePic); err != nil {
+		return nil
+	}
+
+	return &CustomValidator{
+		validator: validator,
+	}
+}
+
+func (v CustomValidator) Validate(data any) error {
+	return v.validator.Struct(data)
+}
+
 func ValidationErrorMessages(err error) map[string]string {
 	var validationErrors validator.ValidationErrors
 	if errors.As(err, &validationErrors) {
@@ -43,19 +72,4 @@ func formatErrorMessage(customMessage string, err validator.FieldError, tag stri
 
 func defaultErrorMessage(err validator.FieldError) string {
 	return fmt.Sprintf("Field validation for '%s' failed on the '%s' tag", strings.ToLower(err.Field()), err.Tag())
-}
-
-func NewValidator() *validator.Validate {
-	validator := validator.New()
-
-	validator.RegisterStructValidation(IdentifierTypeValidation, authInput.LoginCredentials{})
-	validator.RegisterStructValidation(IdentifierTypeValidation, authInput.Identifier{})
-	if err := validator.RegisterValidation("password", Password); err != nil {
-		return nil
-	}
-	if err := validator.RegisterValidation("profilepic", ProfilePic); err != nil {
-		return nil
-	}
-
-	return validator
 }

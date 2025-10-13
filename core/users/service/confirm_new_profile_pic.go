@@ -6,7 +6,7 @@ import (
 )
 
 func (us *UserService) ConfirmNewProfilePic(id uint, input *input.ConfirmNewProfilePic) error {
-	if err := us.validator.Struct(input); err != nil {
+	if err := us.validator.Validate(input); err != nil {
 		return err
 	}
 
@@ -16,7 +16,6 @@ func (us *UserService) ConfirmNewProfilePic(id uint, input *input.ConfirmNewProf
 	}
 
 	if err := us.userRepo.UpdateUserProfilePic(id, &input.ObjectKey); err != nil {
-		us.Log.Errorf("Error updating profile picture for USER ID %d: %s", id, err.Error())
 		return generics.InternalError()
 	}
 

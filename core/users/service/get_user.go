@@ -9,7 +9,6 @@ import (
 func (us *UserService) GetUser(userId uint) (*response.GetUserResponse, error) {
 	user, err := us.userRepo.FindUserById(userId)
 	if err != nil {
-		us.Log.Errorf("Error searching for user %d", userId)
 		return nil, generics.InternalError()
 	} else if user == nil {
 		return nil, errors.UserNotFound("User not found")

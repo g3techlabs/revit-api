@@ -8,7 +8,7 @@ import (
 )
 
 func (us *UserService) AnswerFriendshipRequest(userId, requesterId uint, answer *input.FriendshipRequestAnswer) (*response.FriendshipRequestAnswered, error) {
-	if err := us.validator.Struct(answer); err != nil {
+	if err := us.validator.Validate(answer); err != nil {
 		return nil, err
 	}
 

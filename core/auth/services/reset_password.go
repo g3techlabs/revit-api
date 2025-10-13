@@ -7,7 +7,7 @@ import (
 )
 
 func (as *AuthService) ResetPassword(input *input.ResetPassword) error {
-	if err := as.validator.Struct(input); err != nil {
+	if err := as.validator.Validate(input); err != nil {
 		return err
 	}
 

@@ -10,6 +10,8 @@ import (
 	"github.com/g3techlabs/revit-api/core/token"
 	"github.com/g3techlabs/revit-api/core/users/repository"
 	"github.com/g3techlabs/revit-api/core/users/service"
+	vr "github.com/g3techlabs/revit-api/core/vehicle/repository"
+	vs "github.com/g3techlabs/revit-api/core/vehicle/service"
 	"github.com/g3techlabs/revit-api/utils"
 	"github.com/g3techlabs/revit-api/validation"
 	"github.com/gofiber/fiber/v2"
@@ -22,6 +24,7 @@ func SetupRoutes(app *fiber.App) {
 	storageClient := config.NewS3Client()
 
 	userRepo := repository.NewUserRepository()
+	vehicleRepo := vr.NewVehicleRepository()
 
 	storageService := storage.NewS3Service(storageClient, config.NewPresignClient(storageClient), context.Background())
 	tokenService := token.NewTokenService()
@@ -29,10 +32,12 @@ func SetupRoutes(app *fiber.App) {
 
 	authService := services.NewAuthService(validator, userRepo, emailService, tokenService)
 	userService := service.NewUserService(validator, userRepo, storageService)
+	vehicleService := vs.NewVehicleService(validator, vehicleRepo, storageService)
 
 	api := app.Group("/api")
 	AuthRoutes(api, authService)
 	UserRoutes(api, userService, userRepo, tokenService)
+	VehicleRoutes(api, vehicleService, userRepo, tokenService)
 
 	utils.Log.Info("Routes successfully set up.")
 }

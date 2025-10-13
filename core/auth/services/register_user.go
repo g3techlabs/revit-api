@@ -11,7 +11,7 @@ import (
 )
 
 func (as *AuthService) RegisterUser(input *usersInput.CreateUser) (*usersResponse.UserCreatedResponse, error) {
-	if err := as.validator.Struct(input); err != nil {
+	if err := as.validator.Validate(input); err != nil {
 		return nil, err
 	}
 

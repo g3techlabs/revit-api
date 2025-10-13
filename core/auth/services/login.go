@@ -12,7 +12,7 @@ import (
 )
 
 func (as *AuthService) Login(loginCredentials *input.LoginCredentials) (*response.AuthTokensResponse, error) {
-	if err := as.validator.Struct(loginCredentials); err != nil {
+	if err := as.validator.Validate(loginCredentials); err != nil {
 		return nil, err
 	}
 

@@ -18,6 +18,7 @@ type User struct {
 	UpdatedAt  time.Time    `gorm:"not null"`
 	Friends    []Friendship `gorm:"foreignKey:RequesterID;constraint:OnDelete:CASCADE;"`
 	FriendOf   []Friendship `gorm:"foreignKey:ReceiverID;constraint:OnDelete:CASCADE;"`
+	Vehicles   []Vehicle    `gorm:"constraint:OnDelete:CASCADE"`
 }
 
 func (User) TableName() string {

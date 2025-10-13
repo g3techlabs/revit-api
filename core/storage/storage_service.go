@@ -57,6 +57,7 @@ func (s *S3Service) initBucket(bucket string) {
 }
 
 func (s *S3Service) PresignPutObjectURL(objectKey string, contentType string) (string, error) {
+
 	req, err := s.PresignClient.PresignPutObject(s.Context, &s3.PutObjectInput{
 		Bucket:      &s.bucket,
 		Key:         &objectKey,
@@ -79,22 +80,7 @@ func (s *S3Service) DoesObjectExist(objectKey string) error {
 		return nil
 	}
 
-	var responseError *http.ResponseError
-	if errors.As(err, &responseError) {
-		switch responseError.HTTPStatusCode() {
-		case 404:
-			s.log.Errorf("Object not found in S3: %s", err.Error())
-			return customErrors.ObjectNotFound()
-		case 403:
-			s.log.Errorf("Error of permission in HeadObject operation: %s", err.Error())
-			return generics.InternalError()
-		default:
-			s.log.Errorf("Error checking if object exists in S3: %s", err.Error())
-			return generics.InternalError()
-		}
-	}
-	s.log.Errorf("Error checking if object exists in S3: %s", err.Error())
-	return generics.InternalError()
+	return s.returnErrorBasedOnStatus(objectKey, "HeadObject", err)
 }
 
 func (s *S3Service) DeleteObject(objectKey string) error {
@@ -106,21 +92,24 @@ func (s *S3Service) DeleteObject(objectKey string) error {
 		return nil
 	}
 
+	return s.returnErrorBasedOnStatus(objectKey, "DeleteObject", err)
+}
+
+func (s *S3Service) returnErrorBasedOnStatus(objectKey, operation string, err error) error {
 	var responseError *http.ResponseError
 	if errors.As(err, &responseError) {
 		switch responseError.HTTPStatusCode() {
 		case 404:
-			s.log.Errorf("Object not found in S3: %s", err.Error())
-			return generics.InternalError()
+			s.log.Errorf("%s object not found in S3: %s", objectKey, err.Error())
+			return customErrors.ObjectNotFound()
 		case 403:
-			s.log.Errorf("Error of permission in HeadObject operation: %s", err.Error())
+			s.log.Errorf("Error of permission in %s operation in %s object: %s", operation, objectKey, err.Error())
 			return generics.InternalError()
 		default:
-			s.log.Errorf("Error checking if object exists in S3: %s", err.Error())
+			s.log.Errorf("Error during %s operation in %s object: %s", operation, objectKey, err.Error())
 			return generics.InternalError()
 		}
 	}
-
-	s.log.Errorf("Error deleting object in S3: %s", err.Error())
+	s.log.Errorf("Error during %s operation in %s object: %s", operation, objectKey, err.Error())
 	return generics.InternalError()
 }

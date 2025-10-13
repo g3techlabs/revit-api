@@ -7,13 +7,12 @@ import (
 )
 
 func (us *UserService) GetFriends(userId uint, params *input.GetUsersQuery) (*[]response.Friend, error) {
-	if err := us.validator.Struct(us); err != nil {
+	if err := us.validator.Validate(us); err != nil {
 		return nil, err
 	}
 
 	friends, err := us.userRepo.GetFriends(userId, params.Page, params.Limit, params.Nickname)
 	if err != nil {
-		us.Log.Errorf("Error fetching friends of user %d: %v", userId, err)
 		return nil, generics.InternalError()
 	}
 

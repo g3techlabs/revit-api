@@ -13,7 +13,7 @@ var resetTokenExpirationInMinutes int = config.GetIntVariable("RESET_TOKEN_EXPIR
 var appName = config.Get("APP_NAME")
 
 func (as *AuthService) SendPassResetEmail(input *input.Identifier) error {
-	if err := as.validator.Struct(input); err != nil {
+	if err := as.validator.Validate(input); err != nil {
 		return err
 	}
 

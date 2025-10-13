@@ -5,8 +5,7 @@ import (
 	"github.com/g3techlabs/revit-api/core/users/input"
 	"github.com/g3techlabs/revit-api/core/users/repository"
 	"github.com/g3techlabs/revit-api/core/users/response"
-	"github.com/go-playground/validator/v10"
-	"github.com/sirupsen/logrus"
+	"github.com/g3techlabs/revit-api/validation"
 )
 
 type IUserService interface {
@@ -24,11 +23,10 @@ type IUserService interface {
 type UserService struct {
 	userRepo       repository.UserRepository
 	storageService storage.StorageService
-	validator      *validator.Validate
-	Log            *logrus.Logger
+	validator      validation.IValidator
 }
 
-func NewUserService(validator *validator.Validate, userRepo repository.UserRepository, storageService storage.StorageService) IUserService {
+func NewUserService(validator validation.IValidator, userRepo repository.UserRepository, storageService storage.StorageService) IUserService {
 	return &UserService{
 		userRepo:       userRepo,
 		storageService: storageService,

@@ -12,13 +12,12 @@ import (
 var cloudFrontUrl = config.Get("AWS_CLOUDFRONT_URL")
 
 func (us *UserService) GetUsers(params *input.GetUsersQuery) (*[]response.GetUserResponse, error) {
-	if err := us.validator.Struct(params); err != nil {
+	if err := us.validator.Validate(params); err != nil {
 		return nil, err
 	}
 
 	users, err := us.userRepo.GetUsers(params.Page, params.Limit, params.Nickname)
 	if err != nil {
-		us.Log.Errorf("Error fetching users: %s", err.Error())
 		return nil, generics.InternalError()
 	}
 
