@@ -80,7 +80,7 @@ func (c *VehicleController) UpdateVehicleInfo(ctx *fiber.Ctx) error {
 	return ctx.SendStatus(fiber.StatusNoContent)
 }
 
-func (c *VehicleController) RequestMainPhotoUpdate(ctx *fiber.Ctx) error {
+func (c *VehicleController) RequestPhotoUpsert(ctx *fiber.Ctx) error {
 	vehicleParam := ctx.Params("vehicleId")
 
 	vehicleIdUint64, err := strconv.ParseUint(vehicleParam, 10, 64)
@@ -91,7 +91,7 @@ func (c *VehicleController) RequestMainPhotoUpdate(ctx *fiber.Ctx) error {
 	}
 	vehicleId := uint(vehicleIdUint64)
 
-	input := new(input.RequestMainPhotoUpdate)
+	input := new(input.RequestPhotoUpsert)
 	if err := ctx.BodyParser(input); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body: "+err.Error())
 	}
@@ -101,7 +101,7 @@ func (c *VehicleController) RequestMainPhotoUpdate(ctx *fiber.Ctx) error {
 		return generics.Unauthorized("Invalid or non-existent auth token")
 	}
 
-	response, err := c.vehicleService.RequestMainPhotoUpdate(userId, vehicleId, input)
+	response, err := c.vehicleService.RequestPhotoUpsert(userId, vehicleId, input)
 	if err != nil {
 		return err
 	}
@@ -109,7 +109,7 @@ func (c *VehicleController) RequestMainPhotoUpdate(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusOK).JSON(response)
 }
 
-func (c *VehicleController) ConfirmNewMainPhoto(ctx *fiber.Ctx) error {
+func (c *VehicleController) ConfirmNewPhoto(ctx *fiber.Ctx) error {
 	vehicleParam := ctx.Params("vehicleId")
 
 	vehicleIdUint64, err := strconv.ParseUint(vehicleParam, 10, 64)
@@ -120,12 +120,17 @@ func (c *VehicleController) ConfirmNewMainPhoto(ctx *fiber.Ctx) error {
 	}
 	vehicleId := uint(vehicleIdUint64)
 
-	input := new(input.ConfirmNewMainPhoto)
+	input := new(input.ConfirmNewPhoto)
 	if err := ctx.BodyParser(input); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body: "+err.Error())
 	}
 
-	if err := c.vehicleService.ConfirmNewMainPhoto(vehicleId, input); err != nil {
+	userId, ok := ctx.Locals("userId").(uint)
+	if !ok {
+		return generics.Unauthorized("Invalid or non-existent auth token")
+	}
+
+	if err := c.vehicleService.ConfirmNewPhoto(userId, vehicleId, input); err != nil {
 		return err
 	}
 

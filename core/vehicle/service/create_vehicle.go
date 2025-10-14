@@ -7,9 +7,10 @@ import (
 	"github.com/g3techlabs/revit-api/core/vehicle/input"
 	"github.com/g3techlabs/revit-api/core/vehicle/response"
 	"github.com/g3techlabs/revit-api/response/generics"
+	"github.com/google/uuid"
 )
 
-func (vs *VehicleService) CreateVehicle(userId uint, data *input.CreateVehicle) (*response.PresignedMainPhotoInfo, error) {
+func (vs *VehicleService) CreateVehicle(userId uint, data *input.CreateVehicle) (*response.PresignedPhotoInfo, error) {
 	if err := vs.validator.Validate(data); err != nil {
 		return nil, err
 	}
@@ -19,7 +20,7 @@ func (vs *VehicleService) CreateVehicle(userId uint, data *input.CreateVehicle) 
 		return nil, generics.InternalError()
 	}
 
-	response, err := vs.buildPresignedMainPhotoResponse(userId, vehicleModel.ID, data.MainPhotoContentTye)
+	response, err := vs.buildPresignedPhotoResponse(userId, vehicleModel.ID, data.MainPhotoContentTye, "main")
 	if err != nil {
 		return nil, err
 	}
@@ -27,36 +28,53 @@ func (vs *VehicleService) CreateVehicle(userId uint, data *input.CreateVehicle) 
 	return response, nil
 }
 
-func (vs *VehicleService) buildPresignedMainPhotoResponse(userId, vehicleId uint, contentType *string) (*response.PresignedMainPhotoInfo, error) {
-	response := new(response.PresignedMainPhotoInfo)
+func (vs *VehicleService) buildPresignedPhotoResponse(userId, vehicleId uint, contentType *string, photoType string) (*response.PresignedPhotoInfo, error) {
+	response := new(response.PresignedPhotoInfo)
 	if contentType == nil {
 		return response, nil
 	}
 
-	objectKey, err := vs.generatePresignedMainPhotoUrl(userId, vehicleId, *contentType, response)
-	if err != nil {
+	if err := vs.generatePresignedPhotoUrl(userId, vehicleId, *contentType, photoType, response); err != nil {
 		return nil, err
 	}
 
-	response.ObjectKey = &objectKey
-	response.VehicleId = &vehicleId
 	return response, nil
 }
 
-func (vs *VehicleService) generatePresignedMainPhotoUrl(userId, vehicleId uint, contentType string, r *response.PresignedMainPhotoInfo) (string, error) {
+func (vs *VehicleService) generatePresignedPhotoUrl(userId, vehicleId uint, contentType, photoType string, r *response.PresignedPhotoInfo) error {
+	const MAIN_PHOTO_KEY = "users/%d/vehicles/%d/main%s"
+	const FEED_PHOTO_KEY = "users/%d/vehicles/%d/photos/%s%s"
+
 	extension := vs.mapContentTypeToExtension(contentType)
 	if extension == "" {
-		return "", errors.InvalidFileExtension()
-	}
-	mainPhotoKey := fmt.Sprintf("users/%d/vehicles/%d/main%s", userId, vehicleId, extension)
-	presignedUrl, err := vs.storageService.PresignPutObjectURL(mainPhotoKey, contentType)
-	if err != nil {
-		return "", generics.InternalError()
+		return errors.InvalidFileExtension()
 	}
 
-	r.PresignedVehiclePhotoUrl = &presignedUrl
+	switch photoType {
+	case "main":
+		photoKey := fmt.Sprintf(MAIN_PHOTO_KEY, userId, vehicleId, extension)
+		presignedUrl, err := vs.storageService.PresignPutObjectURL(photoKey, contentType)
+		if err != nil {
+			return generics.InternalError()
+		}
 
-	return mainPhotoKey, nil
+		r.PresignedVehiclePhotoUrl = &presignedUrl
+		r.ObjectKey = &photoKey
+	case "feed":
+		photoUUID := uuid.New().String()
+		photoKey := fmt.Sprintf(FEED_PHOTO_KEY, userId, vehicleId, photoUUID, extension)
+		presignedUrl, err := vs.storageService.PresignPutObjectURL(photoKey, contentType)
+		if err != nil {
+			return generics.InternalError()
+		}
+
+		r.PresignedVehiclePhotoUrl = &presignedUrl
+		r.ObjectKey = &photoKey
+	}
+
+	r.VehicleId = &vehicleId
+
+	return nil
 }
 
 func (s *VehicleService) mapContentTypeToExtension(contentType string) string {

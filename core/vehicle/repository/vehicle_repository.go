@@ -11,9 +11,11 @@ import (
 
 type VehicleRepository interface {
 	CreateVehicle(data *models.Vehicle) error
+	GetVehicles(userId, page, limit uint, nickname string) (*[]models.Vehicle, error)
+	InsertPhoto(vehicleId uint, photoReference string) error
 	UpdateMainPhoto(vehicleId uint, mainPhotoKey string) error
 	UpdateVehicleInfo(vehicleId uint, data *models.Vehicle) error
-	GetVehicles(userId, page, limit uint, nickname string) (*[]models.Vehicle, error)
+	IsVehicleAvailable(userId, vehicleId uint) (bool, error)
 }
 
 type vehicleRepository struct {
@@ -39,7 +41,7 @@ func (vr *vehicleRepository) GetVehicles(userId, page, limit uint, nickname stri
 	pattern := fmt.Sprintf("%%%s%%", strings.ToLower(nickname))
 
 	query := vr.db.
-		Preload("Photos").
+		Preload("Photos", "deleted_at IS NULL").
 		Where("user_id = ? AND deleted_at IS NULL", userId).
 		Where("nickname LIKE ?", pattern).
 		Order("created_at DESC")
@@ -83,6 +85,17 @@ func (vr *vehicleRepository) UpdateVehicleInfo(vehicleId uint, data *models.Vehi
 	return result.Error
 }
 
+func (vr *vehicleRepository) InsertPhoto(vehicleId uint, photoReference string) error {
+	data := &models.Photo{
+		Reference: photoReference,
+		VehicleID: vehicleId,
+	}
+
+	result := vr.db.Create(data)
+
+	return result.Error
+}
+
 func (*vehicleRepository) lowerStrings(i *models.Vehicle) {
 	i.Nickname = strings.ToLower(i.Nickname)
 	i.Brand = strings.ToLower(i.Brand)
@@ -91,4 +104,15 @@ func (*vehicleRepository) lowerStrings(i *models.Vehicle) {
 		lowered := strings.ToLower(*i.Version)
 		i.Version = &lowered
 	}
+}
+
+func (vr *vehicleRepository) IsVehicleAvailable(userId, vehicleId uint) (bool, error) {
+	var count int64
+	err := vr.db.Model(&models.Vehicle{}).
+		Where("id = ? AND user_id = ? AND deleted_at IS NULL", vehicleId, userId).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }

@@ -1,6 +1,6 @@
 package response
 
-type PresignedMainPhotoInfo struct {
+type PresignedPhotoInfo struct {
 	PresignedVehiclePhotoUrl *string `json:"presignedVehiclePhotoUrl"`
 	ObjectKey                *string `json:"objectKey"`
 	VehicleId                *uint   `json:"vehicleId"`
