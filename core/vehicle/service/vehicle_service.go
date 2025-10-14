@@ -10,6 +10,7 @@ import (
 
 type IVehicleService interface {
 	CreateVehicle(userId uint, data *input.CreateVehicle) (*response.PresignedMainPhotoInfo, error)
+	GetVehicles(userId uint, query *input.GetVehiclesParams) (*[]response.Vehicle, error)
 	ConfirmNewMainPhoto(vehicleId uint, data *input.ConfirmNewMainPhoto) error
 	UpdateVehicleInfo(vehicleId uint, data *input.UpdateVehicleInfo) error
 	RequestMainPhotoUpdate(userId, vehicleId uint, data *input.RequestMainPhotoUpdate) (*response.PresignedMainPhotoInfo, error)

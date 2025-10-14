@@ -18,6 +18,7 @@ func VehicleRoutes(router fiber.Router, vehicleService service.IVehicleService, 
 	vehicle := router.Group("/vehicle", middleware.Auth(ur, ts))
 
 	vehicle.Post("/", vehicleController.CreateVehicle)
+	vehicle.Get("/", vehicleController.GetVehicles)
 	vehicle.Patch("/main-photo/:vehicleId", vehicleController.ConfirmNewMainPhoto)
 	vehicle.Post("/main-photo/:vehicleId", vehicleController.RequestMainPhotoUpdate)
 	vehicle.Patch("/:vehicleId", vehicleController.UpdateVehicleInfo)

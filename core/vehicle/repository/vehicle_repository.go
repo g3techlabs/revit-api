@@ -13,6 +13,7 @@ type VehicleRepository interface {
 	CreateVehicle(data *models.Vehicle) error
 	UpdateMainPhoto(vehicleId uint, mainPhotoKey string) error
 	UpdateVehicleInfo(vehicleId uint, data *models.Vehicle) error
+	GetVehicles(userId, page, limit uint, nickname string) (*[]models.Vehicle, error)
 }
 
 type vehicleRepository struct {
@@ -31,6 +32,31 @@ func (vr *vehicleRepository) CreateVehicle(data *models.Vehicle) error {
 	result := vr.db.Create(data)
 
 	return result.Error
+}
+
+func (vr *vehicleRepository) GetVehicles(userId, page, limit uint, nickname string) (*[]models.Vehicle, error) {
+	vehicles := new([]models.Vehicle)
+	pattern := fmt.Sprintf("%%%s%%", strings.ToLower(nickname))
+
+	query := vr.db.
+		Preload("Photos").
+		Where("user_id = ? AND deleted_at IS NULL", userId).
+		Where("nickname LIKE ?", pattern).
+		Order("created_at DESC")
+
+	if limit > 0 {
+		offset := 0
+		if page > 0 {
+			offset = int((page - 1) * limit)
+		}
+		query = query.Limit(int(limit)).Offset(offset)
+	}
+
+	if err := query.Find(&vehicles).Error; err != nil {
+		return nil, err
+	}
+
+	return vehicles, nil
 }
 
 func (vr *vehicleRepository) UpdateMainPhoto(vehicleId uint, mainPhotoKey string) error {

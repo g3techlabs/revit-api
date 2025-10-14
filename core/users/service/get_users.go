@@ -1,12 +1,11 @@
 package service
 
 import (
-	"strings"
-
 	"github.com/g3techlabs/revit-api/config"
 	"github.com/g3techlabs/revit-api/core/users/input"
 	"github.com/g3techlabs/revit-api/core/users/response"
 	"github.com/g3techlabs/revit-api/response/generics"
+	"github.com/g3techlabs/revit-api/utils"
 )
 
 var cloudFrontUrl = config.Get("AWS_CLOUDFRONT_URL")
@@ -25,18 +24,10 @@ func (us *UserService) GetUsers(params *input.GetUsersQuery) (*[]response.GetUse
 	for i := range *users {
 		user := (*users)[i]
 		if user.ProfilePic != nil {
-			user.ProfilePic = us.mountProfilePicURL(*user.ProfilePic)
+			user.ProfilePic = utils.MountCloudFrontUrl(*user.ProfilePic)
 		}
 		response = append(response, *user.ToGetUserResponse())
 	}
 
 	return &response, nil
-}
-
-func (us *UserService) mountProfilePicURL(objectKey string) *string {
-	if !strings.HasSuffix(cloudFrontUrl, "/") {
-		cloudFrontUrl += "/"
-	}
-	mountedUrl := cloudFrontUrl + objectKey
-	return &mountedUrl
 }

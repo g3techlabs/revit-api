@@ -37,6 +37,26 @@ func (c *VehicleController) CreateVehicle(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusCreated).JSON(response)
 }
 
+func (c *VehicleController) GetVehicles(ctx *fiber.Ctx) error {
+	query := new(input.GetVehiclesParams)
+
+	if err := ctx.QueryParser(query); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid query parameters")
+	}
+
+	userId, ok := ctx.Locals("userId").(uint)
+	if !ok {
+		return generics.Unauthorized("Invalid or non-existent auth token")
+	}
+
+	vehicles, err := c.vehicleService.GetVehicles(userId, query)
+	if err != nil {
+		return err
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(vehicles)
+}
+
 func (c *VehicleController) UpdateVehicleInfo(ctx *fiber.Ctx) error {
 	vehicleParam := ctx.Params("vehicleId")
 

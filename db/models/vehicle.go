@@ -2,6 +2,8 @@ package models
 
 import (
 	"time"
+
+	"github.com/g3techlabs/revit-api/core/vehicle/response"
 )
 
 type Vehicle struct {
@@ -18,4 +20,16 @@ type Vehicle struct {
 	UserID    uint `gorm:"not null"`
 
 	Photos []Photo `gorm:"constraint:OnDelete:CASCADE"`
+}
+
+func (v *Vehicle) ToVehicleResponse() *response.Vehicle {
+	return &response.Vehicle{
+		ID:           v.ID,
+		Nickname:     v.Nickname,
+		Brand:        v.Brand,
+		Model:        v.Model,
+		Year:         v.Year,
+		MainPhotoUrl: v.MainPhoto,
+		CreatedAt:    v.CreatedAt,
+	}
 }

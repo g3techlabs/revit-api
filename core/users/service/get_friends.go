@@ -4,6 +4,7 @@ import (
 	"github.com/g3techlabs/revit-api/core/users/input"
 	"github.com/g3techlabs/revit-api/core/users/response"
 	"github.com/g3techlabs/revit-api/response/generics"
+	"github.com/g3techlabs/revit-api/utils"
 )
 
 func (us *UserService) GetFriends(userId uint, params *input.GetUsersQuery) (*[]response.Friend, error) {
@@ -20,7 +21,7 @@ func (us *UserService) GetFriends(userId uint, params *input.GetUsersQuery) (*[]
 	for i := range *friends {
 		friend := (*friends)[i]
 		if friend.ProfilePicUrl != nil {
-			friend.ProfilePicUrl = us.mountProfilePicURL(*friend.ProfilePicUrl)
+			friend.ProfilePicUrl = utils.MountCloudFrontUrl(*friend.ProfilePicUrl)
 		}
 		response = append(response, friend)
 	}
