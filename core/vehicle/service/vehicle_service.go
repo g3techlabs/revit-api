@@ -9,8 +9,10 @@ import (
 )
 
 type IVehicleService interface {
-	CreateVehicle(userId uint, data *input.CreateVehicle) (*response.VehicleCreated, error)
+	CreateVehicle(userId uint, data *input.CreateVehicle) (*response.PresignedMainPhotoInfo, error)
 	ConfirmNewMainPhoto(vehicleId uint, data *input.ConfirmNewMainPhoto) error
+	UpdateVehicleInfo(vehicleId uint, data *input.UpdateVehicleInfo) error
+	RequestMainPhotoUpdate(userId, vehicleId uint, data *input.RequestMainPhotoUpdate) (*response.PresignedMainPhotoInfo, error)
 }
 
 type VehicleService struct {

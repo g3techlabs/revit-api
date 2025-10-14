@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/g3techlabs/revit-api/db"
 	"github.com/g3techlabs/revit-api/db/models"
@@ -11,6 +12,7 @@ import (
 type VehicleRepository interface {
 	CreateVehicle(data *models.Vehicle) error
 	UpdateMainPhoto(vehicleId uint, mainPhotoKey string) error
+	UpdateVehicleInfo(vehicleId uint, data *models.Vehicle) error
 }
 
 type vehicleRepository struct {
@@ -24,6 +26,8 @@ func NewVehicleRepository() VehicleRepository {
 }
 
 func (vr *vehicleRepository) CreateVehicle(data *models.Vehicle) error {
+	vr.lowerStrings(data)
+
 	result := vr.db.Create(data)
 
 	return result.Error
@@ -37,4 +41,28 @@ func (vr *vehicleRepository) UpdateMainPhoto(vehicleId uint, mainPhotoKey string
 	}
 
 	return result.Error
+}
+
+func (vr *vehicleRepository) UpdateVehicleInfo(vehicleId uint, data *models.Vehicle) error {
+	vr.lowerStrings(data)
+
+	result := vr.db.Model(&models.Vehicle{}).
+		Where("id = ?", vehicleId).
+		Updates(data)
+
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("vehicle not found")
+	}
+
+	return result.Error
+}
+
+func (*vehicleRepository) lowerStrings(i *models.Vehicle) {
+	i.Nickname = strings.ToLower(i.Nickname)
+	i.Brand = strings.ToLower(i.Brand)
+	i.Model = strings.ToLower(i.Model)
+	if i.Version != nil {
+		lowered := strings.ToLower(*i.Version)
+		i.Version = &lowered
+	}
 }

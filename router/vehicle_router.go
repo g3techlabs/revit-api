@@ -19,4 +19,6 @@ func VehicleRoutes(router fiber.Router, vehicleService service.IVehicleService, 
 
 	vehicle.Post("/", vehicleController.CreateVehicle)
 	vehicle.Patch("/main-photo/:vehicleId", vehicleController.ConfirmNewMainPhoto)
+	vehicle.Post("/main-photo/:vehicleId", vehicleController.RequestMainPhotoUpdate)
+	vehicle.Patch("/:vehicleId", vehicleController.UpdateVehicleInfo)
 }
