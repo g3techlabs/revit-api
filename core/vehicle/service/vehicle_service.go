@@ -14,6 +14,7 @@ type IVehicleService interface {
 	ConfirmNewPhoto(userId, vehicleId uint, data *input.ConfirmNewPhoto) error
 	UpdateVehicleInfo(vehicleId uint, data *input.UpdateVehicleInfo) error
 	RequestPhotoUpsert(userId, vehicleId uint, data *input.RequestPhotoUpsert) (*response.PresignedPhotoInfo, error)
+	DeleteVehicle(userId, vehicleId uint) error
 	RemoveMainPhoto(userId, vehicleId uint) error
 	RemovePhoto(userId, vehicleId, photoId uint) error
 }

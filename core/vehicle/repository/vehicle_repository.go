@@ -16,6 +16,7 @@ type VehicleRepository interface {
 	UpdateMainPhoto(vehicleId uint, mainPhotoKey string) error
 	UpdateVehicleInfo(vehicleId uint, data *models.Vehicle) error
 	MarkPhotoAsRemoved(userId, vehicleId, photoId uint) error
+	MarkVehicleAsRemoved(userId, vehicleId uint) error
 	DeleteMainPhoto(userId, vehicleId uint) error
 	IsVehicleAvailable(userId, vehicleId uint) (bool, error)
 }
@@ -106,6 +107,18 @@ func (*vehicleRepository) lowerStrings(i *models.Vehicle) {
 		lowered := strings.ToLower(*i.Version)
 		i.Version = &lowered
 	}
+}
+
+func (vr *vehicleRepository) MarkVehicleAsRemoved(userId, vehicleId uint) error {
+	result := vr.db.Model(&models.Vehicle{}).
+		Where("id = ? AND user_id = ? AND deleted_at IS NULL", vehicleId, userId).
+		Update("deleted_at", gorm.Expr("NOW()"))
+
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("vehicle not found")
+	}
+
+	return result.Error
 }
 
 func (vr *vehicleRepository) DeleteMainPhoto(userId, vehicleId uint) error {

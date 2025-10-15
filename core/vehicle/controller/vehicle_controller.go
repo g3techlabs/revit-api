@@ -137,6 +137,29 @@ func (c *VehicleController) ConfirmNewPhoto(ctx *fiber.Ctx) error {
 	return ctx.SendStatus(fiber.StatusNoContent)
 }
 
+func (c *VehicleController) DeleteVehicle(ctx *fiber.Ctx) error {
+	vehicleParam := ctx.Params("vehicleId")
+
+	vehicleIdUint64, err := strconv.ParseUint(vehicleParam, 10, 64)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid vehicle ID",
+		})
+	}
+	vehicleId := uint(vehicleIdUint64)
+
+	userId, ok := ctx.Locals("userId").(uint)
+	if !ok {
+		return generics.Unauthorized("Invalid or non-existent auth token")
+	}
+
+	if err := c.vehicleService.DeleteVehicle(userId, vehicleId); err != nil {
+		return err
+	}
+
+	return ctx.SendStatus(fiber.StatusNoContent)
+}
+
 func (c *VehicleController) RemoveMainPhoto(ctx *fiber.Ctx) error {
 	vehicleParam := ctx.Params("vehicleId")
 
