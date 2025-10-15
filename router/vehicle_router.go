@@ -22,6 +22,8 @@ func VehicleRoutes(router fiber.Router, vehicleService service.IVehicleService, 
 	vehicle.Patch("/photo/:vehicleId", vehicleController.ConfirmNewPhoto)
 	vehicle.Post("/photo/:vehicleId", vehicleController.RequestPhotoUpsert)
 	vehicle.Patch("/:vehicleId", vehicleController.UpdateVehicleInfo)
+	vehicle.Delete("/:vehicleId/photo/:photoId", vehicleController.RemovePhoto)
+	vehicle.Delete("/main-photo/:vehicleId", vehicleController.RemoveMainPhoto)
 
 	utils.Log.Info("VEHICLE routes successfully set up.")
 }

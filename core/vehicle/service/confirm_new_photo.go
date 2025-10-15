@@ -4,16 +4,11 @@ import (
 	"github.com/g3techlabs/revit-api/core/vehicle/errors"
 	"github.com/g3techlabs/revit-api/core/vehicle/input"
 	"github.com/g3techlabs/revit-api/response/generics"
-	"github.com/g3techlabs/revit-api/utils"
 )
 
 func (vs *VehicleService) ConfirmNewPhoto(userId, vehicleId uint, data *input.ConfirmNewPhoto) error {
 	if err := vs.validator.Validate(data); err != nil {
 		return err
-	}
-
-	if data.ObjectKey == "" {
-		utils.Log.Info("deu ruim")
 	}
 
 	if err := vs.storageService.DoesObjectExist(data.ObjectKey); err != nil {
