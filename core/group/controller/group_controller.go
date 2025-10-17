@@ -1,0 +1,67 @@
+package controller
+
+import (
+	"strconv"
+
+	"github.com/g3techlabs/revit-api/core/group/input"
+	"github.com/g3techlabs/revit-api/core/group/service"
+	"github.com/g3techlabs/revit-api/response/generics"
+	"github.com/gofiber/fiber/v2"
+)
+
+type GroupController struct {
+	groupService service.IGroupService
+}
+
+func NewGroupController(groupService service.IGroupService) *GroupController {
+	return &GroupController{groupService: groupService}
+}
+
+func (c *GroupController) CreateGroup(ctx *fiber.Ctx) error {
+	data := new(input.CreateGroup)
+
+	if err := ctx.BodyParser(data); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid body request")
+	}
+
+	userId, ok := ctx.Locals("userId").(uint)
+	if !ok {
+		return generics.Unauthorized("Invalid or non-existent auth token")
+	}
+
+	response, err := c.groupService.CreateGroup(userId, data)
+	if err != nil {
+		return err
+	}
+
+	return ctx.Status(fiber.StatusCreated).JSON(response)
+}
+
+func (c *GroupController) ConfirmNewPhotos(ctx *fiber.Ctx) error {
+	data := new(input.ConfirmNewPhotos)
+
+	if err := ctx.BodyParser(data); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid body request")
+	}
+
+	groupParam := ctx.Params("groupId")
+
+	groupIdUint64, err := strconv.ParseUint(groupParam, 10, 64)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid group ID",
+		})
+	}
+	groupId := uint(groupIdUint64)
+
+	userId, ok := ctx.Locals("userId").(uint)
+	if !ok {
+		return generics.Unauthorized("Invalid or non-existent auth token")
+	}
+
+	if err := c.groupService.ConfirmNewPhotos(userId, groupId, data); err != nil {
+		return err
+	}
+
+	return ctx.SendStatus(fiber.StatusNoContent)
+}

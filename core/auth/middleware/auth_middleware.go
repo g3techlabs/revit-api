@@ -9,20 +9,31 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func Auth(userRepository repository.UserRepository, tokenService token.ITokenService) fiber.Handler {
+type AuthMiddleware struct {
+	userRepository repository.UserRepository
+	tokenService   token.ITokenService
+}
+
+func NewAuthMiddleware(userRepository repository.UserRepository, tokenService token.ITokenService) *AuthMiddleware {
+	return &AuthMiddleware{
+		userRepository: userRepository, tokenService: tokenService,
+	}
+}
+
+func (m *AuthMiddleware) Auth() fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
 		accessToken, err := ExtractBearerToken(ctx)
 		if err != nil {
 			return err
 		}
 
-		claims, err := tokenService.ValidateAccessToken(accessToken)
+		claims, err := m.tokenService.ValidateAccessToken(accessToken)
 		if err != nil {
 			return generics.Unauthorized("Invalid or expired token")
 		}
 
 		userId := claims.UserID
-		user, err := userRepository.FindUserById(userId)
+		user, err := m.userRepository.FindUserById(userId)
 		if err != nil {
 			return generics.InternalError()
 		} else if user == nil {

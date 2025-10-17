@@ -2,20 +2,18 @@ package router
 
 import (
 	"github.com/g3techlabs/revit-api/core/auth/middleware"
-	"github.com/g3techlabs/revit-api/core/token"
-	userRepo "github.com/g3techlabs/revit-api/core/users/repository"
 	"github.com/g3techlabs/revit-api/core/vehicle/controller"
 	"github.com/g3techlabs/revit-api/core/vehicle/service"
 	"github.com/g3techlabs/revit-api/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
-func VehicleRoutes(router fiber.Router, vehicleService service.IVehicleService, ur userRepo.UserRepository, ts token.ITokenService) {
+func VehicleRoutes(router fiber.Router, vehicleService service.IVehicleService, middleware *middleware.AuthMiddleware) {
 	utils.Log.Info("Setting up VEHICLE routes...")
 
 	vehicleController := controller.NewVehicleController(vehicleService)
 
-	vehicle := router.Group("/vehicle", middleware.Auth(ur, ts))
+	vehicle := router.Group("/vehicle", middleware.Auth())
 
 	vehicle.Post("/", vehicleController.CreateVehicle)
 	vehicle.Get("/", vehicleController.GetVehicles)

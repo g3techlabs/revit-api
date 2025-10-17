@@ -6,7 +6,7 @@ type Group struct {
 	ID           uint
 	Name         string `gorm:"not null"`
 	Description  string `gorm:"not null"`
-	Photo        *string
+	MainPhoto    *string
 	Banner       *string
 	CreatedAt    time.Time `gorm:"not null;default:current_timestamp"`
 	UpdatedAt    time.Time `gorm:"not null"`
