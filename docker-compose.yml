@@ -14,7 +14,7 @@ services:
     command: ["go", "run", "main.go"]
 
   postgres:
-    image: postgres:18
+    image: postgis/postgis:18-3.6
     container_name: postgres18
     environment:
       POSTGRES_USER: ${DATABASE_USER}

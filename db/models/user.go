@@ -13,12 +13,14 @@ type User struct {
 	Nickname   string `gorm:"unique;not null"`
 	Password   string `gorm:"not null"`
 	ProfilePic *string
-	Birthdate  *time.Time   `gorm:"type:date"`
-	CreatedAt  time.Time    `gorm:"not null;default:current_timestamp"`
-	UpdatedAt  time.Time    `gorm:"not null"`
-	Friends    []Friendship `gorm:"foreignKey:RequesterID;constraint:OnDelete:CASCADE;"`
-	FriendOf   []Friendship `gorm:"foreignKey:ReceiverID;constraint:OnDelete:CASCADE;"`
-	Vehicles   []Vehicle    `gorm:"constraint:OnDelete:CASCADE"`
+	Birthdate  *time.Time `gorm:"type:date"`
+	CreatedAt  time.Time  `gorm:"not null;default:current_timestamp"`
+	UpdatedAt  time.Time  `gorm:"not null"`
+
+	Friends          []Friendship  `gorm:"foreignKey:RequesterID;constraint:OnDelete:CASCADE;"`
+	FriendOf         []Friendship  `gorm:"foreignKey:ReceiverID;constraint:OnDelete:CASCADE;"`
+	Vehicles         []Vehicle     `gorm:"constraint:OnDelete:CASCADE"`
+	GroupMemberships []GroupMember `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE;"`
 }
 
 func (User) TableName() string {

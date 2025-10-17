@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/g3techlabs/revit-api/config"
-	"github.com/g3techlabs/revit-api/db/models"
 	"github.com/g3techlabs/revit-api/utils"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -33,10 +32,4 @@ func Connect() {
 	}
 
 	utils.Log.Info("Successfully connected to the database")
-
-	err = Db.AutoMigrate(&models.InviteStatus{}, &models.Friendship{}, &models.User{}, &models.Vehicle{}, &models.Photo{})
-	if err != nil {
-		panic("Error during migrations:" + err.Error())
-	}
-	utils.Log.Info("Database successfully migrated.")
 }
