@@ -65,3 +65,23 @@ func (c *GroupController) ConfirmNewPhotos(ctx *fiber.Ctx) error {
 
 	return ctx.SendStatus(fiber.StatusNoContent)
 }
+
+func (c *GroupController) GetGroups(ctx *fiber.Ctx) error {
+	query := new(input.GetGroupsQuery)
+
+	if err := ctx.QueryParser(query); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid query parameters")
+	}
+
+	userId, ok := ctx.Locals("userId").(uint)
+	if !ok {
+		return generics.Unauthorized("Invalid or non-existent auth token")
+	}
+
+	response, err := c.groupService.GetGroups(userId, query)
+	if err != nil {
+		return err
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(response)
+}

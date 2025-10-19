@@ -2,7 +2,13 @@ package repository
 
 import (
 	"fmt"
+	"strings"
 
+	"database/sql"
+
+	"github.com/g3techlabs/revit-api/config"
+	"github.com/g3techlabs/revit-api/core/group/input"
+	"github.com/g3techlabs/revit-api/core/group/response"
 	"github.com/g3techlabs/revit-api/db"
 	"github.com/g3techlabs/revit-api/db/models"
 	"gorm.io/gorm"
@@ -10,6 +16,7 @@ import (
 
 type GroupRepository interface {
 	CreateGroup(userId uint, data *models.Group) error
+	GetGroups(userId uint, filters *input.GetGroupsQuery) (*[]response.GetGroupsResponse, error)
 	UpdateMainPhoto(userId, groupId uint, banner string) error
 	UpdateBanner(userId, groupId uint, banner string) error
 }
@@ -80,4 +87,122 @@ func (gr *groupRepository) UpdateBanner(userId, groupId uint, banner string) err
 	}
 
 	return result.Error
+}
+
+func (gr *groupRepository) GetGroups(userId uint, filters *input.GetGroupsQuery) (*[]response.GetGroupsResponse, error) {
+	cloudFrontUrl := config.Get("AWS_CLOUDFRONT_URL")
+
+	groups := new([]response.GetGroupsResponse)
+
+	query := `
+		SELECT 
+			g.id,
+			g.name,
+			g.description,
+			@cloudFrontUrl || g.main_photo AS "mainPhoto",
+			@cloudFrontUrl || g.banner AS "banner",
+			g.created_at,
+			v.name AS "visibility",
+			c.name AS "city",
+			s.name AS "state",
+			r.name AS "memberType",
+			COALESCE(
+				json_agg(
+					DISTINCT jsonb_build_object(
+						'name', u.name,
+						'profilePicUrl', u.profile_pic_url
+					)
+				) FILTER (WHERE u.user_id IS NOT NULL),
+				'[]'
+			) AS "friendsInGroup"
+		FROM groups g
+		JOIN visibility v ON v.id = g.visibility_id
+		JOIN city c ON c.id = g.city_id
+		JOIN state s ON s.id = c.state_id
+		LEFT JOIN group_member gm_user ON gm_user.group_id = g.id AND gm_user.user_id = @userId
+		LEFT JOIN role r ON r.id = gm_user.role_id
+		LEFT JOIN LATERAL (
+			SELECT 
+				gm_friend.user_id,
+				users.name,
+				@cloudFrontUrl || users.profile_pic as profile_pic_url
+			FROM group_member gm_friend
+			JOIN users ON users.id = gm_friend.user_id
+			JOIN friendship f ON (
+				(f.requester_id = @userId AND f.receiver_id = users.id)
+				OR (f.receiver_id = @userId AND f.requester_id = users.id)
+			)
+			WHERE gm_friend.group_id = g.id
+			ORDER BY users.name
+			LIMIT 3
+		) AS u ON TRUE
+	`
+
+	params := []interface{}{
+		sql.Named("userId", userId),
+		sql.Named("cloudFrontUrl", cloudFrontUrl),
+	}
+
+	gr.buildGetGroupsWhereStatement(&query, &params, filters)
+
+	query += `
+		GROUP BY g.id, v.name, c.name, s.name, r.name
+		ORDER BY g.created_at DESC
+	`
+	gr.addPagination(&query, &params, filters.Limit, filters.Page)
+
+	if err := gr.db.Raw(query, params...).Scan(groups).Error; err != nil {
+		return nil, err
+	}
+
+	if *groups == nil {
+		empty := make([]response.GetGroupsResponse, 0)
+		return &empty, nil
+	}
+
+	return groups, nil
+}
+
+func (gr *groupRepository) buildGetGroupsWhereStatement(query *string, params *[]interface{}, filters *input.GetGroupsQuery) {
+	conditions := []string{}
+
+	if filters.Name != "" {
+		conditions = append(conditions, "LOWER(g.name) LIKE LOWER(@name)")
+		*params = append(*params, sql.Named("name", "%"+filters.Name+"%"))
+	}
+	if filters.CityId != 0 {
+		conditions = append(conditions, "g.city_id = @cityId")
+		*params = append(*params, sql.Named("cityId", filters.CityId))
+	}
+	if filters.StateId != 0 {
+		conditions = append(conditions, "c.state_id = @stateId")
+		*params = append(*params, sql.Named("stateId", filters.StateId))
+	}
+	if filters.Visibility != "" {
+		conditions = append(conditions, "LOWER(v.name) = LOWER(@visibility)")
+		*params = append(*params, sql.Named("visibility", filters.Visibility))
+	}
+	if filters.Member {
+		conditions = append(conditions, "gm_user.user_id IS NOT NULL")
+	}
+
+	if len(conditions) > 0 {
+		*query += " WHERE " + strings.Join(conditions, " AND ")
+	}
+}
+
+func (gr *groupRepository) addPagination(query *string, params *[]interface{}, queryLimit uint, queryPage uint) {
+	limit := 20
+	page := 1
+	if queryLimit > 0 {
+		limit = int(queryLimit)
+	}
+	if queryPage > 0 {
+		page = int(queryPage)
+	}
+	offset := (page - 1) * limit
+
+	*query += " LIMIT @limit OFFSET @offset"
+
+	*params = append(*params, sql.Named("limit", limit), sql.Named("offset", offset))
 }

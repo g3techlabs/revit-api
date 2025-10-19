@@ -16,6 +16,7 @@ func GroupRoutes(router fiber.Router, groupService service.IGroupService, middle
 	group := router.Group("/group", middleware.Auth())
 
 	group.Post("/", groupController.CreateGroup)
+	group.Get("/", groupController.GetGroups)
 	group.Patch("/photos/:groupId", groupController.ConfirmNewPhotos)
 
 	utils.Log.Info("VEHICLE routes successfully set up.")

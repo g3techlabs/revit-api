@@ -1,9 +1,11 @@
 package input
 
 import (
-	"github.com/g3techlabs/revit-api/core/group/repository"
 	"github.com/g3techlabs/revit-api/db/models"
 )
+
+var publicVisibility uint = 1
+var privateVisibility uint = 2
 
 type CreateGroup struct {
 	Name                 string  `json:"name" validate:"required"`
@@ -23,9 +25,9 @@ func (i *CreateGroup) ToGroupModel() *models.Group {
 
 	switch i.Visibility {
 	case "public":
-		groupModel.VisibilityID = repository.PublicVisibility
+		groupModel.VisibilityID = publicVisibility
 	case "private":
-		groupModel.VisibilityID = repository.PrivateVisibility
+		groupModel.VisibilityID = privateVisibility
 	}
 
 	return groupModel

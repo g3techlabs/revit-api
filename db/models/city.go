@@ -6,5 +6,6 @@ type City struct {
 	Location string `gorm:"type:GEOGRAPHY(POINT,4326);not null"`
 	StateID  uint   `gorm:"not null"`
 
+	State  State   `gorm:"foreignKey:StateID;references:ID;constraint:OnDelete:SET NULL"`
 	Groups []Group `gorm:"foreignKey:CityID;constraint:OnDelete:SET NULL;"`
 }

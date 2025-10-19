@@ -13,5 +13,11 @@ type Group struct {
 	VisibilityID uint      `gorm:"not null"`
 	CityID       uint      `gorm:"not null"`
 
-	Members []GroupMember `gorm:"foreignKey:GroupID;constraint:OnDelete:CASCADE;"`
+	Visibility Visibility    `gorm:"foreignKey:VisibilityID;references:ID;constraint:OnDelete:SET NULL"`
+	City       City          `gorm:"foreignKey:CityID;references:ID;constraint:OnDelete:SET NULL"`
+	Members    []GroupMember `gorm:"foreignKey:GroupID;constraint:OnDelete:CASCADE;"`
+}
+
+func (Group) TableName() string {
+	return "groups"
 }
