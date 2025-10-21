@@ -23,7 +23,8 @@ func (gs *GroupService) ConfirmNewPhotos(userId, groupId uint, data *input.Confi
 			return generics.InternalError()
 		}
 
-	} else if data.MainPhotoKey != nil {
+	}
+	if data.MainPhotoKey != nil {
 		if err := gs.storageService.DoesObjectExist(*data.MainPhotoKey); err != nil {
 			return err
 		}

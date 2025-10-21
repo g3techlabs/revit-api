@@ -3,6 +3,7 @@ package repository
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"database/sql"
 
@@ -50,11 +51,14 @@ func (gr *groupRepository) CreateGroup(userId uint, data *models.Group) error {
 			return err
 		}
 
+		currentTimestamp := time.Now().UTC()
+
 		ownerData := &models.GroupMember{
 			GroupID:        data.ID,
 			UserID:         userId,
 			RoleID:         ownerId,
 			InviteStatusID: acceptedStatusId,
+			MemberSince:    &currentTimestamp,
 		}
 
 		if err := tx.Create(ownerData).Error; err != nil {
@@ -67,7 +71,7 @@ func (gr *groupRepository) CreateGroup(userId uint, data *models.Group) error {
 
 func (gr *groupRepository) UpdateMainPhoto(userId, groupId uint, mainPhoto string) error {
 	result := gr.db.Model(&models.Group{}).
-		Where("id = ? AND EXISTS (SELECT 1 FROM group_members WHERE group_members.group_id = ? AND group_members.user_id = ? AND group_members.invite_status_id = ? AND group_members.role_id IN ?)",
+		Where("id = ? AND EXISTS (SELECT 1 FROM group_member WHERE group_member.group_id = ? AND group_member.user_id = ? AND group_member.invite_status_id = ? AND group_member.role_id IN ?)",
 			groupId, groupId, userId, acceptedStatusId, []uint{ownerId, adminId}).
 		Update("main_photo", mainPhoto)
 
@@ -80,7 +84,7 @@ func (gr *groupRepository) UpdateMainPhoto(userId, groupId uint, mainPhoto strin
 
 func (gr *groupRepository) UpdateBanner(userId, groupId uint, banner string) error {
 	result := gr.db.Model(&models.Group{}).
-		Where("id = ? AND EXISTS (SELECT 1 FROM group_members WHERE group_members.group_id = ? AND group_members.user_id = ? AND group_members.invite_status_id = ? AND group_members.role_id IN ?)",
+		Where("id = ? AND EXISTS (SELECT 1 FROM group_member WHERE group_member.group_id = ? AND group_member.user_id = ? AND group_member.invite_status_id = ? AND group_member.role_id IN ?)",
 			groupId, groupId, userId, acceptedStatusId, []uint{ownerId, adminId}).
 		Update("banner", banner)
 
@@ -101,13 +105,13 @@ func (gr *groupRepository) GetGroups(userId uint, filters *input.GetGroupsQuery)
 			g.id,
 			g.name,
 			g.description,
-			@cloudFrontUrl || g.main_photo AS "mainPhoto",
-			@cloudFrontUrl || g.banner AS "banner",
+			CAST(@cloudFrontUrl AS text) || g.main_photo AS "main_photo",
+			CAST(@cloudFrontUrl AS text) || g.banner AS "banner",
 			g.created_at,
 			v.name AS "visibility",
 			c.name AS "city",
 			s.name AS "state",
-			r.name AS "memberType",
+			r.name AS "member_type",
 			COALESCE(
 				json_agg(
 					DISTINCT jsonb_build_object(
@@ -116,12 +120,12 @@ func (gr *groupRepository) GetGroups(userId uint, filters *input.GetGroupsQuery)
 					)
 				) FILTER (WHERE u.user_id IS NOT NULL),
 				'[]'
-			) AS "friendsInGroup"
+			) AS "friends_in_group"
 		FROM groups g
 		JOIN visibility v ON v.id = g.visibility_id
 		JOIN city c ON c.id = g.city_id
 		JOIN state s ON s.id = c.state_id
-		LEFT JOIN group_member gm_user ON gm_user.group_id = g.id AND gm_user.user_id = @userId
+		LEFT JOIN group_member gm_user ON gm_user.group_id = g.id AND gm_user.user_id = @userId AND invite_status_id = @acceptedStatusId
 		LEFT JOIN role r ON r.id = gm_user.role_id
 		LEFT JOIN LATERAL (
 			SELECT 
@@ -143,6 +147,7 @@ func (gr *groupRepository) GetGroups(userId uint, filters *input.GetGroupsQuery)
 	params := []interface{}{
 		sql.Named("userId", userId),
 		sql.Named("cloudFrontUrl", cloudFrontUrl),
+		sql.Named("acceptedStatusId", acceptedStatusId),
 	}
 
 	gr.buildGetGroupsWhereStatement(&query, &params, filters)
@@ -187,6 +192,9 @@ func (gr *groupRepository) buildGetGroupsWhereStatement(query *string, params *[
 	if filters.Member {
 		conditions = append(conditions, "gm_user.user_id IS NOT NULL")
 	}
+
+	conditions = append(conditions, "(g.visibility_id = @publicVisibility OR gm_user.user_id IS NOT NULL)")
+	*params = append(*params, sql.Named("publicVisibility", PublicVisibility))
 
 	if len(conditions) > 0 {
 		*query += " WHERE " + strings.Join(conditions, " AND ")
