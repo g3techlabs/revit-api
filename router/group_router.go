@@ -19,6 +19,7 @@ func GroupRoutes(router fiber.Router, groupService service.IGroupService, middle
 	group.Get("/", groupController.GetGroups)
 	group.Put("/photos/:groupId", groupController.RequestNewGroupPhotos)
 	group.Patch("/photos/:groupId", groupController.ConfirmNewPhotos)
+	group.Post("/:groupId/member", groupController.JoinGroup)
 	group.Patch("/:groupId", groupController.UpdateGroup)
 
 	utils.Log.Info("GROUP routes successfully set up.")

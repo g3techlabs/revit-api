@@ -22,6 +22,7 @@ type GroupRepository interface {
 	UpdateBanner(userId, groupId uint, banner string) error
 	UpdateGroup(userId, groupId uint, data *input.UpdateGroup) error
 	IsUserAdmin(userId, groupId uint) (bool, error)
+	InsertNewGroupMember(userId, groupId uint) error
 }
 
 type groupRepository struct {
@@ -271,4 +272,44 @@ func (gr *groupRepository) IsUserAdmin(userId, groupId uint) (bool, error) {
 	}
 
 	return count > 0, nil
+}
+
+func (gr *groupRepository) InsertNewGroupMember(userId, groupId uint) error {
+	return gr.db.Transaction(func(tx *gorm.DB) error {
+		var g models.Group
+		if err := tx.Select("id", "visibility_id").Where("id = ?", groupId).First(&g).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return fmt.Errorf("group not found")
+			}
+			return err
+		}
+
+		if g.VisibilityID != PublicVisibility {
+			return fmt.Errorf("group is private")
+		}
+
+		var count int64
+		if err := tx.Model(&models.GroupMember{}).
+			Where("group_id = ? AND user_id = ?", groupId, userId).
+			Count(&count).Error; err != nil {
+			return err
+		}
+		if count > 0 {
+			return fmt.Errorf("user already member")
+		}
+
+		now := time.Now().UTC()
+		gm := &models.GroupMember{
+			GroupID:        groupId,
+			UserID:         userId,
+			RoleID:         memberId,
+			InviteStatusID: acceptedStatusId,
+			MemberSince:    &now,
+		}
+		if err := tx.Create(gm).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
 }
