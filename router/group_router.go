@@ -9,7 +9,7 @@ import (
 )
 
 func GroupRoutes(router fiber.Router, groupService service.IGroupService, middleware *middleware.AuthMiddleware) {
-	utils.Log.Info("Setting up VEHICLE routes...")
+	utils.Log.Info("Setting up GROUP routes...")
 
 	groupController := controller.NewGroupController(groupService)
 
@@ -17,7 +17,9 @@ func GroupRoutes(router fiber.Router, groupService service.IGroupService, middle
 
 	group.Post("/", groupController.CreateGroup)
 	group.Get("/", groupController.GetGroups)
+	group.Put("/photos/:groupId", groupController.RequestNewGroupPhotos)
 	group.Patch("/photos/:groupId", groupController.ConfirmNewPhotos)
+	group.Patch("/:groupId", groupController.UpdateGroup)
 
-	utils.Log.Info("VEHICLE routes successfully set up.")
+	utils.Log.Info("GROUP routes successfully set up.")
 }

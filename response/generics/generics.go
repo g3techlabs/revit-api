@@ -13,3 +13,7 @@ func InternalError() error {
 func Unauthorized(message string) error {
 	return fiber.NewError(fiber.StatusUnauthorized, message)
 }
+
+func Forbidden(message string) error {
+	return fiber.NewError(fiber.StatusForbidden, message)
+}

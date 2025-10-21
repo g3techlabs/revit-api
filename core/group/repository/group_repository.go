@@ -19,6 +19,8 @@ type GroupRepository interface {
 	GetGroups(userId uint, filters *input.GetGroupsQuery) (*[]response.GetGroupsResponse, error)
 	UpdateMainPhoto(userId, groupId uint, banner string) error
 	UpdateBanner(userId, groupId uint, banner string) error
+	UpdateGroup(userId, groupId uint, data *input.UpdateGroup) error
+	IsUserAdmin(userId, groupId uint) (bool, error)
 }
 
 type groupRepository struct {
@@ -205,4 +207,60 @@ func (gr *groupRepository) addPagination(query *string, params *[]interface{}, q
 	*query += " LIMIT @limit OFFSET @offset"
 
 	*params = append(*params, sql.Named("limit", limit), sql.Named("offset", offset))
+}
+
+func (gr *groupRepository) UpdateGroup(userId, groupId uint, data *input.UpdateGroup) error {
+	updates := make(map[string]any)
+
+	if data.Name != nil {
+		updates["name"] = *data.Name
+	}
+	if data.Description != nil {
+		updates["description"] = *data.Description
+	}
+	if data.CityID != nil {
+		updates["city_id"] = *data.CityID
+	}
+	if data.Visibility != nil {
+		switch *data.Visibility {
+		case "public":
+			updates["visibility_id"] = PublicVisibility
+		case "private":
+			updates["visibility_id"] = PrivateVisibility
+		}
+	}
+
+	result := gr.db.Model(&models.Group{}).
+		Where("id = ?",
+			groupId).
+		Where(`EXISTS (SELECT 1 
+		FROM group_member 
+		WHERE group_member.group_id = ? 
+		AND group_member.user_id = ? 
+		AND group_member.invite_status_id = ? 
+		AND group_member.role_id IN ?)`,
+			groupId, userId, acceptedStatusId, []uint{ownerId, adminId}).
+		Updates(updates)
+
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("group not found")
+	}
+
+	return result.Error
+}
+
+func (gr *groupRepository) IsUserAdmin(userId, groupId uint) (bool, error) {
+	var count int64
+
+	err := gr.db.
+		Table("group_member").
+		Where("group_id = ? AND user_id = ? AND invite_status_id = ? AND role_id IN ?",
+			groupId, userId, acceptedStatusId, []uint{ownerId, adminId}).
+		Count(&count).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
 }

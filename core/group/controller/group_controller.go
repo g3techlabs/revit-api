@@ -85,3 +85,60 @@ func (c *GroupController) GetGroups(ctx *fiber.Ctx) error {
 
 	return ctx.Status(fiber.StatusOK).JSON(response)
 }
+
+func (c *GroupController) UpdateGroup(ctx *fiber.Ctx) error {
+	data := new(input.UpdateGroup)
+
+	if err := ctx.BodyParser(data); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid body request")
+	}
+
+	groupParam := ctx.Params("groupId")
+	groupIdUint64, err := strconv.ParseUint(groupParam, 10, 64)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid group ID",
+		})
+	}
+	groupId := uint(groupIdUint64)
+
+	userId, ok := ctx.Locals("userId").(uint)
+	if !ok {
+		return generics.Unauthorized("Invalid or non-existent auth token")
+	}
+
+	if err := c.groupService.UpdateGroup(userId, groupId, data); err != nil {
+		return err
+	}
+
+	return ctx.SendStatus(fiber.StatusNoContent)
+}
+
+func (c *GroupController) RequestNewGroupPhotos(ctx *fiber.Ctx) error {
+	data := new(input.RequestNewGroupPhotos)
+
+	if err := ctx.BodyParser(data); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid body request")
+	}
+
+	groupParam := ctx.Params("groupId")
+	groupIdUint64, err := strconv.ParseUint(groupParam, 10, 64)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid group ID",
+		})
+	}
+	groupId := uint(groupIdUint64)
+
+	userId, ok := ctx.Locals("userId").(uint)
+	if !ok {
+		return generics.Unauthorized("Invalid or non-existent auth token")
+	}
+
+	response, err := c.groupService.RequestNewGroupPhotos(userId, groupId, data)
+	if err != nil {
+		return err
+	}
+
+	return ctx.Status(fiber.StatusCreated).JSON(response)
+}
