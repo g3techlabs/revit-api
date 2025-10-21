@@ -15,6 +15,7 @@ type IGroupService interface {
 	UpdateGroup(userId, groupId uint, data *input.UpdateGroup) error
 	RequestNewGroupPhotos(userId, groupId uint, data *input.RequestNewGroupPhotos) (*response.PresignedGroupPhotosInfo, error)
 	JoinGroup(userId, groupId uint) error
+	QuitGroup(userId, groupId uint) error
 }
 
 type GroupService struct {

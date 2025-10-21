@@ -10,8 +10,11 @@ type GroupMember struct {
 	InviterID      *uint
 	RoleID         uint `gorm:"not null"`
 	InviteStatusID uint `gorm:"not null"`
+	LeftAt         *time.Time
+	RemovedBy      *uint
 
-	Group   Group `gorm:"foreignKey:GroupID"`
-	User    User  `gorm:"foreignKey:UserID"`
-	Inviter *User `gorm:"foreignKey:InviterID"`
+	Group         Group `gorm:"foreignKey:GroupID"`
+	User          User  `gorm:"foreignKey:UserID"`
+	Inviter       *User `gorm:"foreignKey:InviterID"`
+	RemovedByUser *User `gorm:"foreignKey:RemovedBy"`
 }

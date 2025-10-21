@@ -23,6 +23,7 @@ type GroupRepository interface {
 	UpdateGroup(userId, groupId uint, data *input.UpdateGroup) error
 	IsUserAdmin(userId, groupId uint) (bool, error)
 	InsertNewGroupMember(userId, groupId uint) error
+	QuitGroup(userId, groupId uint) error
 }
 
 type groupRepository struct {
