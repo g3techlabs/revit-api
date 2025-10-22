@@ -3,10 +3,9 @@ package models
 import "time"
 
 type GroupMember struct {
-	ID             uint
+	GroupID        uint `gorm:"primaryKey;autoIncrement:false"`
+	UserID         uint `gorm:"primaryKey;autoIncrement:false"`
 	MemberSince    *time.Time
-	GroupID        uint `gorm:"not null"`
-	UserID         uint `gorm:"not null"`
 	InviterID      *uint
 	RoleID         uint `gorm:"not null"`
 	InviteStatusID uint `gorm:"not null"`

@@ -14,13 +14,17 @@ func GroupRoutes(router fiber.Router, groupService service.IGroupService, middle
 	groupController := controller.NewGroupController(groupService)
 
 	group := router.Group("/group", middleware.Auth())
-
 	group.Post("/", groupController.CreateGroup)
 	group.Get("/", groupController.GetGroups)
-	group.Put("/photos/:groupId", groupController.RequestNewGroupPhotos)
-	group.Patch("/photos/:groupId", groupController.ConfirmNewPhotos)
+
+	photos := router.Group("/photos")
+	photos.Put("/:groupId", groupController.RequestNewGroupPhotos)
+	photos.Patch("/:groupId", groupController.ConfirmNewPhotos)
+
 	group.Post("/:groupId/member", groupController.JoinGroup)
 	group.Delete("/:groupId/member", groupController.QuitGroup)
+	group.Post("/:groupId/invite/:invitedId", groupController.InviteUser)
+
 	group.Patch("/:groupId", groupController.UpdateGroup)
 
 	utils.Log.Info("GROUP routes successfully set up.")

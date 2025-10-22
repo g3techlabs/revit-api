@@ -186,3 +186,34 @@ func (c *GroupController) QuitGroup(ctx *fiber.Ctx) error {
 
 	return ctx.SendStatus(fiber.StatusNoContent)
 }
+
+func (c *GroupController) InviteUser(ctx *fiber.Ctx) error {
+	groupParam := ctx.Params("groupId")
+	groupIdUint64, err := strconv.ParseUint(groupParam, 10, 64)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid group ID",
+		})
+	}
+	groupId := uint(groupIdUint64)
+
+	invitedParam := ctx.Params("invitedId")
+	invitedIdUint64, err := strconv.ParseUint(invitedParam, 10, 64)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid invited user ID",
+		})
+	}
+	invitedId := uint(invitedIdUint64)
+
+	userId, ok := ctx.Locals("userId").(uint)
+	if !ok {
+		return generics.Unauthorized("Invalid or non-existent auth token")
+	}
+
+	if err := c.groupService.InviteUser(userId, groupId, invitedId); err != nil {
+		return err
+	}
+
+	return ctx.SendStatus(fiber.StatusNoContent)
+}

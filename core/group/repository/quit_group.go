@@ -20,7 +20,7 @@ func (gr *groupRepository) QuitGroup(userId, groupId uint) error {
 			return err
 		}
 
-		if err := gr.makeNewGroupOwnerIfNeeded(groupMember.RoleID == ownerId, groupId, tx); err != nil {
+		if err := gr.makeNewGroupOwnerIfNeeded(groupMember.RoleID == ownerRoleId, groupId, tx); err != nil {
 			return err
 		}
 
@@ -81,7 +81,7 @@ func (gr *groupRepository) queryNewOwnerCandidate(groupId uint, tx *gorm.DB, mod
 		return err
 	}
 
-	if model.ID != 0 {
+	if model.UserID != 0 {
 		return nil
 	}
 
@@ -96,7 +96,7 @@ func (gr *groupRepository) queryMember(groupId uint, admin bool, model *models.G
 	query := tx.Where("group_id = ? AND invite_status_id = ? AND left_at IS NULL AND removed_by IS NULL", groupId, acceptedStatusId)
 
 	if admin {
-		query = query.Where("role_id = ?", adminId)
+		query = query.Where("role_id = ?", adminRoleId)
 	}
 
 	if err := query.Order("member_since ASC").First(&model).Error; err != nil {
@@ -110,7 +110,7 @@ func (gr *groupRepository) queryMember(groupId uint, admin bool, model *models.G
 }
 
 func (gr *groupRepository) makeNewOwner(model *models.GroupMember, tx *gorm.DB) error {
-	result := tx.Model(model).Update("role_id", ownerId)
+	result := tx.Model(model).Update("role_id", ownerRoleId)
 
 	if result.RowsAffected == 0 {
 		return fmt.Errorf("user not found")

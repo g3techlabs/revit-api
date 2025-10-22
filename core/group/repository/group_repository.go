@@ -13,6 +13,7 @@ import (
 	"github.com/g3techlabs/revit-api/db"
 	"github.com/g3techlabs/revit-api/db/models"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type GroupRepository interface {
@@ -24,6 +25,7 @@ type GroupRepository interface {
 	IsUserAdmin(userId, groupId uint) (bool, error)
 	InsertNewGroupMember(userId, groupId uint) error
 	QuitGroup(userId, groupId uint) error
+	MakeGroupInvitation(groupAdminId, groupId, invitedId uint) error
 }
 
 type groupRepository struct {
@@ -39,9 +41,9 @@ func NewGroupRepository() GroupRepository {
 var PublicVisibility uint = 1
 var PrivateVisibility uint = 2
 
-var ownerId uint = 1
-var adminId uint = 2
-var memberId uint = 3
+var ownerRoleId uint = 1
+var adminRoleId uint = 2
+var memberRoleId uint = 3
 
 const acceptedStatusId uint = 1
 const pendingStatusId uint = 2
@@ -58,7 +60,7 @@ func (gr *groupRepository) CreateGroup(userId uint, data *models.Group) error {
 		ownerData := &models.GroupMember{
 			GroupID:        data.ID,
 			UserID:         userId,
-			RoleID:         ownerId,
+			RoleID:         ownerRoleId,
 			InviteStatusID: acceptedStatusId,
 			MemberSince:    &currentTimestamp,
 		}
@@ -74,7 +76,7 @@ func (gr *groupRepository) CreateGroup(userId uint, data *models.Group) error {
 func (gr *groupRepository) UpdateMainPhoto(userId, groupId uint, mainPhoto string) error {
 	result := gr.db.Model(&models.Group{}).
 		Where("id = ? AND EXISTS (SELECT 1 FROM group_member WHERE group_member.group_id = ? AND group_member.user_id = ? AND group_member.invite_status_id = ? AND group_member.role_id IN ?)",
-			groupId, groupId, userId, acceptedStatusId, []uint{ownerId, adminId}).
+			groupId, groupId, userId, acceptedStatusId, []uint{ownerRoleId, adminRoleId}).
 		Update("main_photo", mainPhoto)
 
 	if result.RowsAffected == 0 {
@@ -87,7 +89,7 @@ func (gr *groupRepository) UpdateMainPhoto(userId, groupId uint, mainPhoto strin
 func (gr *groupRepository) UpdateBanner(userId, groupId uint, banner string) error {
 	result := gr.db.Model(&models.Group{}).
 		Where("id = ? AND EXISTS (SELECT 1 FROM group_member WHERE group_member.group_id = ? AND group_member.user_id = ? AND group_member.invite_status_id = ? AND group_member.role_id IN ?)",
-			groupId, groupId, userId, acceptedStatusId, []uint{ownerId, adminId}).
+			groupId, groupId, userId, acceptedStatusId, []uint{ownerRoleId, adminRoleId}).
 		Update("banner", banner)
 
 	if result.RowsAffected == 0 {
@@ -249,7 +251,7 @@ func (gr *groupRepository) UpdateGroup(userId, groupId uint, data *input.UpdateG
 		AND group_member.user_id = ? 
 		AND group_member.invite_status_id = ? 
 		AND group_member.role_id IN ?)`,
-			groupId, userId, acceptedStatusId, []uint{ownerId, adminId}).
+			groupId, userId, acceptedStatusId, []uint{ownerRoleId, adminRoleId}).
 		Updates(updates)
 
 	if result.RowsAffected == 0 {
@@ -265,7 +267,7 @@ func (gr *groupRepository) IsUserAdmin(userId, groupId uint) (bool, error) {
 	err := gr.db.
 		Table("group_member").
 		Where("group_id = ? AND user_id = ? AND invite_status_id = ? AND role_id IN ?",
-			groupId, userId, acceptedStatusId, []uint{ownerId, adminId}).
+			groupId, userId, acceptedStatusId, []uint{ownerRoleId, adminRoleId}).
 		Count(&count).Error
 
 	if err != nil {
@@ -291,7 +293,7 @@ func (gr *groupRepository) InsertNewGroupMember(userId, groupId uint) error {
 
 		var count int64
 		if err := tx.Model(&models.GroupMember{}).
-			Where("group_id = ? AND user_id = ?", groupId, userId).
+			Where("group_id = ? AND user_id = ? AND invite_status_id = ? AND left_at IS NULL AND removed_by IS NULL", groupId, userId, acceptedStatusId).
 			Count(&count).Error; err != nil {
 			return err
 		}
@@ -299,18 +301,87 @@ func (gr *groupRepository) InsertNewGroupMember(userId, groupId uint) error {
 			return fmt.Errorf("user already member")
 		}
 
-		now := time.Now().UTC()
-		gm := &models.GroupMember{
-			GroupID:        groupId,
-			UserID:         userId,
-			RoleID:         memberId,
-			InviteStatusID: acceptedStatusId,
-			MemberSince:    &now,
-		}
-		if err := tx.Create(gm).Error; err != nil {
+		if err := gr.registerMember(groupId, userId, tx); err != nil {
 			return err
 		}
 
 		return nil
 	})
+}
+
+func (gr *groupRepository) registerMember(groupId, userId uint, tx *gorm.DB) error {
+	now := time.Now().UTC()
+	gm := models.GroupMember{
+		GroupID:        groupId,
+		UserID:         userId,
+		RoleID:         memberRoleId,
+		InviteStatusID: acceptedStatusId,
+		MemberSince:    &now,
+	}
+
+	err := tx.Clauses(clause.OnConflict{
+		Columns: []clause.Column{{Name: "group_id"}, {Name: "user_id"}},
+		DoUpdates: clause.Assignments(map[string]interface{}{
+			"role_id":          memberRoleId,
+			"invite_status_id": acceptedStatusId,
+			"member_since":     now,
+			"left_at":          nil,
+			"removed_by":       nil,
+		}),
+	}).Create(&gm).Error
+
+	return err
+}
+
+func (gr *groupRepository) MakeGroupInvitation(groupAdminId, groupId, invitedId uint) error {
+	return gr.db.Transaction(func(tx *gorm.DB) error {
+		var admin models.GroupMember
+		result := tx.Model(&admin).
+			Where("group_id = ? AND user_id = ? AND invite_status_id = ? AND role_id IN ?", groupId, groupAdminId, acceptedStatusId, []uint{ownerRoleId, adminRoleId}).
+			Where("left_at IS NULL AND removed_by IS NULL").
+			First(&admin)
+		if result.Error != nil {
+			if result.Error == gorm.ErrRecordNotFound {
+				return fmt.Errorf("requester not a group admin")
+			}
+			return result.Error
+		}
+
+		var count int64
+		result = tx.Model(&models.GroupMember{}).
+			Where("group_id = ? AND user_id = ? AND invite_status_id IN ? AND left_at IS NULL AND removed_by IS NULL", groupId, invitedId, []uint{pendingStatusId, acceptedStatusId}).
+			Count(&count)
+		if result.Error != nil {
+			return result.Error
+		}
+
+		if count > 0 {
+			return fmt.Errorf("invited already invited/a member")
+		}
+
+		return gr.makeInvitation(groupAdminId, groupId, invitedId, tx)
+	})
+}
+
+func (gr *groupRepository) makeInvitation(groupAdminId, groupId, invitedId uint, tx *gorm.DB) error {
+	data := models.GroupMember{
+		GroupID:        groupId,
+		UserID:         invitedId,
+		InviterID:      &groupAdminId,
+		RoleID:         memberRoleId,
+		InviteStatusID: pendingStatusId,
+	}
+
+	err := tx.Clauses(clause.OnConflict{
+		Columns: []clause.Column{{Name: "group_id"}, {Name: "user_id"}},
+		DoUpdates: clause.Assignments(map[string]interface{}{
+			"inviter_id":       groupAdminId,
+			"role_id":          memberRoleId,
+			"invite_status_id": pendingStatusId,
+			"left_at":          nil,
+			"removed_by":       nil,
+		}),
+	}).Create(&data).Error
+
+	return err
 }
