@@ -26,6 +26,7 @@ type GroupRepository interface {
 	InsertNewGroupMember(userId, groupId uint) error
 	QuitGroup(userId, groupId uint) error
 	MakeGroupInvitation(groupAdminId, groupId, invitedId uint) error
+	GetPendingInvites(userId uint, page uint, limit uint) (*[]response.GetPendingInvites, error)
 }
 
 type groupRepository struct {
@@ -37,6 +38,8 @@ func NewGroupRepository() GroupRepository {
 		db: db.Db,
 	}
 }
+
+var cloudFrontUrl = config.Get("AWS_CLOUDFRONT_URL")
 
 var PublicVisibility uint = 1
 var PrivateVisibility uint = 2
@@ -100,7 +103,6 @@ func (gr *groupRepository) UpdateBanner(userId, groupId uint, banner string) err
 }
 
 func (gr *groupRepository) GetGroups(userId uint, filters *input.GetGroupsQuery) (*[]response.GetGroupsResponse, error) {
-	cloudFrontUrl := config.Get("AWS_CLOUDFRONT_URL")
 
 	groups := new([]response.GetGroupsResponse)
 
@@ -384,4 +386,33 @@ func (gr *groupRepository) makeInvitation(groupAdminId, groupId, invitedId uint,
 	}).Create(&data).Error
 
 	return err
+}
+
+func (gr *groupRepository) GetPendingInvites(userId uint, page uint, limit uint) (*[]response.GetPendingInvites, error) {
+	var pendingInvites []response.GetPendingInvites
+
+	query := gr.db.Model(&models.GroupMember{}).
+		Select("g.name AS group_name", "g.main_photo AS group_main_photo", "jsonb_build_object('name', inviter.name, 'inviterProfilePicUrl', '"+cloudFrontUrl+"'|| inviter.profile_pic)").
+		Joins("INNER JOIN users AS inviter ON inviter.id = group_member.inviter_id").
+		Joins("INNER JOIN groups AS g ON g.id = group_member.group_id").
+		Where("user_id = ? AND invite_status_id = ? AND left_at IS NULL AND removed_by IS NULL", userId, pendingStatusId)
+
+	if limit > 0 {
+		offset := 0
+		if page > 0 {
+			offset = int((page - 1) * limit)
+		}
+		query = query.Limit(int(limit)).Offset(offset)
+	}
+
+	if err := query.Scan(&pendingInvites).Error; err != nil {
+		return nil, err
+	}
+
+	if pendingInvites == nil {
+		empty := make([]response.GetPendingInvites, 0)
+		return &empty, nil
+	}
+
+	return &pendingInvites, nil
 }
