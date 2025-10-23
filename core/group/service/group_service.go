@@ -18,6 +18,7 @@ type IGroupService interface {
 	QuitGroup(userId, groupId uint) error
 	InviteUser(groupAdminId, groupId, invitedId uint) error
 	GetPendingInvites(userId uint, query *input.GetPendingInvites) (*[]response.GetPendingInvites, error)
+	AnswerPendingInvite(userId, groupId uint, answer *input.AnswerPendingInvite) error
 }
 
 type GroupService struct {

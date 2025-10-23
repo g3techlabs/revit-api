@@ -25,6 +25,7 @@ func GroupRoutes(router fiber.Router, groupService service.IGroupService, middle
 	group.Post("/:groupId/member", groupController.JoinGroup)
 	group.Delete("/:groupId/member", groupController.QuitGroup)
 	group.Post("/:groupId/invite/:invitedId", groupController.InviteUser)
+	group.Patch("/:groupId/invite", groupController.AnswerPendingInvite)
 
 	group.Patch("/:groupId", groupController.UpdateGroup)
 

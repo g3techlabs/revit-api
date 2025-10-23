@@ -237,3 +237,31 @@ func (c *GroupController) GetPendingInvites(ctx *fiber.Ctx) error {
 
 	return ctx.Status(fiber.StatusOK).JSON(response)
 }
+
+func (c *GroupController) AnswerPendingInvite(ctx *fiber.Ctx) error {
+	var answer input.AnswerPendingInvite
+
+	if err := ctx.BodyParser(&answer); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid body request")
+	}
+
+	groupParam := ctx.Params("groupId")
+	groupIdUint64, err := strconv.ParseUint(groupParam, 10, 64)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid group ID",
+		})
+	}
+	groupId := uint(groupIdUint64)
+
+	userId, ok := ctx.Locals("userId").(uint)
+	if !ok {
+		return generics.Unauthorized("Invalid or non-existent auth token")
+	}
+
+	if err := c.groupService.AnswerPendingInvite(userId, groupId, &answer); err != nil {
+		return err
+	}
+
+	return ctx.SendStatus(fiber.StatusNoContent)
+}

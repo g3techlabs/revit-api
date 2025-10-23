@@ -27,6 +27,8 @@ type GroupRepository interface {
 	QuitGroup(userId, groupId uint) error
 	MakeGroupInvitation(groupAdminId, groupId, invitedId uint) error
 	GetPendingInvites(userId uint, page uint, limit uint) (*[]response.GetPendingInvites, error)
+	AcceptPendingInvite(groupId, userId uint) error
+	RejectPendingInvite(groupId, userId uint) error
 }
 
 type groupRepository struct {
@@ -392,7 +394,7 @@ func (gr *groupRepository) GetPendingInvites(userId uint, page uint, limit uint)
 	var pendingInvites []response.GetPendingInvites
 
 	query := gr.db.Model(&models.GroupMember{}).
-		Select("g.name AS group_name", "g.main_photo AS group_main_photo", "jsonb_build_object('name', inviter.name, 'inviterProfilePicUrl', '"+cloudFrontUrl+"'|| inviter.profile_pic)").
+		Select("g.id as group_id", "g.name AS group_name", "g.main_photo AS group_main_photo", "jsonb_build_object('name', inviter.name, 'inviterProfilePicUrl', '"+cloudFrontUrl+"'|| inviter.profile_pic)").
 		Joins("INNER JOIN users AS inviter ON inviter.id = group_member.inviter_id").
 		Joins("INNER JOIN groups AS g ON g.id = group_member.group_id").
 		Where("user_id = ? AND invite_status_id = ? AND left_at IS NULL AND removed_by IS NULL", userId, pendingStatusId)
@@ -415,4 +417,30 @@ func (gr *groupRepository) GetPendingInvites(userId uint, page uint, limit uint)
 	}
 
 	return &pendingInvites, nil
+}
+
+func (gr *groupRepository) AcceptPendingInvite(groupId uint, userId uint) error {
+	result := gr.db.
+		Model(&models.GroupMember{}).
+		Where("user_id = ? AND group_id = ? AND invite_status_id = ?", userId, groupId, pendingStatusId).
+		Update("invite_status_id", acceptedStatusId)
+
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("group invite not found")
+	}
+
+	return result.Error
+}
+
+func (gr *groupRepository) RejectPendingInvite(groupId, userId uint) error {
+	result := gr.db.
+		Model(&models.GroupMember{}).
+		Where("user_id = ? AND group_id = ? AND invite_status_id = ?", userId, groupId, pendingStatusId).
+		Update("invite_status_id", rejectedStatusId)
+
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("group invite not found")
+	}
+
+	return result.Error
 }
