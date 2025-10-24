@@ -12,10 +12,14 @@ func (gs *GroupService) UpdateGroup(userId, groupId uint, data *input.UpdateGrou
 	}
 
 	if err := gs.groupRepo.UpdateGroup(userId, groupId, data); err != nil {
-		if err.Error() == "group not found" {
+		switch err.Error() {
+		case "group not found":
 			return errors.GroupNotFound()
+		case "city not found":
+			return errors.CityNotFound()
+		default:
+			return generics.InternalError()
 		}
-		return generics.InternalError()
 	}
 
 	return nil

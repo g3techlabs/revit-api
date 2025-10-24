@@ -201,7 +201,9 @@ func (gr *groupRepository) buildGetGroupsWhereStatement(query *string, params *[
 		conditions = append(conditions, "gm_user.user_id IS NOT NULL")
 	}
 
-	conditions = append(conditions, "(g.visibility_id = @publicVisibility OR gm_user.user_id IS NOT NULL)")
+	groupHasActiveUsersFilter := "EXISTS (SELECT 1 FROM group_member WHERE group_member.group_id = g.id AND left_at IS NULL)"
+	groupIsPublicOrUserIsAMemberFilter := "(g.visibility_id = @publicVisibility OR gm_user.user_id IS NOT NULL)"
+	conditions = append(conditions, groupHasActiveUsersFilter, groupIsPublicOrUserIsAMemberFilter)
 	*params = append(*params, sql.Named("publicVisibility", PublicVisibility))
 
 	if len(conditions) > 0 {
@@ -234,15 +236,17 @@ func (gr *groupRepository) UpdateGroup(userId, groupId uint, data *input.UpdateG
 	if data.Description != nil {
 		updates["description"] = *data.Description
 	}
-	if data.CityID != nil {
-		updates["city_id"] = *data.CityID
-	}
 	if data.Visibility != nil {
 		switch *data.Visibility {
 		case "public":
 			updates["visibility_id"] = PublicVisibility
 		case "private":
 			updates["visibility_id"] = PrivateVisibility
+		}
+	}
+	if data.CityID != nil {
+		if err := gr.updateGroupLocation(data.CityID, &updates); err != nil {
+			return err
 		}
 	}
 
@@ -254,7 +258,8 @@ func (gr *groupRepository) UpdateGroup(userId, groupId uint, data *input.UpdateG
 		WHERE group_member.group_id = ? 
 		AND group_member.user_id = ? 
 		AND group_member.invite_status_id = ? 
-		AND group_member.role_id IN ?)`,
+		AND group_member.role_id IN ?)
+		`,
 			groupId, userId, acceptedStatusId, []uint{ownerRoleId, adminRoleId}).
 		Updates(updates)
 
@@ -263,6 +268,23 @@ func (gr *groupRepository) UpdateGroup(userId, groupId uint, data *input.UpdateG
 	}
 
 	return result.Error
+}
+
+func (gr *groupRepository) updateGroupLocation(cityId *uint, updates *map[string]interface{}) error {
+	var newCity sql.NullInt64
+	if err := gr.db.Table("city").
+		Select("id").
+		Where("id = ?", *cityId).
+		Scan(&newCity).Error; err != nil {
+		return err
+	}
+	if !newCity.Valid {
+		return fmt.Errorf("city not found")
+	}
+
+	(*updates)["city_id"] = *cityId
+
+	return nil
 }
 
 func (gr *groupRepository) IsUserAdmin(userId, groupId uint) (bool, error) {
