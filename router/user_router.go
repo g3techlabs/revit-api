@@ -17,6 +17,7 @@ func UserRoutes(router fiber.Router, us service.IUserService, middleware *middle
 	friendship := user.Group("/friendship")
 
 	friendship.Get("/", userController.GetFriends)
+	friendship.Get("/requests", userController.GetFriendshipRequests)
 	friendship.Post("/:destinataryId", userController.RequestFriendship)
 	friendship.Patch("/:requesterId", userController.AnswerFriendshipRequest)
 	friendship.Delete("/:friendId", userController.RemoveFriendship)

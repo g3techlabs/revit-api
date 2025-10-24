@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/g3techlabs/revit-api/config"
 	"github.com/g3techlabs/revit-api/core/users/response"
 	"github.com/g3techlabs/revit-api/db"
 	"github.com/g3techlabs/revit-api/db/models"
@@ -14,6 +15,8 @@ import (
 const acceptedStatusId uint = 1
 const pendingStatusId uint = 2
 const rejectedStatusId uint = 3
+
+var cloudFrontUrl string = config.Get("AWS_CLOUDFRONT_URL")
 
 type UserRepository interface {
 	RegisterUser(user *models.User) error
@@ -30,6 +33,7 @@ type UserRepository interface {
 	AcceptFriendshipRequest(userId, requesterId uint) error
 	RejectFriendshipRequest(userId, requesterId uint) error
 	RemoveFriendship(userId, friendId uint) error
+	GetFriendshipRequests(userId uint, page, limit uint) (*[]response.FriendshipRequest, error)
 }
 
 type userRepository struct {
@@ -266,4 +270,33 @@ func (ur *userRepository) RemoveFriendship(userId, friendId uint) error {
 	}
 
 	return result.Error
+}
+
+func (ur *userRepository) GetFriendshipRequests(userId uint, page, limit uint) (*[]response.FriendshipRequest, error) {
+	requests := new([]response.FriendshipRequest)
+
+	query := ur.db.
+		Model(&models.Friendship{}).
+		Select("requester_id", "requester.nickname", "'"+cloudFrontUrl+"'|| requester.profile_pic").
+		Joins("INNER JOIN users AS requester ON friendship.requester_id = requester.id").
+		Where("friendship.invite_status_id = ? AND receiver_id = ? AND removed_at IS NULL AND removed_by_id IS NULL", pendingStatusId, userId)
+
+	if limit > 0 {
+		offset := 0
+		if page > 0 {
+			offset = int((page - 1) * limit)
+		}
+		query = query.Limit(int(limit)).Offset(offset)
+	}
+
+	if err := query.Scan(requests).Error; err != nil {
+		return nil, err
+	}
+
+	if *requests == nil {
+		empty := make([]response.FriendshipRequest, 0)
+		return &empty, nil
+	}
+
+	return requests, nil
 }
