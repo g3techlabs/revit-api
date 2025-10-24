@@ -20,6 +20,8 @@ func Migrations() {
 		&models.Visibility{},
 		&models.Group{},
 		&models.GroupMember{},
+		&models.Event{},
+		&models.EventSubscriber{},
 	)
 	if err != nil {
 		utils.Log.Fatalf("Error during migrations: %v", err)
