@@ -29,6 +29,7 @@ type GroupRepository interface {
 	GetPendingInvites(userId uint, page uint, limit uint) (*[]response.GetPendingInvites, error)
 	AcceptPendingInvite(groupId, userId uint) error
 	RejectPendingInvite(groupId, userId uint) error
+	RemoveMember(groupAdminId, groupId, groupMemberId uint) error
 }
 
 type groupRepository struct {
@@ -442,10 +443,15 @@ func (gr *groupRepository) GetPendingInvites(userId uint, page uint, limit uint)
 }
 
 func (gr *groupRepository) AcceptPendingInvite(groupId uint, userId uint) error {
+	data := map[string]interface{}{
+		"invite_status_id": acceptedStatusId,
+		"member_since":     time.Now().UTC(),
+	}
+
 	result := gr.db.
 		Model(&models.GroupMember{}).
 		Where("user_id = ? AND group_id = ? AND invite_status_id = ?", userId, groupId, pendingStatusId).
-		Update("invite_status_id", acceptedStatusId)
+		Updates(data)
 
 	if result.RowsAffected == 0 {
 		return fmt.Errorf("group invite not found")
@@ -462,6 +468,23 @@ func (gr *groupRepository) RejectPendingInvite(groupId, userId uint) error {
 
 	if result.RowsAffected == 0 {
 		return fmt.Errorf("group invite not found")
+	}
+
+	return result.Error
+}
+
+func (gr *groupRepository) RemoveMember(groupAdminId, groupId, groupMemberId uint) error {
+	data := map[string]interface{}{
+		"removed_by": groupAdminId,
+		"left_at":    time.Now().UTC(),
+	}
+
+	result := gr.db.Model(&models.GroupMember{}).
+		Where("user_id = ? AND group_id = ? AND invite_status_id = ? AND left_at IS NULL and removed_by IS NULL", groupMemberId, groupId, acceptedStatusId).
+		Updates(data)
+
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("member not found")
 	}
 
 	return result.Error

@@ -265,3 +265,34 @@ func (c *GroupController) AnswerPendingInvite(ctx *fiber.Ctx) error {
 
 	return ctx.SendStatus(fiber.StatusNoContent)
 }
+
+func (c *GroupController) RemoveMember(ctx *fiber.Ctx) error {
+	groupParam := ctx.Params("groupId")
+	groupIdUint64, err := strconv.ParseUint(groupParam, 10, 64)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid group ID",
+		})
+	}
+	groupId := uint(groupIdUint64)
+
+	memberParam := ctx.Params("memberId")
+	memberIdUint64, err := strconv.ParseUint(memberParam, 10, 64)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid member ID",
+		})
+	}
+	memberId := uint(memberIdUint64)
+
+	userId, ok := ctx.Locals("userId").(uint)
+	if !ok {
+		return generics.Unauthorized("Invalid or non-existent auth token")
+	}
+
+	if err := c.groupService.RemoveMember(userId, groupId, memberId); err != nil {
+		return err
+	}
+
+	return ctx.SendStatus(fiber.StatusNoContent)
+}
