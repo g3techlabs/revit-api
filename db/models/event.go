@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type Event struct {
 	ID           uint
@@ -8,7 +10,7 @@ type Event struct {
 	Description  string    `gorm:"not null"`
 	Date         time.Time `gorm:"not null"`
 	Photo        *string
-	Location     string `gorm:"type:GEOGRAPHY(POINT,4326);not null"`
+	Location     any    `gorm:"type:GEOGRAPHY(POINT,4326);not null"`
 	Canceled     bool   `gorm:"not null;default:false"`
 	City         string `gorm:"not null"`
 	VisibilityID uint   `gorm:"not null"`

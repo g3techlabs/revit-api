@@ -6,6 +6,8 @@ import (
 	"github.com/g3techlabs/revit-api/config"
 	"github.com/g3techlabs/revit-api/core/auth/middleware"
 	"github.com/g3techlabs/revit-api/core/auth/services"
+	er "github.com/g3techlabs/revit-api/core/event/repository"
+	es "github.com/g3techlabs/revit-api/core/event/service"
 	gr "github.com/g3techlabs/revit-api/core/group/repository"
 	gs "github.com/g3techlabs/revit-api/core/group/service"
 	"github.com/g3techlabs/revit-api/core/mail"
@@ -29,6 +31,7 @@ func SetupRoutes(app *fiber.App) {
 	userRepo := repository.NewUserRepository()
 	vehicleRepo := vr.NewVehicleRepository()
 	groupRepository := gr.NewGroupRepository()
+	eventRepository := er.NewEventRepository()
 
 	storageService := storage.NewS3Service(storageClient, config.NewPresignClient(storageClient), context.Background())
 	tokenService := token.NewTokenService()
@@ -40,12 +43,14 @@ func SetupRoutes(app *fiber.App) {
 	userService := service.NewUserService(validator, userRepo, storageService)
 	vehicleService := vs.NewVehicleService(validator, vehicleRepo, storageService)
 	groupService := gs.NewGroupService(groupRepository, validator, storageService)
+	eventService := es.NewEventService(validator, eventRepository)
 
 	api := app.Group("/api")
 	AuthRoutes(api, authService)
 	UserRoutes(api, userService, authMiddleware)
 	VehicleRoutes(api, vehicleService, authMiddleware)
 	GroupRoutes(api, groupService, authMiddleware)
+	EventRoutes(api, eventService, authMiddleware)
 
 	utils.Log.Info("Routes successfully set up.")
 }

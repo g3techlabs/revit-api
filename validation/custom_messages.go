@@ -17,4 +17,8 @@ var customMessages = map[string]string{
 	"lowercase":        "Field %s must be all lowercase characters",
 	"nicknametooshort": "Field %s, when set as nickname, must be at least 3 characters long",
 	"notanickname":     "Field %s is not a nickname, even when said so",
+	"gte":              "Field %s is not greater or equal to the specified value",
+	"lte":              "Field %s must be less than or equal to the specified value",
+	"gt":               "Field %s must be greater than the specified value",
+	"lt":               "Field %s must be less than the specified value",
 }
