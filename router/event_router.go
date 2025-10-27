@@ -15,6 +15,7 @@ func EventRoutes(router fiber.Router, eventService service.IEventService, m *mid
 
 	event := router.Group("/event", m.Auth())
 	event.Post("/", eventController.CreateEvent)
+	event.Patch("/photo/:eventId", eventController.ConfirmNewPhoto)
 
 	utils.Log.Info("EVENT routes successfully set up.")
 }

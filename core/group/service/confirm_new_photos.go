@@ -17,8 +17,8 @@ func (gs *GroupService) ConfirmNewPhotos(userId, groupId uint, data *input.Confi
 		}
 
 		if err := gs.groupRepo.UpdateBanner(userId, groupId, *data.BannerKey); err != nil {
-			if err.Error() == "group not found" {
-				return errors.GroupNotFound()
+			if err.Error() == "group not found or user not allowed" {
+				return errors.RequesterIsNotAnAdmin()
 			}
 			return generics.InternalError()
 		}
@@ -30,8 +30,8 @@ func (gs *GroupService) ConfirmNewPhotos(userId, groupId uint, data *input.Confi
 		}
 
 		if err := gs.groupRepo.UpdateMainPhoto(userId, groupId, *data.MainPhotoKey); err != nil {
-			if err.Error() == "group not found" {
-				return errors.GroupNotFound()
+			if err.Error() == "group not found or user not allowed" {
+				return errors.RequesterIsNotAnAdmin()
 			}
 			return generics.InternalError()
 		}

@@ -1,6 +1,7 @@
 package response
 
 type PresginedEventPhotoResponse struct {
-	Url       string `json:"url"`
-	ObjectKey string `json:"key"`
+	EventId   *uint   `json:"eventId"`
+	Url       *string `json:"url"`
+	ObjectKey *string `json:"key"`
 }

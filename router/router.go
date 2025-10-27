@@ -46,7 +46,7 @@ func SetupRoutes(app *fiber.App) {
 	userService := service.NewUserService(validator, userRepo, storageService)
 	vehicleService := vs.NewVehicleService(validator, vehicleRepo, storageService)
 	groupService := gs.NewGroupService(groupRepository, validator, storageService)
-	eventService := es.NewEventService(validator, eventRepository)
+	eventService := es.NewEventService(validator, eventRepository, storageService)
 	cityService := cs.NewCityService(validator, cityRepository)
 
 	api := app.Group("/api")
