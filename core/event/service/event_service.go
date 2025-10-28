@@ -11,6 +11,7 @@ import (
 type IEventService interface {
 	CreateEvent(userId uint, data *input.CreateEventInput) (*response.PresginedEventPhotoResponse, error)
 	ConfirmNewPhoto(userId, eventId uint, data *input.ConfirmNewPhoto) error
+	GetEvents(userId uint, query *input.GetEventsFilters) (*[]response.GetEventResponse, error)
 }
 
 type EventService struct {

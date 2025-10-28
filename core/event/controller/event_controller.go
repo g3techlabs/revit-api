@@ -5,6 +5,7 @@ import (
 
 	"github.com/g3techlabs/revit-api/core/event/input"
 	"github.com/g3techlabs/revit-api/core/event/service"
+	"github.com/g3techlabs/revit-api/response/generics"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -18,7 +19,7 @@ func NewEventController(eventService service.IEventService) *EventController {
 	}
 }
 
-func (ec *EventController) CreateEvent(ctx *fiber.Ctx) error {
+func (c *EventController) CreateEvent(ctx *fiber.Ctx) error {
 	var data input.CreateEventInput
 	if err := ctx.BodyParser(&data); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "Invalid body request")
@@ -26,7 +27,7 @@ func (ec *EventController) CreateEvent(ctx *fiber.Ctx) error {
 
 	userId := ctx.Locals("userId").(uint)
 
-	response, err := ec.eventService.CreateEvent(userId, &data)
+	response, err := c.eventService.CreateEvent(userId, &data)
 	if err != nil {
 		return err
 	}
@@ -34,7 +35,7 @@ func (ec *EventController) CreateEvent(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusOK).JSON(response)
 }
 
-func (ec *EventController) ConfirmNewPhoto(ctx *fiber.Ctx) error {
+func (c *EventController) ConfirmNewPhoto(ctx *fiber.Ctx) error {
 	var data input.ConfirmNewPhoto
 	if err := ctx.BodyParser(&data); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "Invalid body request")
@@ -49,11 +50,33 @@ func (ec *EventController) ConfirmNewPhoto(ctx *fiber.Ctx) error {
 	}
 	eventId := uint(eventIdUint64)
 
-	userId := ctx.Locals("userId").(uint)
+	userId, ok := ctx.Locals("userId").(uint)
+	if !ok {
+		return generics.Unauthorized("Invalid or non-existent auth token")
+	}
 
-	if err := ec.eventService.ConfirmNewPhoto(userId, eventId, &data); err != nil {
+	if err := c.eventService.ConfirmNewPhoto(userId, eventId, &data); err != nil {
 		return err
 	}
 
 	return ctx.SendStatus(fiber.StatusNoContent)
+}
+
+func (c *EventController) GetEvents(ctx *fiber.Ctx) error {
+	var data input.GetEventsFilters
+	if err := ctx.QueryParser(&data); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid query parameters")
+	}
+
+	userId, ok := ctx.Locals("userId").(uint)
+	if !ok {
+		return generics.Unauthorized("Invalid or non-existent auth token")
+	}
+
+	response, err := c.eventService.GetEvents(userId, &data)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(response)
 }

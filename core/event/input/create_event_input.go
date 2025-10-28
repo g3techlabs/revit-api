@@ -14,7 +14,7 @@ type CreateEventInput struct {
 	Date             string               `json:"date" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
 	Location         entities.Coordinates `json:"location" validate:"required"`
 	PhotoContentType *string              `json:"photoContentType" validate:"omitempty,oneof=image/jpeg image/png image/webp"`
-	City             string               `json:"city" validate:"required"`
+	CityID           uint                 `json:"cityId" validate:"required,number,gt=0"`
 	Visibility       string               `json:"visibility" validate:"required,oneof=public private"`
 	GroupID          *uint                `json:"groupId" validate:"omitempty,number,gt=0"`
 }
@@ -37,7 +37,7 @@ func (i *CreateEventInput) ToEventModel() *models.Event {
 		Name:         i.Name,
 		Description:  i.Description,
 		Date:         dateTime,
-		City:         i.City,
+		CityID:       i.CityID,
 		VisibilityID: newVisibility,
 		GroupID:      i.GroupID,
 		Location:     gorm.Expr("ST_SetSRID(ST_MakePoint(?, ?), 4326)", i.Location.Longitude, i.Location.Latitude),

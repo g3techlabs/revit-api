@@ -6,4 +6,5 @@ import (
 
 func EnableAll() {
 	EnablePostGISExtension(db.Db)
+	EnablePostTRGMExtension(db.Db)
 }

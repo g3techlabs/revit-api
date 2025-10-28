@@ -10,14 +10,15 @@ type Event struct {
 	Description  string    `gorm:"not null"`
 	Date         time.Time `gorm:"not null"`
 	Photo        *string
-	Location     any    `gorm:"type:GEOGRAPHY(POINT,4326);not null"`
-	Canceled     bool   `gorm:"not null;default:false"`
-	City         string `gorm:"not null"`
-	VisibilityID uint   `gorm:"not null"`
+	Location     any  `gorm:"type:GEOGRAPHY(POINT,4326);not null"`
+	Canceled     bool `gorm:"not null;default:false"`
+	CityID       uint `gorm:"not null"`
+	VisibilityID uint `gorm:"not null"`
 	GroupID      *uint
 	CreatedAt    time.Time `gorm:"not null;default:current_timestamp"`
 	UpdatedAt    time.Time `gorm:"not null"`
 
 	Visibility Visibility `gorm:"foreignKey:VisibilityID;references:ID;constraint:OnDelete:SET NULL"`
+	City       City       `gorm:"foreignKey:CityID;references:ID;constraint:OnDelete:SET NULL"`
 	Group      *Group     `gorm:"foreignKey:GroupID;references:ID;constraint:OnDelete:SET NULL"`
 }
