@@ -23,6 +23,7 @@ type EventRepository interface {
 	UpdateEvent(userId, eventId uint, newDate *time.Time, data *input.UpdateEventInput) error
 	InsertNewEventSubscriber(userId, eventId uint) error
 	RevokeEventSubscription(userId, eventId uint) error
+	MakeEventInvitation(eventAdminId, eventId, invitedId uint) error
 }
 
 type eventRepository struct {
@@ -36,6 +37,7 @@ func NewEventRepository() EventRepository {
 }
 
 const acceptedStatusId uint = 1
+const pendingStatusId uint = 2
 
 const publicVisibility uint = 1
 const privateVisibility uint = 2
@@ -376,4 +378,55 @@ func (er *eventRepository) RevokeEventSubscription(userId, eventId uint) error {
 	}
 
 	return result.Error
+}
+
+func (er *eventRepository) MakeEventInvitation(eventAdminId, eventId, invitedId uint) error {
+	var admin models.EventSubscriber
+	result := er.db.Model(&admin).
+		Where("event_id = ? AND user_id = ? AND invite_status_id = ? AND role_id IN ?", eventId, eventAdminId, acceptedStatusId, []uint{ownerRoleId, adminRoleId}).
+		Where("left_at IS NULL AND removed_by IS NULL").
+		First(&admin)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return fmt.Errorf("requester not a event admin")
+		}
+		return result.Error
+	}
+
+	var count int64
+	result = er.db.Model(&models.EventSubscriber{}).
+		Where("event_id = ? AND user_id = ? AND invite_status_id IN ? AND left_at IS NULL AND removed_by IS NULL", eventId, invitedId, []uint{pendingStatusId, acceptedStatusId}).
+		Count(&count)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if count > 0 {
+		return fmt.Errorf("invite target already invited/subscribed")
+	}
+
+	return er.makeInvitation(eventAdminId, eventId, invitedId)
+}
+
+func (er *eventRepository) makeInvitation(eventAdminId, eventId, invitedId uint) error {
+	data := models.EventSubscriber{
+		EventID:        eventId,
+		UserID:         invitedId,
+		InviterID:      &eventAdminId,
+		RoleID:         memberRoleId,
+		InviteStatusID: pendingStatusId,
+	}
+
+	err := er.db.Clauses(clause.OnConflict{
+		Columns: []clause.Column{{Name: "event_id"}, {Name: "user_id"}},
+		DoUpdates: clause.Assignments(map[string]interface{}{
+			"inviter_id":       eventAdminId,
+			"role_id":          memberRoleId,
+			"invite_status_id": pendingStatusId,
+			"left_at":          nil,
+			"removed_by":       nil,
+		}),
+	}).Create(&data).Error
+
+	return err
 }
