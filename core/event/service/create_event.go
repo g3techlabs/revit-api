@@ -15,6 +15,16 @@ func (es *EventService) CreateEvent(userId uint, input *input.CreateEventInput) 
 		return nil, err
 	}
 
+	if input.GroupID != nil {
+		isUserGroupAdmin, err := es.eventRepo.IsUserGroupAdmin(userId, *input.GroupID)
+		if err != nil {
+			return nil, generics.InternalError()
+		}
+		if !isUserGroupAdmin {
+			return nil, generics.Forbidden("User does not have permission of managing this group")
+		}
+	}
+
 	eventModel := input.ToEventModel()
 	if err := es.eventRepo.CreateEvent(userId, eventModel); err != nil {
 		return nil, generics.InternalError()

@@ -80,3 +80,58 @@ func (c *EventController) GetEvents(ctx *fiber.Ctx) error {
 
 	return ctx.JSON(response)
 }
+
+func (c *EventController) UpdateEvent(ctx *fiber.Ctx) error {
+	var data input.UpdateEventInput
+	if err := ctx.BodyParser(&data); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid query parameters")
+	}
+
+	eventParam := ctx.Params("eventId")
+	eventIdUint64, err := strconv.ParseUint(eventParam, 10, 64)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid event ID",
+		})
+	}
+	eventId := uint(eventIdUint64)
+
+	userId, ok := ctx.Locals("userId").(uint)
+	if !ok {
+		return generics.Unauthorized("Invalid or non-existent auth token")
+	}
+
+	if err := c.eventService.UpdateEvent(userId, eventId, &data); err != nil {
+		return err
+	}
+
+	return ctx.SendStatus(fiber.StatusNoContent)
+}
+
+func (c *EventController) RequestNewPhoto(ctx *fiber.Ctx) error {
+	var data input.RequestNewPhotoInput
+	if err := ctx.BodyParser(&data); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid query parameters")
+	}
+
+	eventParam := ctx.Params("eventId")
+	eventIdUint64, err := strconv.ParseUint(eventParam, 10, 64)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid event ID",
+		})
+	}
+	eventId := uint(eventIdUint64)
+
+	userId, ok := ctx.Locals("userId").(uint)
+	if !ok {
+		return generics.Unauthorized("Invalid or non-existent auth token")
+	}
+
+	response, err := c.eventService.RequestNewPhoto(userId, eventId, &data)
+	if err != nil {
+		return err
+	}
+
+	return ctx.Status(fiber.StatusCreated).JSON(response)
+}

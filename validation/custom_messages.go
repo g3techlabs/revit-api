@@ -21,4 +21,7 @@ var customMessages = map[string]string{
 	"lte":              "Field %s must be less than or equal to the specified value",
 	"gt":               "Field %s must be greater than the specified value",
 	"lt":               "Field %s must be less than the specified value",
+	"latitude":         "Field %s must be a valid latitude",
+	"longitude":        "Field %s must be a valid longitude",
+	"required_with":    "Field %s must be present alongside other field",
 }

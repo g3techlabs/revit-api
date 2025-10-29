@@ -13,6 +13,6 @@ type CreateEventData struct {
 }
 
 type Coordinates struct {
-	Latitude  float64 `validate:"required,gte=-90,lte=90"`
-	Longitude float64 `validate:"required,gte=-180,lte=180"`
+	Latitude  float64 `validate:"required,latitude"`
+	Longitude float64 `validate:"required,longitude"`
 }

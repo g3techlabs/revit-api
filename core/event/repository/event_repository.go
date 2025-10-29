@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/g3techlabs/revit-api/config"
 	"github.com/g3techlabs/revit-api/core/event/input"
@@ -17,6 +18,9 @@ type EventRepository interface {
 	CreateEvent(userId uint, data *models.Event) error
 	UpdatePhoto(userId, eventId uint, photoKey string) error
 	GetEvents(userId uint, filters *input.GetEventsFilters) (*[]response.GetEventResponse, error)
+	IsUserAdmin(userId, eventId uint) (bool, error)
+	IsUserGroupAdmin(userId, groupId uint) (bool, error)
+	UpdateEvent(userId, eventId uint, newDate *time.Time, data *input.UpdateEventInput) error
 }
 
 type eventRepository struct {
@@ -30,6 +34,9 @@ func NewEventRepository() EventRepository {
 }
 
 const acceptedStatusId uint = 1
+
+const publicVisibility uint = 1
+const privateVisibility uint = 2
 
 const ownerRoleId uint = 1
 const adminRoleId uint = 2
@@ -203,4 +210,86 @@ func (er *eventRepository) buildPagination(query *gorm.DB, limitFilter, pageFilt
 	}
 
 	return query
+}
+
+func (er *eventRepository) IsUserAdmin(userId, eventId uint) (bool, error) {
+	var count int64
+
+	err := er.db.
+		Table("event_subscriber").
+		Where("event_id = ? AND user_id = ? AND invite_status_id = ? AND role_id IN ?",
+			eventId, userId, acceptedStatusId, []uint{ownerRoleId, adminRoleId}).
+		Count(&count).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
+func (er *eventRepository) UpdateEvent(userId, eventId uint, newDate *time.Time, data *input.UpdateEventInput) error {
+	updates := make(map[string]any)
+
+	if data.Name != nil {
+		updates["name"] = *data.Name
+	}
+	if data.Description != nil {
+		updates["description"] = *data.Description
+	}
+	if newDate != nil {
+		updates["date"] = *newDate
+	}
+	if data.Visibility != nil {
+		switch *data.Visibility {
+		case "public":
+			updates["visibility_id"] = publicVisibility
+		case "private":
+			updates["visibility_id"] = privateVisibility
+		}
+	}
+
+	if data.GroupID != nil {
+		updates["group_id"] = *data.GroupID
+	}
+
+	if data.Location != nil && data.CityID != nil {
+		updates["location"] = gorm.Expr("ST_SetSRID(ST_MakePoint(?, ?), 4326)", data.Location.Longitude, data.Location.Latitude)
+		updates["city_id"] = *data.CityID
+	}
+
+	query := er.db.Model(&models.Event{}).
+		Where("id = ?",
+			eventId).
+		Where(`EXISTS (SELECT 1 
+		FROM event_subscriber 
+		WHERE event_subscriber.event_id = ? 
+		AND event_subscriber.user_id = ? 
+		AND event_subscriber.invite_status_id = ? 
+		AND event_subscriber.role_id IN ?)
+		`,
+			eventId, userId, acceptedStatusId, []uint{ownerRoleId, adminRoleId}).
+		Updates(updates)
+
+	if query.RowsAffected == 0 {
+		return fmt.Errorf("user not admin")
+	}
+
+	return query.Error
+}
+
+func (er *eventRepository) IsUserGroupAdmin(userId, groupId uint) (bool, error) {
+	var count int64
+
+	err := er.db.
+		Table("group_member").
+		Where("group_id = ? AND user_id = ? AND invite_status_id = ? AND role_id IN ?",
+			groupId, userId, acceptedStatusId, []uint{ownerRoleId, adminRoleId}).
+		Count(&count).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
 }

@@ -14,7 +14,7 @@ type GetEventResponse struct {
 	Visibility       string          `json:"visibility"`
 	Photo            *string         `json:"photo"`
 	SubscribersCount *uint           `json:"subscribersCount"`
-	Address          datatypes.JSON  `json:"Address"`
+	Address          datatypes.JSON  `json:"address"`
 	Coordinates      datatypes.JSON  `json:"coordinates"`
 	Group            *datatypes.JSON `json:"group"`
 	MemberRole       string          `json:"memberRole"`
