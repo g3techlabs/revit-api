@@ -22,6 +22,7 @@ type EventRepository interface {
 	IsUserGroupAdmin(userId, groupId uint) (bool, error)
 	UpdateEvent(userId, eventId uint, newDate *time.Time, data *input.UpdateEventInput) error
 	InsertNewEventSubscriber(userId, eventId uint) error
+	RevokeEventSubscription(userId, eventId uint) error
 }
 
 type eventRepository struct {
@@ -327,7 +328,7 @@ func (gr *eventRepository) InsertNewEventSubscriber(userId, eventId uint) error 
 	})
 }
 
-func (gr *eventRepository) registerSubscriber(eventId, userId uint, tx *gorm.DB) error {
+func (*eventRepository) registerSubscriber(eventId, userId uint, tx *gorm.DB) error {
 	es := models.EventSubscriber{
 		EventID:        eventId,
 		UserID:         userId,
@@ -346,4 +347,33 @@ func (gr *eventRepository) registerSubscriber(eventId, userId uint, tx *gorm.DB)
 	}).Create(&es).Error
 
 	return err
+}
+
+func (er *eventRepository) RevokeEventSubscription(userId, eventId uint) error {
+	var quitter models.EventSubscriber
+
+	if err := er.db.Model(&models.EventSubscriber{}).Select("role_id").
+		Where("event_id = ? AND user_id = ? AND invite_status_id = ?", eventId, userId, acceptedStatusId).
+		Where("left_at IS NULL AND removed_by IS NULL").
+		First(&quitter).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return fmt.Errorf("user is not subscribed")
+		}
+		return err
+	}
+
+	if quitter.RoleID == ownerRoleId {
+		return fmt.Errorf("user is owner")
+	}
+
+	result := er.db.
+		Model(&models.EventSubscriber{}).
+		Where("event_id = ? AND user_id = ? AND invite_status_id = ? AND left_at IS NULL AND removed_by IS NULL", eventId, userId, acceptedStatusId).
+		Update("left_at", time.Now().UTC())
+
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("user is not subscribed")
+	}
+
+	return result.Error
 }

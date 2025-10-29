@@ -15,6 +15,7 @@ type IEventService interface {
 	UpdateEvent(userId, eventId uint, data *input.UpdateEventInput) error
 	RequestNewPhoto(userId, eventId uint, data *input.RequestNewPhotoInput) (*response.PresginedEventPhotoResponse, error)
 	SubscribeToEvent(userId, eventId uint) error
+	RevokeEventSubscription(userId, eventId uint) error
 }
 
 type EventService struct {
