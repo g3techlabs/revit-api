@@ -12,4 +12,5 @@ func CityRoutes(router fiber.Router, cityService service.ICityService, m *middle
 
 	city := router.Group("/city", m.Auth())
 	city.Get("/", controller.GetCities)
+	city.Get("/nearby", controller.GetNearbyCities)
 }

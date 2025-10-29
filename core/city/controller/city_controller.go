@@ -15,13 +15,28 @@ func NewCityController(cityService service.ICityService) *CityController {
 }
 
 func (c *CityController) GetCities(ctx *fiber.Ctx) error {
-	var query input.GetCitiesQuery
+	var query input.GetCitiesFilters
 
 	if err := ctx.QueryParser(&query); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "Invalid query parameters")
 	}
 
 	response, err := c.cityService.GetCities(&query)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(response)
+}
+
+func (c *CityController) GetNearbyCities(ctx *fiber.Ctx) error {
+	var query input.GetNearbyCitiesFilters
+
+	if err := ctx.QueryParser(&query); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid query parameters")
+	}
+
+	response, err := c.cityService.GetNearbyCities(&query)
 	if err != nil {
 		return err
 	}
