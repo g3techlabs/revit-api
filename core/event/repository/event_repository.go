@@ -21,6 +21,7 @@ type EventRepository interface {
 	IsUserAdmin(userId, eventId uint) (bool, error)
 	IsUserGroupAdmin(userId, groupId uint) (bool, error)
 	UpdateEvent(userId, eventId uint, newDate *time.Time, data *input.UpdateEventInput) error
+	InsertNewEventSubscriber(userId, eventId uint) error
 }
 
 type eventRepository struct {
@@ -292,4 +293,57 @@ func (er *eventRepository) IsUserGroupAdmin(userId, groupId uint) (bool, error) 
 	}
 
 	return count > 0, nil
+}
+
+func (gr *eventRepository) InsertNewEventSubscriber(userId, eventId uint) error {
+	return gr.db.Transaction(func(tx *gorm.DB) error {
+		var e models.Event
+		if err := tx.Select("id", "visibility_id").Where("id = ?", eventId).First(&e).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return fmt.Errorf("event not found")
+			}
+			return err
+		}
+
+		if e.VisibilityID != publicVisibility {
+			return fmt.Errorf("event is private")
+		}
+
+		var count int64
+		if err := tx.Model(&models.EventSubscriber{}).
+			Where("event_id = ? AND user_id = ? AND invite_status_id = ? AND left_at IS NULL AND removed_by IS NULL", eventId, userId, acceptedStatusId).
+			Count(&count).Error; err != nil {
+			return err
+		}
+		if count > 0 {
+			return fmt.Errorf("user already subscribed")
+		}
+
+		if err := gr.registerSubscriber(eventId, userId, tx); err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (gr *eventRepository) registerSubscriber(eventId, userId uint, tx *gorm.DB) error {
+	es := models.EventSubscriber{
+		EventID:        eventId,
+		UserID:         userId,
+		RoleID:         memberRoleId,
+		InviteStatusID: acceptedStatusId,
+	}
+
+	err := tx.Clauses(clause.OnConflict{
+		Columns: []clause.Column{{Name: "event_id"}, {Name: "user_id"}},
+		DoUpdates: clause.Assignments(map[string]interface{}{
+			"role_id":          memberRoleId,
+			"invite_status_id": acceptedStatusId,
+			"left_at":          nil,
+			"removed_by":       nil,
+		}),
+	}).Create(&es).Error
+
+	return err
 }

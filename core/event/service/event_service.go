@@ -14,6 +14,7 @@ type IEventService interface {
 	GetEvents(userId uint, filters *input.GetEventsFilters) (*[]response.GetEventResponse, error)
 	UpdateEvent(userId, eventId uint, data *input.UpdateEventInput) error
 	RequestNewPhoto(userId, eventId uint, data *input.RequestNewPhotoInput) (*response.PresginedEventPhotoResponse, error)
+	SubscribeToEvent(userId, eventId uint) error
 }
 
 type EventService struct {

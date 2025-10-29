@@ -135,3 +135,25 @@ func (c *EventController) RequestNewPhoto(ctx *fiber.Ctx) error {
 
 	return ctx.Status(fiber.StatusCreated).JSON(response)
 }
+
+func (c *EventController) SubscribeIntoEvent(ctx *fiber.Ctx) error {
+	eventParam := ctx.Params("eventId")
+	eventIdUint64, err := strconv.ParseUint(eventParam, 10, 64)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid event ID",
+		})
+	}
+	eventId := uint(eventIdUint64)
+
+	userId, ok := ctx.Locals("userId").(uint)
+	if !ok {
+		return generics.Unauthorized("Invalid or non-existent auth token")
+	}
+
+	if err := c.eventService.SubscribeToEvent(userId, eventId); err != nil {
+		return err
+	}
+
+	return ctx.SendStatus(fiber.StatusNoContent)
+}
