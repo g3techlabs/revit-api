@@ -72,7 +72,7 @@ func (cr *cityRepository) GetNearbyCities(latitude, longitude float64) (*[]respo
 		LIMIT 4
 	`
 
-	if err := cr.db.Raw(sql, latitude, longitude).Scan(&nearbyCities).Error; err != nil {
+	if err := cr.db.Raw(sql, longitude, latitude).Scan(&nearbyCities).Error; err != nil {
 		return nil, err
 	}
 
