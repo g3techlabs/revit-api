@@ -230,3 +230,31 @@ func (c *EventController) GetPendingInvites(ctx *fiber.Ctx) error {
 
 	return ctx.JSON(response)
 }
+
+func (c *EventController) AnswerPendingInvite(ctx *fiber.Ctx) error {
+	var answer input.PendingInviteAnswer
+
+	if err := ctx.BodyParser(&answer); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid body request")
+	}
+
+	eventParam := ctx.Params("eventId")
+	eventIdUint64, err := strconv.ParseUint(eventParam, 10, 64)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid event ID",
+		})
+	}
+	eventId := uint(eventIdUint64)
+
+	userId, ok := ctx.Locals("userId").(uint)
+	if !ok {
+		return generics.Unauthorized("Invalid or non-existent auth token")
+	}
+
+	if err := c.eventService.AnswerPendingInvite(userId, eventId, &answer); err != nil {
+		return err
+	}
+
+	return ctx.SendStatus(fiber.StatusNoContent)
+}

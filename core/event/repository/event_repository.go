@@ -25,6 +25,8 @@ type EventRepository interface {
 	RevokeEventSubscription(userId, eventId uint) error
 	MakeEventInvitation(eventAdminId, eventId, invitedId uint) error
 	GetPendingInvites(userId, limit, page uint) (*[]response.GetPendingInvites, error)
+	AcceptPendingInvite(eventId uint, userId uint) error
+	RejectPendingInvite(eventId uint, userId uint) error
 }
 
 type eventRepository struct {
@@ -39,6 +41,7 @@ func NewEventRepository() EventRepository {
 
 const acceptedStatusId uint = 1
 const pendingStatusId uint = 2
+const rejectedStatusId uint = 3
 
 const publicVisibility uint = 1
 const privateVisibility uint = 2
@@ -452,4 +455,32 @@ func (er *eventRepository) GetPendingInvites(userId, limit, page uint) (*[]respo
 	}
 
 	return &invites, nil
+}
+
+func (er *eventRepository) AcceptPendingInvite(eventId uint, userId uint) error {
+	result := er.db.
+		Model(&models.EventSubscriber{}).
+		Joins("INNER JOIN event e ON e.id = event_id AND e.date > NOW()").
+		Where("user_id = ? AND event_id = ? AND invite_status_id = ?", userId, eventId, pendingStatusId).
+		Update("invite_status_id", acceptedStatusId)
+
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("event invite not found")
+	}
+
+	return result.Error
+}
+
+func (er *eventRepository) RejectPendingInvite(eventId, userId uint) error {
+	result := er.db.
+		Model(&models.EventSubscriber{}).
+		Joins("INNER JOIN event e ON e.id = event_id AND e.date > NOW()").
+		Where("user_id = ? AND event_id = ? AND invite_status_id = ?", userId, eventId, pendingStatusId).
+		Update("invite_status_id", rejectedStatusId)
+
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("event invite not found")
+	}
+
+	return result.Error
 }
