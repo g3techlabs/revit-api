@@ -16,6 +16,7 @@ func EventRoutes(router fiber.Router, eventService service.IEventService, m *mid
 	event := router.Group("/event", m.Auth())
 	event.Post("/", eventController.CreateEvent)
 	event.Get("/", eventController.GetEvents)
+	event.Get("/invite", eventController.GetPendingInvites)
 
 	event.Patch("/photo/:eventId", eventController.ConfirmNewPhoto)
 	event.Post("/photo/:eventId", eventController.RequestNewPhoto)

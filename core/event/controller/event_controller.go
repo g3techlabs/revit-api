@@ -210,3 +210,23 @@ func (c *EventController) InviteUserToEvent(ctx *fiber.Ctx) error {
 
 	return ctx.SendStatus(fiber.StatusNoContent)
 }
+
+func (c *EventController) GetPendingInvites(ctx *fiber.Ctx) error {
+	var filters input.GetPendingInvitesFilters
+
+	if err := ctx.QueryParser(&filters); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid query parameters")
+	}
+
+	userId, ok := ctx.Locals("userId").(uint)
+	if !ok {
+		return generics.Unauthorized("Invalid or non-existent auth token")
+	}
+
+	response, err := c.eventService.GetPendingInvites(userId, &filters)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(response)
+}

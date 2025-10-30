@@ -24,6 +24,7 @@ type EventRepository interface {
 	InsertNewEventSubscriber(userId, eventId uint) error
 	RevokeEventSubscription(userId, eventId uint) error
 	MakeEventInvitation(eventAdminId, eventId, invitedId uint) error
+	GetPendingInvites(userId, limit, page uint) (*[]response.GetPendingInvites, error)
 }
 
 type eventRepository struct {
@@ -429,4 +430,26 @@ func (er *eventRepository) makeInvitation(eventAdminId, eventId, invitedId uint)
 	}).Create(&data).Error
 
 	return err
+}
+
+func (er *eventRepository) GetPendingInvites(userId, limit, page uint) (*[]response.GetPendingInvites, error) {
+	var invites []response.GetPendingInvites
+
+	query := er.db.Model(&models.EventSubscriber{}).
+		Select("e.id AS event_id", "e.name AS event_name", "'"+cloudFrontUrl+"' || e.photo AS event_photo", "u.nickname AS invited_by").
+		Joins("INNER JOIN event e ON e.id = event_subscriber.event_id AND e.canceled = FALSE AND e.date > NOW()").
+		Joins("INNER JOIN users u ON u.id = event_subscriber.inviter_id").
+		Where("event_subscriber.user_id = ? AND invite_status_id = ? AND left_at IS NULL AND removed_by IS NULL", userId, pendingStatusId).
+		Order("e.date ASC")
+
+	if err := query.Scan(&invites).Error; err != nil {
+		return nil, err
+	}
+
+	if len(invites) == 0 {
+		empty := make([]response.GetPendingInvites, 0)
+		return &empty, nil
+	}
+
+	return &invites, nil
 }
