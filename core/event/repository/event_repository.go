@@ -27,6 +27,7 @@ type EventRepository interface {
 	GetPendingInvites(userId, limit, page uint) (*[]response.GetPendingInvites, error)
 	AcceptPendingInvite(eventId uint, userId uint) error
 	RejectPendingInvite(eventId uint, userId uint) error
+	RemoveSubscriber(eventAdminId, eventId, subscriberId uint) error
 }
 
 type eventRepository struct {
@@ -480,6 +481,67 @@ func (er *eventRepository) RejectPendingInvite(eventId, userId uint) error {
 
 	if result.RowsAffected == 0 {
 		return fmt.Errorf("event invite not found")
+	}
+
+	return result.Error
+}
+
+func (er *eventRepository) RemoveSubscriber(eventAdminId, eventId, subscriberId uint) error {
+	var eventAdmin models.EventSubscriber
+	if err := er.getEventAdmin(eventAdminId, eventId, &eventAdmin); err != nil {
+		return err
+	}
+
+	data := map[string]any{
+		"removed_by": eventAdminId,
+		"left_at":    time.Now().UTC(),
+	}
+
+	switch eventAdmin.RoleID {
+	case adminRoleId:
+		return er.removeMemberRoleSubscriber(subscriberId, eventId, data)
+	case ownerRoleId:
+		return er.removeSubscriber(subscriberId, eventId, data)
+	}
+
+	return nil
+}
+
+func (er *eventRepository) getEventAdmin(eventAdminId, eventId uint, model *models.EventSubscriber) error {
+	if err := er.db.
+		Model(&model).
+		Where("user_id = ? AND event_id = ? AND invite_status_id = ? AND role_id IN ?", eventAdminId, eventId, acceptedStatusId, []uint{ownerRoleId, adminRoleId}).
+		First(&model).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return fmt.Errorf("admin not found")
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (er *eventRepository) removeMemberRoleSubscriber(subscriberId, eventId uint, data map[string]any) error {
+	result := er.db.Model(&models.EventSubscriber{}).
+		Where("user_id = ? AND event_id = ? AND invite_status_id = ? AND left_at IS NULL AND removed_by IS NULL", subscriberId, eventId, acceptedStatusId).
+		Where("role_id = ?", memberRoleId).
+		Updates(data)
+
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("subscriber not found")
+	}
+
+	return result.Error
+}
+
+func (er *eventRepository) removeSubscriber(subscriberId, eventId uint, data map[string]any) error {
+	result := er.db.Model(&models.EventSubscriber{}).
+		Where("user_id = ? AND event_id = ? AND invite_status_id = ? AND left_at IS NULL AND removed_by IS NULL", subscriberId, eventId, acceptedStatusId).
+		Where("role_id IN ?", []uint{adminRoleId, memberRoleId}).
+		Updates(data)
+
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("subscriber not found")
 	}
 
 	return result.Error

@@ -23,6 +23,7 @@ func EventRoutes(router fiber.Router, eventService service.IEventService, m *mid
 
 	event.Post("/:eventId/subscriber", eventController.SubscribeIntoEvent)
 	event.Delete("/:eventId/subscriber", eventController.RevokeEventSubscription)
+	event.Delete("/:eventId/subscriber/:subscriberId", eventController.RemoveSubscriber)
 	event.Post("/:eventId/invite/:invitedId", eventController.InviteUserToEvent)
 	event.Patch("/:eventId/invite", eventController.AnswerPendingInvite)
 
