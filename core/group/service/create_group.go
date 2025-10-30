@@ -5,7 +5,6 @@ import (
 
 	"github.com/g3techlabs/revit-api/core/group/input"
 	"github.com/g3techlabs/revit-api/core/group/response"
-	"github.com/g3techlabs/revit-api/core/vehicle/errors"
 	"github.com/g3techlabs/revit-api/response/generics"
 	"github.com/g3techlabs/revit-api/utils"
 )
@@ -57,7 +56,7 @@ func (gs *GroupService) makePresignedMainPhotoUrl(groupId uint, contentType stri
 
 	extension := utils.MapImageMIMEToExtension(contentType)
 	if extension == "" {
-		return errors.InvalidFileExtension()
+		return generics.InvalidFileExtension()
 	}
 
 	photoKey := fmt.Sprintf(MAIN_PHOTO_KEY, groupId, extension)
@@ -77,7 +76,7 @@ func (gs *GroupService) makePresignedBannerUrl(groupId uint, contentType string,
 
 	extension := utils.MapImageMIMEToExtension(contentType)
 	if extension == "" {
-		return errors.InvalidFileExtension()
+		return generics.InvalidFileExtension()
 	}
 
 	bannerKey := fmt.Sprintf(BANNER_KEY, groupId, extension)

@@ -2,9 +2,9 @@ package errors
 
 import "github.com/g3techlabs/revit-api/response"
 
-func InvalidDate() error {
+func InvalidDateValue() error {
 	return &response.CustomError{
-		Message:    "Invalid date format",
+		Message:    "The date value must be at least 15 minutes from now",
 		StatusCode: 400,
 	}
 }

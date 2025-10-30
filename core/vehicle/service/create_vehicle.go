@@ -3,7 +3,6 @@ package service
 import (
 	"fmt"
 
-	"github.com/g3techlabs/revit-api/core/vehicle/errors"
 	"github.com/g3techlabs/revit-api/core/vehicle/input"
 	"github.com/g3techlabs/revit-api/core/vehicle/response"
 	"github.com/g3techlabs/revit-api/response/generics"
@@ -47,7 +46,7 @@ func (vs *VehicleService) generatePresignedPhotoUrl(userId, vehicleId uint, cont
 
 	extension := vs.mapContentTypeToExtension(contentType)
 	if extension == "" {
-		return errors.InvalidFileExtension()
+		return generics.InvalidFileExtension()
 	}
 
 	switch photoType {

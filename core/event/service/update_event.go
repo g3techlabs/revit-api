@@ -1,8 +1,6 @@
 package service
 
 import (
-	"time"
-
 	"github.com/g3techlabs/revit-api/core/event/errors"
 	"github.com/g3techlabs/revit-api/core/event/input"
 	"github.com/g3techlabs/revit-api/response/generics"
@@ -32,15 +30,12 @@ func (es *EventService) UpdateEvent(userId, eventId uint, data *input.UpdateEven
 		}
 	}
 
-	var newDate time.Time
-	if data.Date != nil {
-		newDate, err = time.Parse("2006-01-02T15:04:05Z07:00", *data.Date)
-		if err != nil {
-			return errors.InvalidDate()
-		}
+	formattedDate, err := es.validateEventDate(*data.Date)
+	if err != nil {
+		return err
 	}
 
-	if err := es.eventRepo.UpdateEvent(userId, eventId, &newDate, data); err != nil {
+	if err := es.eventRepo.UpdateEvent(userId, eventId, formattedDate, data); err != nil {
 		if err.Error() == "user not admin" {
 			return errors.UserNotAdmin()
 		}

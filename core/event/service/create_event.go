@@ -2,10 +2,11 @@ package service
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/g3techlabs/revit-api/core/event/errors"
 	"github.com/g3techlabs/revit-api/core/event/input"
 	"github.com/g3techlabs/revit-api/core/event/response"
-	"github.com/g3techlabs/revit-api/core/vehicle/errors"
 	"github.com/g3techlabs/revit-api/response/generics"
 	"github.com/g3techlabs/revit-api/utils"
 )
@@ -25,6 +26,11 @@ func (es *EventService) CreateEvent(userId uint, input *input.CreateEventInput) 
 		}
 	}
 
+	_, err := es.validateEventDate(input.Date)
+	if err != nil {
+		return nil, err
+	}
+
 	eventModel := input.ToEventModel()
 	if err := es.eventRepo.CreateEvent(userId, eventModel); err != nil {
 		return nil, generics.InternalError()
@@ -36,6 +42,20 @@ func (es *EventService) CreateEvent(userId uint, input *input.CreateEventInput) 
 	}
 
 	return response, nil
+}
+
+func (es *EventService) validateEventDate(dateString string) (*time.Time, error) {
+	formattedDate, err := time.Parse("2006-01-02T15:04:05Z07:00", dateString)
+	if err != nil {
+		return nil, errors.InvalidDateFormat()
+	}
+
+	fifteenMinutesFromNow := time.Now().Add(time.Minute * 15)
+	if formattedDate.Before(fifteenMinutesFromNow) {
+		return nil, errors.InvalidDateValue()
+	}
+
+	return &formattedDate, nil
 }
 
 func (es *EventService) buildResponse(eventId uint, photoContentType *string) (*response.PresginedEventPhotoResponse, error) {
@@ -58,7 +78,7 @@ func (es *EventService) makePresignedPhotoUrl(eventId uint, contentType string, 
 
 	extension := utils.MapImageMIMEToExtension(contentType)
 	if extension == "" {
-		return errors.InvalidFileExtension()
+		return generics.InvalidFileExtension()
 	}
 
 	photoKey := fmt.Sprintf(PHOTO_KEY, eventId, extension)

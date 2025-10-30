@@ -17,3 +17,7 @@ func Unauthorized(message string) error {
 func Forbidden(message string) error {
 	return fiber.NewError(fiber.StatusForbidden, message)
 }
+
+func InvalidFileExtension() error {
+	return fiber.NewError(fiber.StatusBadRequest, "Invalid file extension. Only .jpg, .jpeg and .png are allowed.")
+}
