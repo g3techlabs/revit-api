@@ -1,0 +1,10 @@
+package errors
+
+import "github.com/g3techlabs/revit-api/src/response"
+
+func UsersAreTheSame() error {
+	return &response.CustomError{
+		Message:    "Requester and target user are the same",
+		StatusCode: 400,
+	}
+}

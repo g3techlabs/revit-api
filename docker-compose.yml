@@ -8,10 +8,11 @@ services:
       - .env
     depends_on:
       - postgres
+      - redis
     volumes:
       - .:/app
     working_dir: /app
-    command: ["go", "run", "main.go"]
+    command: ["go", "run", "src/main.go"]
 
   postgres:
     image: postgis/postgis:18-3.6
@@ -26,5 +27,15 @@ services:
       - postgres_data:/var/lib/postgresql/
     restart: unless-stopped
 
+  redis:
+    image: redis
+    container_name: revit-redis
+    ports:
+      - "${REDIS_PORT}:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
 volumes:
   postgres_data:
+  redis_data:
