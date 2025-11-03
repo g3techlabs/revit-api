@@ -6,7 +6,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type CustomFormatter struct {
+type ILogger interface {
+	Info(args ...interface{})
+	Error(args ...interface{})
+}
+
+type Logger struct {
 	logrus.TextFormatter
 }
 
@@ -15,7 +20,7 @@ var Log *logrus.Logger
 func init() {
 	Log = logrus.New()
 
-	Log.SetFormatter(&CustomFormatter{
+	Log.SetFormatter(&Logger{
 		TextFormatter: logrus.TextFormatter{
 			FullTimestamp:   true,
 			ForceColors:     true,
