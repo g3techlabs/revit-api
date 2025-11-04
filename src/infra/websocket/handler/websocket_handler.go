@@ -8,18 +8,21 @@ import (
 	"github.com/g3techlabs/revit-api/src/core/geolocation/input"
 	ws "github.com/g3techlabs/revit-api/src/infra/websocket"
 	"github.com/g3techlabs/revit-api/src/infra/websocket/models"
+	"github.com/g3techlabs/revit-api/src/utils"
 	"github.com/gofiber/contrib/websocket"
 )
 
 type WebSocketHandler struct {
 	hub        *ws.Hub
 	geoService geolocation.IGeoLocationService
+	logger     utils.ILogger
 }
 
-func NewWebSocketHandler(hub *ws.Hub, geoService geolocation.IGeoLocationService) *WebSocketHandler {
+func NewWebSocketHandler(hub *ws.Hub, geoService geolocation.IGeoLocationService, logger utils.ILogger) *WebSocketHandler {
 	return &WebSocketHandler{
 		hub:        hub,
 		geoService: geoService,
+		logger:     logger,
 	}
 }
 
@@ -37,6 +40,7 @@ func (h *WebSocketHandler) Handle(c *websocket.Conn) {
 	for {
 		var message ws.WebSocketMessage
 		if err := c.ReadJSON(&message); err != nil {
+			h.logger.Errorf("Error reading WebSocketMessage: %v", err)
 			break
 		}
 
@@ -73,5 +77,9 @@ func (h *WebSocketHandler) registerClientInHub(c *websocket.Conn, userId uint) {
 }
 
 func (h *WebSocketHandler) unregisterClientInHub(userId uint) {
+	if err := h.geoService.RemoveUserLocation(userId); err != nil {
+		return
+	}
+
 	h.hub.Unregister <- userId
 }

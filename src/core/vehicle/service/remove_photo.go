@@ -3,12 +3,9 @@ package service
 import (
 	"github.com/g3techlabs/revit-api/src/core/vehicle/errors"
 	"github.com/g3techlabs/revit-api/src/response/generics"
-	"github.com/g3techlabs/revit-api/src/utils"
 )
 
 func (vs *VehicleService) RemovePhoto(userId, vehicleId, photoId uint) error {
-	utils.Log.Infof("User: %d, Vehicle: %d, Photo: %d", userId, vehicleId, photoId)
-
 	if err := vs.markFeedPhotoAsRemoved(userId, vehicleId, photoId); err != nil {
 		return err
 	}

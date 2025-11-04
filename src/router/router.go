@@ -27,22 +27,23 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func SetupRoutes(app *fiber.App) {
-	utils.Log.Info("Setting up routes...")
+func SetupRoutes(app *fiber.App, logger utils.ILogger) {
+	logger.Info("Setting up routes...")
 
 	validator := validation.NewValidator()
 	storageClient := config.NewS3Client()
-	hub := websocket.NewHub()
 	redisClient := config.NewRedisClient()
+	hub := websocket.NewHub(logger)
+	go hub.Run()
 
 	userRepo := repository.NewUserRepository()
 	vehicleRepo := vr.NewVehicleRepository()
 	groupRepository := gr.NewGroupRepository()
 	eventRepository := er.NewEventRepository()
 	cityRepository := cr.NewCityRepository()
-	geoLocationRepo := glr.NewGeoLocationRepository(context.TODO(), redisClient)
+	geoLocationRepo := glr.NewGeoLocationRepository(redisClient)
 
-	storageService := storage.NewS3Service(storageClient, config.NewPresignClient(storageClient), context.Background())
+	storageService := storage.NewS3Service(storageClient, config.NewPresignClient(storageClient), context.Background(), logger)
 	tokenService := token.NewTokenService()
 	emailService := mail.NewEmailService()
 
@@ -54,16 +55,16 @@ func SetupRoutes(app *fiber.App) {
 	groupService := gs.NewGroupService(groupRepository, validator, storageService)
 	eventService := es.NewEventService(validator, eventRepository, storageService)
 	cityService := cs.NewCityService(validator, cityRepository)
-	geoLocationService := gls.NewGeoLocationService(validator, geoLocationRepo, hub)
+	geoLocationService := gls.NewGeoLocationService(validator, geoLocationRepo, hub, logger)
 
 	api := app.Group("/api")
-	AuthRoutes(api, authService)
-	UserRoutes(api, userService, authMiddleware)
-	VehicleRoutes(api, vehicleService, authMiddleware)
-	GroupRoutes(api, groupService, authMiddleware)
-	EventRoutes(api, eventService, authMiddleware)
-	CityRoutes(api, cityService, authMiddleware)
-	WebSocketRoute(api, hub, geoLocationService, authMiddleware)
+	AuthRoutes(api, authService, logger)
+	UserRoutes(api, userService, authMiddleware, logger)
+	VehicleRoutes(api, vehicleService, authMiddleware, logger)
+	GroupRoutes(api, groupService, authMiddleware, logger)
+	EventRoutes(api, eventService, authMiddleware, logger)
+	CityRoutes(api, cityService, authMiddleware, logger)
+	WebSocketRoute(api, hub, geoLocationService, authMiddleware, logger)
 
-	utils.Log.Info("Routes successfully set up.")
+	logger.Info("Routes successfully set up.")
 }

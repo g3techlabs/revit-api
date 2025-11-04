@@ -7,8 +7,8 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func seedInviteStatusTable(db *gorm.DB) {
-	utils.Log.Info("Starting InviteStatus Table seed...")
+func seedInviteStatusTable(db *gorm.DB, logger utils.ILogger) {
+	logger.Info("Starting InviteStatus Table seed...")
 	statuses := []models.InviteStatus{
 		{Status: "accepted", ID: 1},
 		{Status: "pending", ID: 2},
@@ -16,7 +16,7 @@ func seedInviteStatusTable(db *gorm.DB) {
 	}
 
 	if err := db.Clauses(clause.OnConflict{DoNothing: true}).Create(&statuses).Error; err != nil {
-		utils.Log.Errorf("Error seeding InviteStatus Table: %v", err)
+		logger.Errorf("Error seeding InviteStatus Table: %v", err)
 	}
-	utils.Log.Info("InviteStatus Table seed complete.")
+	logger.Info("InviteStatus Table seed complete.")
 }

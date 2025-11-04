@@ -8,8 +8,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func GroupRoutes(router fiber.Router, groupService service.IGroupService, middleware *middleware.AuthMiddleware) {
-	utils.Log.Info("Setting up GROUP routes...")
+func GroupRoutes(router fiber.Router, groupService service.IGroupService, middleware *middleware.AuthMiddleware, logger utils.ILogger) {
+	logger.Info("Setting up GROUP routes...")
 
 	groupController := controller.NewGroupController(groupService)
 
@@ -30,5 +30,5 @@ func GroupRoutes(router fiber.Router, groupService service.IGroupService, middle
 
 	group.Patch("/:groupId", groupController.UpdateGroup)
 
-	utils.Log.Info("GROUP routes successfully set up.")
+	logger.Info("GROUP routes successfully set up.")
 }

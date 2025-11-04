@@ -5,8 +5,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func EnablePostGISExtension(db *gorm.DB) {
+func EnablePostGISExtension(db *gorm.DB, logger utils.ILogger) {
 	if err := db.Exec(`CREATE EXTENSION IF NOT EXISTS postgis;`).Error; err != nil {
-		utils.Log.Fatalf("Error creating PostGIS extension: %v", err)
+		logger.Fatalf("Error creating PostGIS extension: %v", err)
 	}
 }

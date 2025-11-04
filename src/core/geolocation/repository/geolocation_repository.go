@@ -18,13 +18,11 @@ type IGeoLocationRepository interface {
 }
 
 type GeoLocationRepository struct {
-	ctx         context.Context
 	redisClient *redis.Client
 }
 
-func NewGeoLocationRepository(ctx context.Context, redisClient *redis.Client) IGeoLocationRepository {
+func NewGeoLocationRepository(redisClient *redis.Client) IGeoLocationRepository {
 	return &GeoLocationRepository{
-		ctx:         ctx,
 		redisClient: redisClient,
 	}
 }
@@ -32,7 +30,9 @@ func NewGeoLocationRepository(ctx context.Context, redisClient *redis.Client) IG
 var nearbyUsersRadiusInKm = config.GetIntVariable("USERS_RADIUS_IN_KM")
 
 func (s *GeoLocationRepository) PutUserLocation(userId uint, data *input.Coordinates) ([]uint, error) {
-	_, err := s.redisClient.GeoAdd(s.ctx, "users:location", &redis.GeoLocation{
+	ctx := context.Background()
+
+	_, err := s.redisClient.GeoAdd(ctx, "users:location", &redis.GeoLocation{
 		Longitude: data.Long,
 		Latitude:  data.Lat,
 		Name:      fmt.Sprint(userId),
@@ -51,14 +51,13 @@ func (s *GeoLocationRepository) PutUserLocation(userId uint, data *input.Coordin
 }
 
 func (s *GeoLocationRepository) getNearbyUsersIds(lat, lng float64) ([]uint, error) {
-	res, err := s.redisClient.GeoSearchLocation(s.ctx, "users:location", &redis.GeoSearchLocationQuery{
-		WithCoord: false,
-		GeoSearchQuery: redis.GeoSearchQuery{
-			Longitude:  lng,
-			Latitude:   lat,
-			Radius:     float64(nearbyUsersRadiusInKm),
-			RadiusUnit: "km",
-		},
+	ctx := context.Background()
+
+	res, err := s.redisClient.GeoSearch(ctx, "users:location", &redis.GeoSearchQuery{
+		Longitude:  lng,
+		Latitude:   lat,
+		Radius:     float64(nearbyUsersRadiusInKm),
+		RadiusUnit: "km",
 	}).Result()
 
 	if err != nil {
@@ -70,7 +69,8 @@ func (s *GeoLocationRepository) getNearbyUsersIds(lat, lng float64) ([]uint, err
 }
 
 func (s *GeoLocationRepository) GetNearbyUsers(userId uint, data *input.Coordinates) (*[]response.NearbyUsers, error) {
-	res, err := s.redisClient.GeoSearchLocation(s.ctx, "users:location", &redis.GeoSearchLocationQuery{
+	ctx := context.Background()
+	res, err := s.redisClient.GeoSearchLocation(ctx, "users:location", &redis.GeoSearchLocationQuery{
 		WithCoord: true,
 		GeoSearchQuery: redis.GeoSearchQuery{
 			Longitude:  data.Long,
@@ -111,10 +111,10 @@ func (s *GeoLocationRepository) convertToNearbyUsers(res []redis.GeoLocation, re
 	return &nearbyUsers
 }
 
-func (s *GeoLocationRepository) convertNearbyUsersToIDs(res []redis.GeoLocation) []uint {
+func (s *GeoLocationRepository) convertNearbyUsersToIDs(res []string) []uint {
 	var targetIDs []uint
-	for _, userNearby := range res {
-		userId, err := strconv.ParseUint(userNearby.Name, 10, 64)
+	for _, userIdStr := range res {
+		userId, err := strconv.ParseUint(userIdStr, 10, 64)
 		if err != nil {
 			continue
 		}
@@ -125,7 +125,8 @@ func (s *GeoLocationRepository) convertNearbyUsersToIDs(res []redis.GeoLocation)
 }
 
 func (s *GeoLocationRepository) RemoveUserLocation(userId uint) error {
-	_, err := s.redisClient.ZRem(s.ctx, "users:location", fmt.Sprint(userId)).Result()
+	ctx := context.Background()
+	_, err := s.redisClient.ZRem(ctx, "users:location", fmt.Sprint(userId)).Result()
 	if err != nil {
 		return err
 	}

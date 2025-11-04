@@ -12,7 +12,6 @@ import (
 	customErrors "github.com/g3techlabs/revit-api/src/infra/storage/errors"
 	"github.com/g3techlabs/revit-api/src/response/generics"
 	"github.com/g3techlabs/revit-api/src/utils"
-	"github.com/sirupsen/logrus"
 )
 
 type StorageService interface {
@@ -27,16 +26,17 @@ type S3Service struct {
 	Context              context.Context
 	bucket               string
 	presignPutExpiration int
-	log                  *logrus.Logger
+	logger               utils.ILogger
 }
 
-func NewS3Service(client *s3.Client, presignClient *s3.PresignClient, c context.Context) StorageService {
+func NewS3Service(client *s3.Client, presignClient *s3.PresignClient, c context.Context, logger utils.ILogger) StorageService {
 	s3Client := &S3Service{
 		Client:               client,
 		PresignClient:        presignClient,
 		Context:              c,
 		bucket:               config.Get("AWS_BUCKET_NAME"),
 		presignPutExpiration: config.GetIntVariable("PRESIGNED_PUT_URL_EXPIRATION"),
+		logger:               logger,
 	}
 	s3Client.initBucket(s3Client.bucket)
 	return s3Client
@@ -49,11 +49,11 @@ func (s *S3Service) initBucket(bucket string) {
 	if err != nil {
 		var bne *types.BucketAlreadyExists
 		if errors.As(err, &bne) {
-			utils.Log.Info("Bucket already exists. Skipping creation...")
+			s.logger.Info("Bucket already exists. Skipping creation...")
 		}
-		utils.Log.Warnf("Unable to create the bucket: %v", err)
+		s.logger.Warnf("Unable to create the bucket: %v", err)
 	}
-	utils.Log.Infof("Created bucket %q.\n", bucket)
+	s.logger.Warnf("Created bucket %q.\n", bucket)
 }
 
 func (s *S3Service) PresignPutObjectURL(objectKey string, contentType string) (string, error) {
@@ -100,16 +100,16 @@ func (s *S3Service) returnErrorBasedOnStatus(objectKey, operation string, err er
 	if errors.As(err, &responseError) {
 		switch responseError.HTTPStatusCode() {
 		case 404:
-			s.log.Errorf("%s object not found in S3: %s", objectKey, err.Error())
+			s.logger.Errorf("%s object not found in S3: %s", objectKey, err.Error())
 			return customErrors.ObjectNotFound()
 		case 403:
-			s.log.Errorf("Error of permission in %s operation in %s object: %s", operation, objectKey, err.Error())
+			s.logger.Errorf("Error of permission in %s operation in %s object: %s", operation, objectKey, err.Error())
 			return generics.InternalError()
 		default:
-			s.log.Errorf("Error during %s operation in %s object: %s", operation, objectKey, err.Error())
+			s.logger.Errorf("Error during %s operation in %s object: %s", operation, objectKey, err.Error())
 			return generics.InternalError()
 		}
 	}
-	s.log.Errorf("Error during %s operation in %s object: %s", operation, objectKey, err.Error())
+	s.logger.Errorf("Error during %s operation in %s object: %s", operation, objectKey, err.Error())
 	return generics.InternalError()
 }

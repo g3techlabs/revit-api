@@ -7,8 +7,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func AuthRoutes(router fiber.Router, as services.IAuthService) {
-	utils.Log.Info("Setting up AUTH routes...")
+func AuthRoutes(router fiber.Router, as services.IAuthService, logger utils.ILogger) {
+	logger.Info("Setting up AUTH routes...")
 
 	authController := controller.NewAuthController(as)
 
@@ -20,5 +20,5 @@ func AuthRoutes(router fiber.Router, as services.IAuthService) {
 	auth.Post("/send-reset-password-email", authController.SendPassResetEmail)
 	auth.Post("/reset-password", authController.ResetPassword)
 
-	utils.Log.Info("AUTH routes successfully set up.")
+	logger.Info("AUTH routes successfully set up.")
 }

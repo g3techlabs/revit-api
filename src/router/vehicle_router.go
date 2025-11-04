@@ -8,8 +8,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func VehicleRoutes(router fiber.Router, vehicleService service.IVehicleService, middleware *middleware.AuthMiddleware) {
-	utils.Log.Info("Setting up VEHICLE routes...")
+func VehicleRoutes(router fiber.Router, vehicleService service.IVehicleService, middleware *middleware.AuthMiddleware, logger utils.ILogger) {
+	logger.Info("Setting up VEHICLE routes...")
 
 	vehicleController := controller.NewVehicleController(vehicleService)
 
@@ -24,5 +24,5 @@ func VehicleRoutes(router fiber.Router, vehicleService service.IVehicleService, 
 	vehicle.Delete("/main-photo/:vehicleId", vehicleController.RemoveMainPhoto)
 	vehicle.Delete("/:vehicleId", vehicleController.DeleteVehicle)
 
-	utils.Log.Info("VEHICLE routes successfully set up.")
+	logger.Info("VEHICLE routes successfully set up.")
 }

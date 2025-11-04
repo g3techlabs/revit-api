@@ -9,7 +9,6 @@ import (
 	"github.com/g3techlabs/revit-api/src/core/event/response"
 	"github.com/g3techlabs/revit-api/src/db"
 	"github.com/g3techlabs/revit-api/src/db/models"
-	"github.com/g3techlabs/revit-api/src/utils"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -57,7 +56,6 @@ var defaultEventRadiusMeters = config.GetIntVariable("DEFAULT_EVENT_RADIUS_METER
 func (er *eventRepository) CreateEvent(userId uint, data *models.Event) error {
 	return er.db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Model(&models.Event{}).Create(data).Error; err != nil {
-			utils.Log.Infof("%s", err.Error())
 			return err
 		}
 

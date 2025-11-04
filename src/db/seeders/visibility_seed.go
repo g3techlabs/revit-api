@@ -7,15 +7,15 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func seedVisibilityTable(db *gorm.DB) {
-	utils.Log.Info("Starting Visibility Table seed...")
+func seedVisibilityTable(db *gorm.DB, logger utils.ILogger) {
+	logger.Info("Starting Visibility Table seed...")
 	visibilities := []models.Visibility{
 		{Name: "public", ID: 1},
 		{Name: "private", ID: 2},
 	}
 
 	if err := db.Clauses(clause.OnConflict{DoNothing: true}).Create(&visibilities).Error; err != nil {
-		utils.Log.Errorf("Error seeding Visibility Table: %v", err)
+		logger.Errorf("Error seeding Visibility Table: %v", err)
 	}
-	utils.Log.Info("Visibility Table seed complete.")
+	logger.Info("Visibility Table seed complete.")
 }

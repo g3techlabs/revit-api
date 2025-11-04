@@ -8,8 +8,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func EventRoutes(router fiber.Router, eventService service.IEventService, m *middleware.AuthMiddleware) {
-	utils.Log.Info("Setting up EVENT routes...")
+func EventRoutes(router fiber.Router, eventService service.IEventService, m *middleware.AuthMiddleware, logger utils.ILogger) {
+	logger.Info("Setting up EVENT routes...")
 
 	eventController := controller.NewEventController(eventService)
 
@@ -29,5 +29,5 @@ func EventRoutes(router fiber.Router, eventService service.IEventService, m *mid
 
 	event.Patch("/:eventId", eventController.UpdateEvent)
 
-	utils.Log.Info("EVENT routes successfully set up.")
+	logger.Info("EVENT routes successfully set up.")
 }

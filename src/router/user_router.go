@@ -8,8 +8,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func UserRoutes(router fiber.Router, us service.IUserService, middleware *middleware.AuthMiddleware) {
-	utils.Log.Info("Setting up USER routes...")
+func UserRoutes(router fiber.Router, us service.IUserService, middleware *middleware.AuthMiddleware, logger utils.ILogger) {
+	logger.Info("Setting up USER routes...")
 
 	userController := controller.NewUserController(us)
 
@@ -28,5 +28,5 @@ func UserRoutes(router fiber.Router, us service.IUserService, middleware *middle
 	user.Post("/profile-pic/", userController.RequestProfilePicUpdate)
 	user.Patch("/profile-pic", userController.ConfirmNewProfilePic)
 
-	utils.Log.Info("USER routes successfully set up.")
+	logger.Info("USER routes successfully set up.")
 }

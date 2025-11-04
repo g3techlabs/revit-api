@@ -5,8 +5,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func EnablePostTRGMExtension(db *gorm.DB) {
+func EnablePostTRGMExtension(db *gorm.DB, logger utils.ILogger) {
 	if err := db.Exec(`CREATE EXTENSION IF NOT EXISTS pg_trgm;`).Error; err != nil {
-		utils.Log.Fatalf("Error creating pg_trgm extension: %v", err)
+		logger.Fatalf("Error creating pg_trgm extension: %v", err)
 	}
 }

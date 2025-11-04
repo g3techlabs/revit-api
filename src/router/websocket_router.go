@@ -10,12 +10,12 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func WebSocketRoute(router fiber.Router, hub *ws.Hub, geoService geolocation.IGeoLocationService, m *middleware.AuthMiddleware) {
-	utils.Log.Info("WEBSOCKET route setting up...")
+func WebSocketRoute(router fiber.Router, hub *ws.Hub, geoService geolocation.IGeoLocationService, m *middleware.AuthMiddleware, logger utils.ILogger) {
+	logger.Info("WEBSOCKET route setting up...")
 
-	webSocketHandler := handler.NewWebSocketHandler(hub, geoService)
+	webSocketHandler := handler.NewWebSocketHandler(hub, geoService, logger)
 
 	router.Get("/ws", m.Auth(), websocket.New(webSocketHandler.Handle))
 
-	utils.Log.Info("WEBSOCKET route successfully set up.")
+	logger.Info("WEBSOCKET route successfully set up.")
 }

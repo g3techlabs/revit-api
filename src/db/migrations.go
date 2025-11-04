@@ -5,8 +5,8 @@ import (
 	"github.com/g3techlabs/revit-api/src/utils"
 )
 
-func Migrations() {
-	utils.Log.Info("Initiating database migration...")
+func Migrations(logger utils.ILogger) {
+	logger.Info("Initiating database migration...")
 	err := Db.AutoMigrate(
 		&models.InviteStatus{},
 		&models.Friendship{},
@@ -24,7 +24,7 @@ func Migrations() {
 		&models.EventSubscriber{},
 	)
 	if err != nil {
-		utils.Log.Fatalf("Error during migrations: %v", err)
+		logger.Fatalf("Error during migrations: %v", err)
 	}
-	utils.Log.Info("Database successfully migrated.")
+	logger.Info("Database successfully migrated.")
 }

@@ -10,8 +10,8 @@ import (
 	"gorm.io/gorm/schema"
 )
 
-func Connect() {
-	utils.Log.Info("Connecting to the database...")
+func Connect(logger utils.ILogger) {
+	logger.Info("Connecting to the database...")
 
 	var err error
 
@@ -28,8 +28,8 @@ func Connect() {
 		},
 	})
 	if err != nil {
-		utils.Log.Fatalf("Database connection gone wrong: %v", err)
+		logger.Fatalf("Database connection gone wrong: %v", err)
 	}
 
-	utils.Log.Info("Successfully connected to the database")
+	logger.Info("Successfully connected to the database")
 }

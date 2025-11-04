@@ -7,8 +7,8 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func seedRoleTable(db *gorm.DB) {
-	utils.Log.Info("Starting Role Table seed...")
+func seedRoleTable(db *gorm.DB, logger utils.ILogger) {
+	logger.Info("Starting Role Table seed...")
 	roles := []models.Role{
 		{Name: "owner", ID: 1},
 		{Name: "admin", ID: 2},
@@ -16,7 +16,7 @@ func seedRoleTable(db *gorm.DB) {
 	}
 
 	if err := db.Clauses(clause.OnConflict{DoNothing: true}).Create(&roles).Error; err != nil {
-		utils.Log.Errorf("Error seeding Role Table: %v", err)
+		logger.Errorf("Error seeding Role Table: %v", err)
 	}
-	utils.Log.Info("Role Table seed complete.")
+	logger.Info("Role Table seed complete.")
 }
