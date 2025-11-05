@@ -4,11 +4,12 @@ import (
 	"github.com/g3techlabs/revit-api/src/core/geolocation/service"
 	"github.com/g3techlabs/revit-api/src/core/route/input"
 	"github.com/g3techlabs/revit-api/src/core/route/repository"
+	"github.com/g3techlabs/revit-api/src/core/route/response"
 	"github.com/g3techlabs/revit-api/src/validation"
 )
 
 type IRouteService interface {
-	CreateRoute(userId uint, data *input.CreateRouteInput) error
+	CreateRoute(userId uint, data *input.CreateRouteInput) (*response.RouteCreatedReponse, error)
 }
 
 type RouteService struct {

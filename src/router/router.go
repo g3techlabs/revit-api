@@ -14,6 +14,8 @@ import (
 	gls "github.com/g3techlabs/revit-api/src/core/geolocation/service"
 	gr "github.com/g3techlabs/revit-api/src/core/group/repository"
 	gs "github.com/g3techlabs/revit-api/src/core/group/service"
+	rr "github.com/g3techlabs/revit-api/src/core/route/repository"
+	rs "github.com/g3techlabs/revit-api/src/core/route/service"
 	"github.com/g3techlabs/revit-api/src/core/users/repository"
 	"github.com/g3techlabs/revit-api/src/core/users/service"
 	vr "github.com/g3techlabs/revit-api/src/core/vehicle/repository"
@@ -42,6 +44,7 @@ func SetupRoutes(app *fiber.App, logger utils.ILogger) {
 	eventRepository := er.NewEventRepository()
 	cityRepository := cr.NewCityRepository()
 	geoLocationRepo := glr.NewGeoLocationRepository(redisClient)
+	routeRepo := rr.NewRouteRepository()
 
 	storageService := storage.NewS3Service(storageClient, config.NewPresignClient(storageClient), context.Background(), logger)
 	tokenService := token.NewTokenService()
@@ -56,6 +59,7 @@ func SetupRoutes(app *fiber.App, logger utils.ILogger) {
 	eventService := es.NewEventService(validator, eventRepository, storageService)
 	cityService := cs.NewCityService(validator, cityRepository)
 	geoLocationService := gls.NewGeoLocationService(validator, geoLocationRepo, hub, logger)
+	routeService := rs.NewRouteService(validator, geoLocationService, routeRepo)
 
 	api := app.Group("/api")
 	AuthRoutes(api, authService, logger)
@@ -65,6 +69,7 @@ func SetupRoutes(app *fiber.App, logger utils.ILogger) {
 	EventRoutes(api, eventService, authMiddleware, logger)
 	CityRoutes(api, cityService, authMiddleware, logger)
 	WebSocketRoute(api, hub, geoLocationService, authMiddleware, logger)
+	RouteRoutes(api, routeService, authMiddleware, logger)
 
 	logger.Info("Routes successfully set up.")
 }
