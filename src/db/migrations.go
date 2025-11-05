@@ -22,6 +22,8 @@ func Migrations(logger utils.ILogger) {
 		&models.GroupMember{},
 		&models.Event{},
 		&models.EventSubscriber{},
+		&models.Route{},
+		&models.RouteParticipant{},
 	)
 	if err != nil {
 		logger.Fatalf("Error during migrations: %v", err)

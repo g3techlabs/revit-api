@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/g3techlabs/revit-api/src/core/geolocation"
-	"github.com/g3techlabs/revit-api/src/core/geolocation/input"
+	geoinput "github.com/g3techlabs/revit-api/src/core/geolocation/geo_input"
+	"github.com/g3techlabs/revit-api/src/core/geolocation/service"
 	ws "github.com/g3techlabs/revit-api/src/infra/websocket"
 	"github.com/g3techlabs/revit-api/src/infra/websocket/models"
 	"github.com/g3techlabs/revit-api/src/utils"
@@ -14,11 +14,11 @@ import (
 
 type WebSocketHandler struct {
 	hub        *ws.Hub
-	geoService geolocation.IGeoLocationService
+	geoService service.IGeoLocationService
 	logger     utils.ILogger
 }
 
-func NewWebSocketHandler(hub *ws.Hub, geoService geolocation.IGeoLocationService, logger utils.ILogger) *WebSocketHandler {
+func NewWebSocketHandler(hub *ws.Hub, geoService service.IGeoLocationService, logger utils.ILogger) *WebSocketHandler {
 	return &WebSocketHandler{
 		hub:        hub,
 		geoService: geoService,
@@ -46,7 +46,7 @@ func (h *WebSocketHandler) Handle(c *websocket.Conn) {
 
 		switch message.Event {
 		case "put-user-location":
-			var payload input.Coordinates
+			var payload geoinput.Coordinates
 			if err := json.Unmarshal(message.Payload, &payload); err != nil {
 				continue
 			}

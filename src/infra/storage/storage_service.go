@@ -53,7 +53,7 @@ func (s *S3Service) initBucket(bucket string) {
 		}
 		s.logger.Warnf("Unable to create the bucket: %v", err)
 	}
-	s.logger.Warnf("Created bucket %q.\n", bucket)
+	s.logger.Infof("%q Bucket successfully created.\n", bucket)
 }
 
 func (s *S3Service) PresignPutObjectURL(objectKey string, contentType string) (string, error) {
