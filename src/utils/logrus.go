@@ -14,6 +14,8 @@ type ILogger interface {
 	Fatalf(format string, args ...any)
 }
 
+var Log *logrus.Logger
+
 type Logger struct {
 	logger *logrus.Logger
 }
@@ -28,6 +30,8 @@ func NewLogger() ILogger {
 			TimestampFormat: "02-01-2006 15:04:05",
 		},
 	)
+
+	Log = logger
 
 	return &Logger{
 		logger: logger,

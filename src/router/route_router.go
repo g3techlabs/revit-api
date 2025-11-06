@@ -16,6 +16,9 @@ func RouteRoutes(router fiber.Router, routeService service.IRouteService, m *mid
 	route := router.Group("/route", m.Auth())
 
 	route.Post("/", controller.CreateRoute)
+	route.Get("/friends", controller.GetOnlineFriendsToInvite)
+	route.Get("/nearby", controller.GetNearbyUsersToRouteInvite)
+	route.Post("/:routeId/invite", controller.InviteNearbyUsers)
 
 	logger.Info("ROUTE endpoints successfully set up")
 }

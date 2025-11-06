@@ -14,6 +14,8 @@ type IGeoLocationService interface {
 	PutUserOnFreeRoam(userId uint, data *geoinput.Coordinates) error
 	PutUserOnRoute(routeId, userId uint, data *geoinput.Coordinates) error
 	RemoveUserLocation(userId uint) error
+	CheckUsersAreOnline(userIDs []uint) ([]bool, error)
+	GetNearbyUsersToRouteInvite(userId uint, lat, long float64, page, pageSize int) ([]uint, error)
 }
 
 type GeoLocationService struct {

@@ -7,7 +7,6 @@ import (
 
 	"github.com/g3techlabs/revit-api/src/config"
 	geoinput "github.com/g3techlabs/revit-api/src/core/geolocation/geo_input"
-	"github.com/g3techlabs/revit-api/src/core/geolocation/response"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -22,11 +21,12 @@ var radiusInMetersOfRouteInvite = config.GetIntVariable("RADIUS_IN_METERS_OF_ROU
 
 type IGeoLocationRepository interface {
 	PutUserLocation(key string, userId uint, data *geoinput.Coordinates) ([]uint, error)
-	GetFreeRoamNearbyUsers(key string, userId uint, coordinates *geoinput.Coordinates) (*[]response.NearbyUsers, error)
+	GetNearbyUsersToRouteInvite(userId uint, lat, long float64, page, pageSize int) ([]uint, error)
 	RemoveUserLocation(key string, userId uint) error
 	GetUserStateGeoKey(userId uint) (string, error)
 	SetUserState(key string, userId uint) error
 	ClearUserState(userId uint) error
+	CheckUsersAreOnline(userIDs []uint) ([]bool, error)
 }
 
 type GeoLocationRepository struct {
@@ -59,49 +59,6 @@ func (s *GeoLocationRepository) ClearUserState(userId uint) error {
 	ctx := context.Background()
 
 	return s.redisClient.Del(ctx, s.userStateKey(userId)).Err()
-}
-
-func (s *GeoLocationRepository) GetFreeRoamNearbyUsers(key string, userId uint, data *geoinput.Coordinates) (*[]response.NearbyUsers, error) {
-	ctx := context.Background()
-	res, err := s.redisClient.GeoSearchLocation(ctx, key, &redis.GeoSearchLocationQuery{
-		WithCoord: true,
-		GeoSearchQuery: redis.GeoSearchQuery{
-			Longitude:  data.Long,
-			Latitude:   data.Lat,
-			Radius:     float64(radiusInMetersOfRouteInvite),
-			RadiusUnit: "m",
-		},
-	}).Result()
-
-	if err != nil {
-		return nil, err
-	}
-
-	nearbyUsers := s.convertToNearbyUsers(res, userId)
-
-	return nearbyUsers, nil
-}
-
-func (s *GeoLocationRepository) convertToNearbyUsers(res []redis.GeoLocation, requesterId uint) *[]response.NearbyUsers {
-	var nearbyUsers []response.NearbyUsers
-	for _, user := range res {
-		userId, err := strconv.ParseUint(user.Name, 10, 64)
-		if err != nil {
-			continue
-		}
-
-		if userId == uint64(requesterId) {
-			continue
-		}
-
-		nearbyUsers = append(nearbyUsers, response.NearbyUsers{
-			UserID: uint(userId),
-			Lat:    user.Latitude,
-			Lng:    user.Longitude,
-		})
-	}
-
-	return &nearbyUsers
 }
 
 func (s *GeoLocationRepository) convertNearbyUsersToIDs(res []string, senderId uint) []uint {

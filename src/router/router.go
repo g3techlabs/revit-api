@@ -59,7 +59,7 @@ func SetupRoutes(app *fiber.App, logger utils.ILogger) {
 	eventService := es.NewEventService(validator, eventRepository, storageService)
 	cityService := cs.NewCityService(validator, cityRepository)
 	geoLocationService := gls.NewGeoLocationService(validator, geoLocationRepo, hub, logger)
-	routeService := rs.NewRouteService(validator, geoLocationService, routeRepo)
+	routeService := rs.NewRouteService(validator, geoLocationService, routeRepo, hub)
 
 	api := app.Group("/api")
 	AuthRoutes(api, authService, logger)
