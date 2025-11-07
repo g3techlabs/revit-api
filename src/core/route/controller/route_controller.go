@@ -3,6 +3,7 @@ package controller
 import (
 	"strconv"
 
+	geoinput "github.com/g3techlabs/revit-api/src/core/geolocation/geo_input"
 	"github.com/g3techlabs/revit-api/src/core/route/input"
 	"github.com/g3techlabs/revit-api/src/core/route/service"
 	"github.com/gofiber/fiber/v2"
@@ -98,4 +99,28 @@ func (c *RouteController) GetNearbyUsersToRouteInvite(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(response)
+}
+
+func (c *RouteController) AcceptRouteInvite(ctx *fiber.Ctx) error {
+	var coordinates geoinput.Coordinates
+
+	routeParam := ctx.Params("routeId")
+	routeIdUint64, err := strconv.ParseUint(routeParam, 10, 64)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid route ID",
+		})
+	}
+	routeId := uint(routeIdUint64)
+
+	userId, ok := ctx.Locals("userId").(uint)
+	if !ok {
+		return fiber.NewError(fiber.StatusUnauthorized, "Invalid user ID")
+	}
+
+	if err := c.routeService.AcceptRouteInvite(userId, routeId, &coordinates); err != nil {
+		return err
+	}
+
+	return ctx.SendStatus(fiber.StatusNoContent)
 }

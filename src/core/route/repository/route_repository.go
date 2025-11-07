@@ -1,8 +1,11 @@
 package repository
 
 import (
+	"fmt"
+
 	"github.com/g3techlabs/revit-api/src/config"
 	geoinput "github.com/g3techlabs/revit-api/src/core/geolocation/geo_input"
+	georesponse "github.com/g3techlabs/revit-api/src/core/geolocation/response"
 	"github.com/g3techlabs/revit-api/src/core/route/response"
 	"github.com/g3techlabs/revit-api/src/db"
 	"github.com/g3techlabs/revit-api/src/db/models"
@@ -18,6 +21,7 @@ type RouteRepository interface {
 	GetRouteOwner(userId, routeId uint) (*OwnerInfo, error)
 	GetFriendsToInvite(userId uint) (*[]response.OnlineFriendsResponse, error)
 	GetNearbyUsersDetails(nearbyIds []uint) (*[]response.NearbyUserToRouteResponse, error)
+	AcceptRouteInvite(userId, routeId uint, coordinates *geoinput.Coordinates) (*georesponse.UserDetails, error)
 }
 
 type routeRepository struct {
@@ -110,4 +114,66 @@ func (r *routeRepository) GetNearbyUsersDetails(nearbyIds []uint) (*[]response.N
 	}
 
 	return &nearbyUsers, nil
+}
+
+func (r *routeRepository) AcceptRouteInvite(userId, routeId uint, coordinates *geoinput.Coordinates) (*georesponse.UserDetails, error) {
+	var userDetails georesponse.UserDetails
+
+	tx := r.db.Begin()
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	var routeCount int64
+	if err := tx.Model(&models.Route{}).
+		Where("id = ?", routeId).
+		Where("is_done = FALSE AND finished_at IS NULL").
+		Count(&routeCount).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	if routeCount == 0 {
+		tx.Rollback()
+		return nil, fmt.Errorf("route not found")
+	}
+
+	var participantCount int64
+	if err := tx.Model(&models.RouteParticipant{}).
+		Where("route_id = ? AND user_id = ?", routeId, userId).
+		Count(&participantCount).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	if participantCount > 0 {
+		tx.Rollback()
+		return nil, fmt.Errorf("user already a participant")
+	}
+
+	routeParticipant := models.RouteParticipant{
+		UserID:        userId,
+		RouteID:       routeId,
+		StartLocation: gorm.Expr("ST_SetSRID(ST_MakePoint(?, ?), 4326)", coordinates.Long, coordinates.Lat),
+	}
+
+	if err := tx.Create(&routeParticipant).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	if err := tx.Model(&models.User{}).
+		Select("id AS user_id, nickname, COALESCE(? || profile_pic) AS profile_pic").
+		Where("id = ?", userId).
+		Scan(&userDetails).Error; err != nil {
+		return nil, err
+	}
+
+	return &userDetails, tx.Commit().Error
 }

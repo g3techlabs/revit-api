@@ -1,6 +1,8 @@
 package websocket
 
 import (
+	"encoding/json"
+
 	"github.com/g3techlabs/revit-api/src/infra/websocket/models"
 	"github.com/g3techlabs/revit-api/src/utils"
 	"github.com/gofiber/contrib/websocket"
@@ -53,4 +55,20 @@ func (h *Hub) Run() {
 			}
 		}
 	}
+}
+
+func (h *Hub) SendMulticastMessage(targetIds []uint, payload any) error {
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	multicastMessage := MulticastMessage{
+		TargetUserIDs: targetIds,
+		Payload:       payloadBytes,
+	}
+
+	h.Multicast <- &multicastMessage
+
+	return nil
 }

@@ -3,6 +3,7 @@ package service
 import (
 	geoinput "github.com/g3techlabs/revit-api/src/core/geolocation/geo_input"
 	"github.com/g3techlabs/revit-api/src/core/geolocation/repository"
+	"github.com/g3techlabs/revit-api/src/core/geolocation/response"
 	"github.com/g3techlabs/revit-api/src/infra/websocket"
 	"github.com/g3techlabs/revit-api/src/utils"
 	"github.com/g3techlabs/revit-api/src/validation"
@@ -12,7 +13,7 @@ import (
 type IGeoLocationService interface {
 	PutUserLocation(userId uint, data *geoinput.Coordinates) error
 	PutUserOnFreeRoam(userId uint, data *geoinput.Coordinates) error
-	PutUserOnRoute(routeId, userId uint, data *geoinput.Coordinates) error
+	PutUserOnRoute(routeId uint, userDetails *response.UserDetails, data *geoinput.Coordinates) error
 	RemoveUserLocation(userId uint) error
 	CheckUsersAreOnline(userIDs []uint) ([]bool, error)
 	GetNearbyUsersToRouteInvite(userId uint, lat, long float64, page, pageSize int) ([]uint, error)

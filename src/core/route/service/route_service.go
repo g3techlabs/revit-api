@@ -1,6 +1,7 @@
 package service
 
 import (
+	geoinput "github.com/g3techlabs/revit-api/src/core/geolocation/geo_input"
 	"github.com/g3techlabs/revit-api/src/core/geolocation/service"
 	"github.com/g3techlabs/revit-api/src/core/route/input"
 	"github.com/g3techlabs/revit-api/src/core/route/repository"
@@ -14,6 +15,7 @@ type IRouteService interface {
 	GetOnlineFriendsToInvite(userId uint) (*[]response.OnlineFriendsResponse, error)
 	GetNearbyUsersToInvite(userId uint, data *input.GetNearbyUsersToInviteQuery) (*[]response.NearbyUserToRouteResponse, error)
 	InviteNearbyUsers(userId, routeId uint, inviteds *input.UsersToInviteInput) error
+	AcceptRouteInvite(userId, routeId uint, coordinates *geoinput.Coordinates) error
 }
 
 type RouteService struct {

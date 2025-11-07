@@ -1,6 +1,7 @@
 package service
 
 import (
+	georesponse "github.com/g3techlabs/revit-api/src/core/geolocation/response"
 	"github.com/g3techlabs/revit-api/src/core/route/input"
 	"github.com/g3techlabs/revit-api/src/core/route/response"
 	"github.com/g3techlabs/revit-api/src/response/generics"
@@ -16,7 +17,11 @@ func (rs *RouteService) CreateRoute(userId uint, data *input.CreateRouteInput) (
 		return nil, generics.InternalError()
 	}
 
-	if err := rs.geoLocationService.PutUserOnRoute(routeId, userId, &data.StartLocation); err != nil {
+	userDetails := georesponse.UserDetails{
+		UserId: userId,
+	}
+
+	if err := rs.geoLocationService.PutUserOnRoute(routeId, &userDetails, &data.StartLocation); err != nil {
 		return nil, err
 	}
 

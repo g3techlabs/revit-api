@@ -1,11 +1,8 @@
 package service
 
 import (
-	"encoding/json"
-
 	geoinput "github.com/g3techlabs/revit-api/src/core/geolocation/geo_input"
-	"github.com/g3techlabs/revit-api/src/infra/websocket"
-	"github.com/g3techlabs/revit-api/src/infra/websocket/response"
+	"github.com/g3techlabs/revit-api/src/core/geolocation/response"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -27,12 +24,6 @@ func (gls *GeoLocationService) PutUserLocation(userId uint, data *geoinput.Coord
 		isNewState = true
 	}
 
-	targetIDs, err := gls.geoLocationRepository.PutUserLocation(key, userId, data)
-	if err != nil {
-		gls.logger.Errorf("Error while putting user location: %v", err)
-		return err
-	}
-
 	if isNewState {
 		if err := gls.geoLocationRepository.SetUserState(key, userId); err != nil {
 			gls.logger.Errorf("Error setting new user state to free roam: %v", err)
@@ -40,27 +31,16 @@ func (gls *GeoLocationService) PutUserLocation(userId uint, data *geoinput.Coord
 		}
 	}
 
-	newPayload := &response.UserMovedEvent{
-		Event: "user-moved",
-		Payload: response.UserMovedPayload{
-			Lat:    data.Lat,
-			Lng:    data.Long,
-			UserID: userId,
-		},
-	}
-
-	payloadBytes, err := json.Marshal(newPayload)
+	targetIDs, err := gls.geoLocationRepository.PutUserLocation(key, userId, data)
 	if err != nil {
-		gls.logger.Errorf("Error while marshalling payload on PutUserOnFreeRoam: %v", err)
+		gls.logger.Errorf("Error while putting user location: %v", err)
 		return err
 	}
 
-	multicastMessage := &websocket.MulticastMessage{
-		Payload:       payloadBytes,
-		TargetUserIDs: targetIDs,
+	payload := response.NewUserMovedEvent(userId, data)
+	if err := gls.hub.SendMulticastMessage(targetIDs, payload); err != nil {
+		gls.logger.Errorf("Error marshalling UserMovedEvent message: %v", err)
+		return err
 	}
-
-	gls.hub.Multicast <- multicastMessage
-
 	return nil
 }
