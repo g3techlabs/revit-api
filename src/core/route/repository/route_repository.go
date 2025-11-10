@@ -18,8 +18,8 @@ var cloudFrontUrl string = config.Get("AWS_CLOUDFRONT_URL")
 
 type RouteRepository interface {
 	CreateRoute(userId uint, startLocation, destination geoinput.Coordinates) (uint, error)
-	GetRouteOwner(userId, routeId uint) (*OwnerInfo, error)
-	GetFriendsToInvite(userId uint) (*[]response.OnlineFriendsResponse, error)
+	GetRouteAndOwnerInfo(userId, routeId uint) (*OwnerAndRouteInfo, error)
+	GetFriendsToInvite(userId uint, page, limit uint) (*[]response.OnlineFriendsResponse, error)
 	GetNearbyUsersDetails(nearbyIds []uint) (*[]response.NearbyUserToRouteResponse, error)
 	AcceptRouteInvite(userId, routeId uint, coordinates *geoinput.Coordinates) (*georesponse.UserDetails, error)
 }
@@ -62,13 +62,18 @@ func (r *routeRepository) CreateRoute(userId uint, startLocation, destination ge
 	return route.ID, nil
 }
 
-func (r *routeRepository) GetRouteOwner(userId, routeId uint) (*OwnerInfo, error) {
-	var owner OwnerInfo
+func (r *routeRepository) GetRouteAndOwnerInfo(userId, routeId uint) (*OwnerAndRouteInfo, error) {
+	var owner OwnerAndRouteInfo
 
 	if err := r.db.Model(&models.RouteParticipant{}).
-		Select("u.nickname", "route_participant.is_owner", "ST_Y(event.location::geometry) as lat", "ST_X(event.location::geometry) as long").
-		Joins("JOIN route r ON r.id = route_participant.route_id AND r.finished_at IS NULL and r.is_done = FALSE").
-		Joins("JOIN users u ON u.id = route_participant.user_id").
+		Select(`
+		u.nickname, 
+		route_participant.is_owner, 
+		ST_Y(r.destination::geometry) as lat, 
+		ST_X(r.destination::geometry) as long, 
+		COALESCE(? || u.profile_pic) AS profile_pic`, cloudFrontUrl).
+		Joins("INNER JOIN route r ON r.id = route_participant.route_id AND r.finished_at IS NULL and r.is_done = FALSE").
+		Joins("INNER JOIN users u ON u.id = route_participant.user_id").
 		Where("user_id = ? AND route_id = ?", userId, routeId).
 		Where("ended_at IS NULL AND is_owner = TRUE").Scan(&owner).Error; err != nil {
 		return nil, err
@@ -77,8 +82,10 @@ func (r *routeRepository) GetRouteOwner(userId, routeId uint) (*OwnerInfo, error
 	return &owner, nil
 }
 
-func (r *routeRepository) GetFriendsToInvite(userId uint) (*[]response.OnlineFriendsResponse, error) {
+func (r *routeRepository) GetFriendsToInvite(userId uint, page, limit uint) (*[]response.OnlineFriendsResponse, error) {
 	var friends []response.OnlineFriendsResponse
+
+	offset := (int(page) - 1) * int(limit)
 
 	subQuery := r.db.
 		Model(&models.Friendship{}).
@@ -96,6 +103,8 @@ func (r *routeRepository) GetFriendsToInvite(userId uint) (*[]response.OnlineFri
 		Table("users").
 		Select("users.id AS friend_id, users.nickname, COALESCE(? || users.profile_pic) AS profile_pic", cloudFrontUrl).
 		Joins("JOIN (?) AS sub ON sub.friend_id = users.id", subQuery).
+		Limit(int(limit)).
+		Offset(offset).
 		Scan(&friends).Error; err != nil {
 		return nil, err
 	}
@@ -169,9 +178,10 @@ func (r *routeRepository) AcceptRouteInvite(userId, routeId uint, coordinates *g
 	}
 
 	if err := tx.Model(&models.User{}).
-		Select("id AS user_id, nickname, COALESCE(? || profile_pic) AS profile_pic").
+		Select("id AS user_id, nickname, COALESCE(? || profile_pic) AS profile_pic", cloudFrontUrl).
 		Where("id = ?", userId).
 		Scan(&userDetails).Error; err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 

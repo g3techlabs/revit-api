@@ -18,8 +18,8 @@ func RouteRoutes(router fiber.Router, routeService service.IRouteService, m *mid
 	route.Post("/", controller.CreateRoute)
 	route.Get("/friends", controller.GetOnlineFriendsToInvite)
 	route.Get("/nearby", controller.GetNearbyUsersToRouteInvite)
-	route.Post("/:routeId/invite", controller.InviteNearbyUsers)
-	route.Post("/:routeId/invite/action", controller.AcceptRouteInvite)
+	route.Put("/:routeId/invite", controller.InviteUsers)
+	route.Patch("/:routeId/invite", controller.AcceptRouteInvite)
 
 	logger.Info("ROUTE endpoints successfully set up")
 }

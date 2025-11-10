@@ -39,7 +39,7 @@ func (c *RouteController) CreateRoute(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusCreated).JSON(response)
 }
 
-func (c *RouteController) InviteNearbyUsers(ctx *fiber.Ctx) error {
+func (c *RouteController) InviteUsers(ctx *fiber.Ctx) error {
 	var data input.UsersToInviteInput
 
 	if err := ctx.BodyParser(&data); err != nil {
@@ -60,7 +60,7 @@ func (c *RouteController) InviteNearbyUsers(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusUnauthorized, "Invalid user ID")
 	}
 
-	if err := c.routeService.InviteNearbyUsers(userId, routeId, &data); err != nil {
+	if err := c.routeService.InviteUsers(userId, routeId, &data); err != nil {
 		return err
 	}
 
@@ -68,12 +68,18 @@ func (c *RouteController) InviteNearbyUsers(ctx *fiber.Ctx) error {
 }
 
 func (c *RouteController) GetOnlineFriendsToInvite(ctx *fiber.Ctx) error {
+	var query input.GetOnlineFriendsToInviteQuery
+
+	if err := ctx.QueryParser(&query); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid body request")
+	}
+
 	userId, ok := ctx.Locals("userId").(uint)
 	if !ok {
 		return fiber.NewError(fiber.StatusUnauthorized, "Invalid user ID")
 	}
 
-	response, err := c.routeService.GetOnlineFriendsToInvite(userId)
+	response, err := c.routeService.GetOnlineFriendsToInvite(userId, &query)
 	if err != nil {
 		return err
 	}
@@ -103,6 +109,10 @@ func (c *RouteController) GetNearbyUsersToRouteInvite(ctx *fiber.Ctx) error {
 
 func (c *RouteController) AcceptRouteInvite(ctx *fiber.Ctx) error {
 	var coordinates geoinput.Coordinates
+
+	if err := ctx.BodyParser(&coordinates); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid body request")
+	}
 
 	routeParam := ctx.Params("routeId")
 	routeIdUint64, err := strconv.ParseUint(routeParam, 10, 64)

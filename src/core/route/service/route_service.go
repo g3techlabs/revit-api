@@ -12,9 +12,9 @@ import (
 
 type IRouteService interface {
 	CreateRoute(userId uint, data *input.CreateRouteInput) (*response.RouteCreatedReponse, error)
-	GetOnlineFriendsToInvite(userId uint) (*[]response.OnlineFriendsResponse, error)
+	GetOnlineFriendsToInvite(userId uint, query *input.GetOnlineFriendsToInviteQuery) (*[]response.OnlineFriendsResponse, error)
 	GetNearbyUsersToInvite(userId uint, data *input.GetNearbyUsersToInviteQuery) (*[]response.NearbyUserToRouteResponse, error)
-	InviteNearbyUsers(userId, routeId uint, inviteds *input.UsersToInviteInput) error
+	InviteUsers(userId, routeId uint, inviteds *input.UsersToInviteInput) error
 	AcceptRouteInvite(userId, routeId uint, coordinates *geoinput.Coordinates) error
 }
 

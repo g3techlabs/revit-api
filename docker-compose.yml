@@ -32,10 +32,7 @@ services:
     container_name: revit-redis
     ports:
       - "${REDIS_PORT}:6379"
-    volumes:
-      - redis_data:/data
     restart: unless-stopped
 
 volumes:
   postgres_data:
-  redis_data:

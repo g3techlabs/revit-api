@@ -1,12 +1,17 @@
 package service
 
 import (
+	"github.com/g3techlabs/revit-api/src/core/route/input"
 	"github.com/g3techlabs/revit-api/src/core/route/response"
 	"github.com/g3techlabs/revit-api/src/response/generics"
 )
 
-func (s *RouteService) GetOnlineFriendsToInvite(userId uint) (*[]response.OnlineFriendsResponse, error) {
-	userFriends, err := s.routeRepo.GetFriendsToInvite(userId)
+func (s *RouteService) GetOnlineFriendsToInvite(userId uint, query *input.GetOnlineFriendsToInviteQuery) (*[]response.OnlineFriendsResponse, error) {
+	if err := s.validator.Validate(query); err != nil {
+		return nil, err
+	}
+
+	userFriends, err := s.routeRepo.GetFriendsToInvite(userId, query.Page, query.Limit)
 	if err != nil {
 		return nil, generics.InternalError()
 	}
@@ -15,7 +20,6 @@ func (s *RouteService) GetOnlineFriendsToInvite(userId uint) (*[]response.Online
 		return &[]response.OnlineFriendsResponse{}, nil
 	}
 
-	// TODO: optimize this shit
 	friendIDs := make([]uint, len(*userFriends))
 	for i, friend := range *userFriends {
 		friendIDs[i] = friend.FriendId
