@@ -27,6 +27,7 @@ type IGeoLocationRepository interface {
 	SetUserState(key string, userId uint) error
 	ClearUserState(userId uint) error
 	CheckUsersAreOnline(userIDs []uint) ([]bool, error)
+	GetUsersInRoute(key string) ([]uint, error)
 }
 
 type GeoLocationRepository struct {

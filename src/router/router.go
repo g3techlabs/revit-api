@@ -68,7 +68,7 @@ func SetupRoutes(app *fiber.App, logger utils.ILogger) {
 	GroupRoutes(api, groupService, authMiddleware, logger)
 	EventRoutes(api, eventService, authMiddleware, logger)
 	CityRoutes(api, cityService, authMiddleware, logger)
-	WebSocketRoute(api, hub, geoLocationService, authMiddleware, logger)
+	WebSocketRoute(api, hub, routeService, geoLocationService, authMiddleware, logger)
 	RouteRoutes(api, routeService, authMiddleware, logger)
 
 	logger.Info("Routes successfully set up.")

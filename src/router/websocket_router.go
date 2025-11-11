@@ -2,7 +2,8 @@ package router
 
 import (
 	"github.com/g3techlabs/revit-api/src/core/auth/middleware"
-	"github.com/g3techlabs/revit-api/src/core/geolocation/service"
+	geoservice "github.com/g3techlabs/revit-api/src/core/geolocation/service"
+	routeservice "github.com/g3techlabs/revit-api/src/core/route/service"
 	ws "github.com/g3techlabs/revit-api/src/infra/websocket"
 	"github.com/g3techlabs/revit-api/src/infra/websocket/handler"
 	"github.com/g3techlabs/revit-api/src/utils"
@@ -10,10 +11,17 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func WebSocketRoute(router fiber.Router, hub *ws.Hub, geoService service.IGeoLocationService, m *middleware.AuthMiddleware, logger utils.ILogger) {
+func WebSocketRoute(
+	router fiber.Router,
+	hub *ws.Hub,
+	routeService routeservice.IRouteService,
+	geoService geoservice.IGeoLocationService,
+	m *middleware.AuthMiddleware,
+	logger utils.ILogger,
+) {
 	logger.Info("WEBSOCKET route setting up...")
 
-	webSocketHandler := handler.NewWebSocketHandler(hub, geoService, logger)
+	webSocketHandler := handler.NewWebSocketHandler(hub, geoService, routeService, logger)
 
 	router.Get("/ws", m.Auth(), websocket.New(webSocketHandler.Handle))
 

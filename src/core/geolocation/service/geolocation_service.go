@@ -17,6 +17,7 @@ type IGeoLocationService interface {
 	RemoveUserLocation(userId uint) error
 	CheckUsersAreOnline(userIDs []uint) ([]bool, error)
 	GetNearbyUsersToRouteInvite(userId uint, lat, long float64, page, pageSize int) ([]uint, error)
+	GetUsersInRoute(routeId uint) ([]uint, error)
 }
 
 type GeoLocationService struct {

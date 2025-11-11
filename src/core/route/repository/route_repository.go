@@ -22,6 +22,7 @@ type RouteRepository interface {
 	GetFriendsToInvite(userId uint, page, limit uint) (*[]response.OnlineFriendsResponse, error)
 	GetNearbyUsersDetails(nearbyIds []uint) (*[]response.NearbyUserToRouteResponse, error)
 	AcceptRouteInvite(userId, routeId uint, coordinates *geoinput.Coordinates) (*georesponse.UserDetails, error)
+	StartRoute(userId, routeId uint) error
 }
 
 type routeRepository struct {
@@ -186,4 +187,29 @@ func (r *routeRepository) AcceptRouteInvite(userId, routeId uint, coordinates *g
 	}
 
 	return &userDetails, tx.Commit().Error
+}
+
+func (r *routeRepository) StartRoute(userId, routeId uint) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		var count int64
+
+		if err := tx.Model(&models.RouteParticipant{}).
+			Joins("INNER JOIN routes r ON r.id = route_participant.route_id AND r.started_at IS NULL AND r.finished_at IS NULL AND r.is_done = FALSE").
+			Where("route_participant.route_id = ? AND route_participant.user_id = ?", routeId, userId).
+			Where("route_participant.ended_at IS NULL").
+			Where("route_participant.is_owner = TRUE").
+			Count(&count).Error; err != nil {
+			return err
+		}
+
+		if count < 1 {
+			return fmt.Errorf("route not found")
+		}
+
+		err := tx.Model(&models.Route{}).
+			Where("id = ?", routeId).
+			Update("started_at", gorm.Expr("NOW()")).Error
+
+		return err
+	})
 }

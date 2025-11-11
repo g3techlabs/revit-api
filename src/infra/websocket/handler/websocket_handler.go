@@ -5,24 +5,28 @@ import (
 	"fmt"
 
 	geoinput "github.com/g3techlabs/revit-api/src/core/geolocation/geo_input"
-	"github.com/g3techlabs/revit-api/src/core/geolocation/service"
+	geoservice "github.com/g3techlabs/revit-api/src/core/geolocation/service"
+	routeservice "github.com/g3techlabs/revit-api/src/core/route/service"
 	ws "github.com/g3techlabs/revit-api/src/infra/websocket"
 	"github.com/g3techlabs/revit-api/src/infra/websocket/models"
+	"github.com/g3techlabs/revit-api/src/infra/websocket/payload"
 	"github.com/g3techlabs/revit-api/src/utils"
 	"github.com/gofiber/contrib/websocket"
 )
 
 type WebSocketHandler struct {
-	hub        *ws.Hub
-	geoService service.IGeoLocationService
-	logger     utils.ILogger
+	hub          *ws.Hub
+	geoService   geoservice.IGeoLocationService
+	routeService routeservice.IRouteService
+	logger       utils.ILogger
 }
 
-func NewWebSocketHandler(hub *ws.Hub, geoService service.IGeoLocationService, logger utils.ILogger) *WebSocketHandler {
+func NewWebSocketHandler(hub *ws.Hub, geoService geoservice.IGeoLocationService, routeService routeservice.IRouteService, logger utils.ILogger) *WebSocketHandler {
 	return &WebSocketHandler{
-		hub:        hub,
-		geoService: geoService,
-		logger:     logger,
+		hub:          hub,
+		geoService:   geoService,
+		routeService: routeService,
+		logger:       logger,
 	}
 }
 
@@ -52,6 +56,16 @@ func (h *WebSocketHandler) Handle(c *websocket.Conn) {
 			}
 
 			if err := h.geoService.PutUserLocation(userId, &payload); err != nil {
+				continue
+			}
+		case "start-route":
+			var payload payload.StartRoutePayload
+			if err := json.Unmarshal(message.Payload, &payload); err != nil {
+				continue
+			}
+
+			if err := h.routeService.StartRoute(userId, payload.RouteID); err != nil {
+				h.logger.Errorf("Error starting route %d: %v", payload.RouteID, err)
 				continue
 			}
 		}
