@@ -18,6 +18,7 @@ type IGeoLocationService interface {
 	CheckUsersAreOnline(userIDs []uint) ([]bool, error)
 	GetNearbyUsersToRouteInvite(userId uint, lat, long float64, page, pageSize int) ([]uint, error)
 	GetUsersInRoute(routeId uint) ([]uint, error)
+	GetUserCurrentKey(userId uint) (string, error)
 }
 
 type GeoLocationService struct {

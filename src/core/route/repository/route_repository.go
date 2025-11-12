@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/g3techlabs/revit-api/src/config"
 	geoinput "github.com/g3techlabs/revit-api/src/core/geolocation/geo_input"
@@ -23,6 +24,7 @@ type RouteRepository interface {
 	GetNearbyUsersDetails(nearbyIds []uint) (*[]response.NearbyUserToRouteResponse, error)
 	AcceptRouteInvite(userId, routeId uint, coordinates *geoinput.Coordinates) (*georesponse.UserDetails, error)
 	StartRoute(userId, routeId uint) error
+	FinishParticipant(userId, routeId uint, finishTime time.Time) (*FinishDetails, error)
 }
 
 type routeRepository struct {

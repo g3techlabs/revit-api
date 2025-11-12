@@ -17,6 +17,7 @@ type IRouteService interface {
 	InviteUsers(userId, routeId uint, inviteds *input.UsersToInviteInput) error
 	AcceptRouteInvite(userId, routeId uint, coordinates *geoinput.Coordinates) error
 	StartRoute(userId, routeId uint) error
+	FinishRouteParticipant(userId uint, coordinates *geoinput.Coordinates) error
 }
 
 type RouteService struct {

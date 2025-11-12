@@ -8,8 +8,8 @@ import (
 	geoservice "github.com/g3techlabs/revit-api/src/core/geolocation/service"
 	routeservice "github.com/g3techlabs/revit-api/src/core/route/service"
 	ws "github.com/g3techlabs/revit-api/src/infra/websocket"
+	"github.com/g3techlabs/revit-api/src/infra/websocket/input"
 	"github.com/g3techlabs/revit-api/src/infra/websocket/models"
-	"github.com/g3techlabs/revit-api/src/infra/websocket/payload"
 	"github.com/g3techlabs/revit-api/src/utils"
 	"github.com/gofiber/contrib/websocket"
 )
@@ -59,13 +59,23 @@ func (h *WebSocketHandler) Handle(c *websocket.Conn) {
 				continue
 			}
 		case "start-route":
-			var payload payload.StartRoutePayload
+			var payload input.StartRoutePayload
 			if err := json.Unmarshal(message.Payload, &payload); err != nil {
 				continue
 			}
 
 			if err := h.routeService.StartRoute(userId, payload.RouteID); err != nil {
 				h.logger.Errorf("Error starting route %d: %v", payload.RouteID, err)
+				continue
+			}
+		case "arrive-at-destination":
+			var payload geoinput.Coordinates
+			if err := json.Unmarshal(message.Payload, &payload); err != nil {
+				continue
+			}
+
+			if err := h.routeService.FinishRouteParticipant(userId, &payload); err != nil {
+				h.logger.Errorf("Error finishing route participant %d: %v", userId, err)
 				continue
 			}
 		}

@@ -12,6 +12,7 @@ type Hub struct {
 	clients    map[uint]*websocket.Conn
 	Register   chan *models.ClientRegistration
 	Unregister chan uint
+	SingleCast chan *SingleCastMessage
 	Multicast  chan *MulticastMessage
 	logger     utils.ILogger
 }
@@ -42,6 +43,16 @@ func (h *Hub) Run() {
 				h.logger.Errorf("Error in unregister client operation: Client %d not found", clientID)
 			}
 
+		case msg := <-h.SingleCast:
+			if conn, ok := h.clients[msg.TargetUserID]; ok {
+				if err := conn.WriteMessage(websocket.TextMessage, msg.Payload); err != nil {
+					h.logger.Errorf("Error in WriteMessage Operation to Client %d: %v. Unregistering...", msg.TargetUserID, err)
+					h.Unregister <- msg.TargetUserID
+				}
+			} else {
+				h.logger.Warnf("Singlecast: Target client %d not found. Message not sent.", msg.TargetUserID)
+			}
+
 		case msg := <-h.Multicast:
 			for _, targetID := range msg.TargetUserIDs {
 				if conn, ok := h.clients[targetID]; ok {
@@ -69,6 +80,22 @@ func (h *Hub) SendMulticastMessage(targetIds []uint, payload any) error {
 	}
 
 	h.Multicast <- &multicastMessage
+
+	return nil
+}
+
+func (h *Hub) SendSinglecastMessage(targetId uint, payload any) error {
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	multicastMessage := SingleCastMessage{
+		TargetUserID: targetId,
+		Payload:      payloadBytes,
+	}
+
+	h.SingleCast <- &multicastMessage
 
 	return nil
 }
