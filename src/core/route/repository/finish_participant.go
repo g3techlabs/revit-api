@@ -12,7 +12,7 @@ func (r *routeRepository) FinishParticipant(userId, routeId uint, finishTime tim
 	var details FinishDetails
 
 	err := r.db.Transaction(func(tx *gorm.DB) error {
-		if err := r.updateParticipant(tx, routeId, userId, finishTime); err != nil {
+		if err := r.updateUserEndedAt(tx, routeId, userId, finishTime); err != nil {
 			return err
 		}
 
@@ -45,7 +45,7 @@ func (r *routeRepository) FinishParticipant(userId, routeId uint, finishTime tim
 	return &details, err
 }
 
-func (r *routeRepository) updateParticipant(tx *gorm.DB, routeId, userId uint, finishTime time.Time) error {
+func (r *routeRepository) updateUserEndedAt(tx *gorm.DB, routeId, userId uint, finishTime time.Time) error {
 	result := tx.Model(&models.RouteParticipant{}).
 		Where("route_id = ? AND user_id = ? AND ended_at IS NULL", routeId, userId).
 		Update("ended_at", finishTime)

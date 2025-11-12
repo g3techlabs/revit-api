@@ -68,7 +68,7 @@ func (h *WebSocketHandler) Handle(c *websocket.Conn) {
 				h.logger.Errorf("Error starting route %d: %v", payload.RouteID, err)
 				continue
 			}
-		case "arrive-at-destination":
+		case "participant-finish-route":
 			var payload geoinput.Coordinates
 			if err := json.Unmarshal(message.Payload, &payload); err != nil {
 				continue
@@ -76,6 +76,17 @@ func (h *WebSocketHandler) Handle(c *websocket.Conn) {
 
 			if err := h.routeService.FinishRouteParticipant(userId, &payload); err != nil {
 				h.logger.Errorf("Error finishing route participant %d: %v", userId, err)
+				continue
+			}
+		case "leave-route":
+			var payload geoinput.Coordinates
+
+			if err := json.Unmarshal(message.Payload, &payload); err != nil {
+				continue
+			}
+
+			if err := h.routeService.LeaveRoute(userId, &payload); err != nil {
+				h.logger.Errorf("Error leaving route participant %d: %v", userId, err)
 				continue
 			}
 		}

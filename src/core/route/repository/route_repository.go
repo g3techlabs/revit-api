@@ -25,6 +25,7 @@ type RouteRepository interface {
 	AcceptRouteInvite(userId, routeId uint, coordinates *geoinput.Coordinates) (*georesponse.UserDetails, error)
 	StartRoute(userId, routeId uint) error
 	FinishParticipant(userId, routeId uint, finishTime time.Time) (*FinishDetails, error)
+	LeaveRoute(userId, routeId uint, leftAt time.Time) error
 }
 
 type routeRepository struct {
