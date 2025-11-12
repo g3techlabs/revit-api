@@ -26,9 +26,8 @@ func (s *RouteService) InviteUsers(userId, routeId uint, inviteds *input.UsersTo
 		Long: routeInfo.Long,
 	}
 
-	payload := response.NewRouteInviteEvent(routeId, destination, routeInfo.Nickname, routeInfo.ProfilePic)
-
-	if err := s.hub.SendMulticastMessage(inviteds.IdsToInvite, payload); err != nil {
+	payload := response.NewRouteInvitePayload(routeId, destination, routeInfo.Nickname, routeInfo.ProfilePic)
+	if err := s.hub.SendMulticastMessage("route-invite", inviteds.IdsToInvite, payload); err != nil {
 		return generics.InternalError()
 	}
 

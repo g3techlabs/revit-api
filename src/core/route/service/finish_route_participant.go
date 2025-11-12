@@ -30,8 +30,8 @@ func (s *RouteService) FinishRouteParticipant(userId uint, coordinates *geoinput
 		return err
 	}
 
-	payload := response.NewUserFinishedRouteEvent(userId, finishDetails.ArrivalTime, finishDetails.ArrivalOrder)
-	if err := s.hub.SendSinglecastMessage(userId, payload); err != nil {
+	payload := response.NewUserFinishedRoutePayload(userId, finishDetails.ArrivalTime, finishDetails.ArrivalOrder)
+	if err := s.hub.SendSinglecastMessage("user-finished-route", userId, payload); err != nil {
 		return err
 	}
 

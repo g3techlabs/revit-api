@@ -46,8 +46,7 @@ func (gls *GeoLocationService) PutUserOnRoute(routeId uint, userDetails *respons
 		return nil
 	}
 
-	payload := response.NewUserAcceptedRouteInviteEvent(*userDetails)
-	if err := gls.hub.SendMulticastMessage(targetIDs, payload); err != nil {
+	if err := gls.hub.SendMulticastMessage("new-user-in-route", targetIDs, *userDetails); err != nil {
 		gls.logger.Errorf("Error marshalling UserAccepteedRouteInvite message: %v", err)
 		return err
 	}

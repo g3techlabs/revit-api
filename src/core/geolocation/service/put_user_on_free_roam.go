@@ -40,8 +40,8 @@ func (gls *GeoLocationService) PutUserOnFreeRoam(userId uint, data *geoinput.Coo
 		return nil
 	}
 
-	payload := response.NewUserMovedEvent(userId, data)
-	if err := gls.hub.SendMulticastMessage(targetIDs, payload); err != nil {
+	payload := response.NewUserMovedPayload(userId, data)
+	if err := gls.hub.SendMulticastMessage("user-moved", targetIDs, payload); err != nil {
 		gls.logger.Errorf("Error marshalling UserMoved message: %v", err)
 		return err
 	}

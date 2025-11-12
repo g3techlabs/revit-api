@@ -22,8 +22,8 @@ func (s *RouteService) StartRoute(userId, routeId uint) error {
 	}
 
 	displayAt := time.Now().Add(5 * time.Second).Unix()
-	payload := response.NewStartRouteEvent(routeId, displayAt)
-	if err := s.hub.SendMulticastMessage(routeUsers, payload); err != nil {
+	payload := response.NewStartRoutePayload(routeId, displayAt)
+	if err := s.hub.SendMulticastMessage("start-route", routeUsers, payload); err != nil {
 		return err
 	}
 

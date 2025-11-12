@@ -68,8 +68,16 @@ func (h *Hub) Run() {
 	}
 }
 
-func (h *Hub) SendMulticastMessage(targetIds []uint, payload any) error {
-	payloadBytes, err := json.Marshal(payload)
+func (h *Hub) SendMulticastMessage(event string, targetIds []uint, payload any) error {
+	formattedPayload := struct {
+		Event   string `json:"event"`
+		Payload any    `json:"payload"`
+	}{
+		Event:   event,
+		Payload: payload,
+	}
+
+	payloadBytes, err := json.Marshal(formattedPayload)
 	if err != nil {
 		return err
 	}
@@ -84,8 +92,16 @@ func (h *Hub) SendMulticastMessage(targetIds []uint, payload any) error {
 	return nil
 }
 
-func (h *Hub) SendSinglecastMessage(targetId uint, payload any) error {
-	payloadBytes, err := json.Marshal(payload)
+func (h *Hub) SendSinglecastMessage(event string, targetId uint, payload any) error {
+	formattedPayload := struct {
+		Event   string `json:"event"`
+		Payload any    `json:"payload"`
+	}{
+		Event:   event,
+		Payload: payload,
+	}
+
+	payloadBytes, err := json.Marshal(formattedPayload)
 	if err != nil {
 		return err
 	}
