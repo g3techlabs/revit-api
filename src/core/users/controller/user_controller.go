@@ -227,3 +227,41 @@ func (uc *UserController) GetFriendshipRequests(ctx *fiber.Ctx) error {
 
 	return ctx.Status(fiber.StatusOK).JSON(response)
 }
+
+func (c *UserController) CheckIfEmailAvailable(ctx *fiber.Ctx) error {
+	var input input.EmailInput
+
+	if err := ctx.QueryParser(&input); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid body request")
+	}
+
+	isEmailAvailable, err := c.userService.CheckIfEmailAvailable(&input)
+	if err != nil {
+		return err
+	}
+
+	if !isEmailAvailable {
+		return fiber.NewError(fiber.StatusConflict, "Email already taken")
+	}
+
+	return ctx.SendStatus(fiber.StatusNoContent)
+}
+
+func (c *UserController) CheckIfNicknameAvailable(ctx *fiber.Ctx) error {
+	var input input.NicknameInput
+
+	if err := ctx.QueryParser(&input); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid body request")
+	}
+
+	isEmailAvailable, err := c.userService.CheckIfNicknameAvailable(&input)
+	if err != nil {
+		return err
+	}
+
+	if !isEmailAvailable {
+		return fiber.NewError(fiber.StatusConflict, "Nickname already taken")
+	}
+
+	return ctx.SendStatus(fiber.StatusNoContent)
+}

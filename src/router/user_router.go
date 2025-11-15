@@ -23,6 +23,8 @@ func UserRoutes(router fiber.Router, us service.IUserService, middleware *middle
 	friendship.Delete("/:friendId", userController.RemoveFriendship)
 
 	user.Get("/", userController.GetUsers)
+	user.Get("/email-available", userController.CheckIfEmailAvailable)
+	user.Get("/nickname-available", userController.CheckIfNicknameAvailable)
 	user.Get("/:id", userController.GetUser)
 	user.Patch("/", userController.UpdateUser)
 	user.Post("/profile-pic/", userController.RequestProfilePicUpdate)
