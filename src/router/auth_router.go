@@ -17,8 +17,8 @@ func AuthRoutes(router fiber.Router, as services.IAuthService, logger utils.ILog
 	auth.Post("/register", authController.RegisterUser)
 	auth.Post("/login", authController.Login)
 	auth.Post("/refresh", authController.RefreshTokens)
-	auth.Post("/send-reset-password-email", authController.SendPassResetEmail)
-	auth.Post("/reset-password", authController.ResetPassword)
+	auth.Post("/password", authController.SendPassResetEmail)
+	auth.Patch("/password", authController.ResetPassword)
 
 	logger.Info("AUTH routes successfully set up.")
 }
