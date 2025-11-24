@@ -3,7 +3,8 @@ package models
 import (
 	"time"
 
-	"github.com/g3techlabs/revit-api/src/core/users/response"
+	"github.com/g3techlabs/revit-api/src/core/auth/response"
+	usersResponse "github.com/g3techlabs/revit-api/src/core/users/response"
 )
 
 type User struct {
@@ -39,8 +40,8 @@ func (u User) ToUserCreatedResponse() *response.UserCreatedResponse {
 	}
 }
 
-func (u User) ToGetUserResponse() *response.GetUserResponse {
-	return &response.GetUserResponse{
+func (u User) ToGetUserResponse() *usersResponse.GetUserResponse {
+	return &usersResponse.GetUserResponse{
 		ID:            u.ID,
 		Name:          u.Name,
 		Nickname:      u.Nickname,

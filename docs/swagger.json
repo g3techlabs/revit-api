@@ -1,0 +1,4607 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "API do Revit integrada com Swagger via Fiber.",
+        "title": "Revit API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:3000",
+    "basePath": "/",
+    "paths": {
+        "/api/auth/login": {
+            "post": {
+                "description": "Realiza login do usuário e retorna tokens de acesso e refresh",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Autenticar usuário",
+                "parameters": [
+                    {
+                        "description": "Credenciais de login (email ou nickname + senha + tipo de identificador)",
+                        "name": "credentials",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/input.LoginCredentials"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tokens de autenticação",
+                        "schema": {
+                            "$ref": "#/definitions/response.AuthTokensResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Erro na validação dos dados. Possíveis campos: identifier, password, identifierType",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_auth_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Credenciais inválidas",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_auth_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/password": {
+            "post": {
+                "description": "Envia email com token para redefinição de senha",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Solicitar redefinição de senha",
+                "parameters": [
+                    {
+                        "description": "Email ou nickname do usuário",
+                        "name": "identifier",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/input.Identifier"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Email enviado com sucesso"
+                    },
+                    "400": {
+                        "description": "Erro na validação dos dados. Possíveis campos: identifier, identifierType",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_auth_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Usuário não encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_auth_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Redefine a senha do usuário usando o token de redefinição",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Redefinir senha",
+                "parameters": [
+                    {
+                        "description": "Token de redefinição e nova senha",
+                        "name": "resetData",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/input.ResetPassword"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Senha redefinida com sucesso"
+                    },
+                    "400": {
+                        "description": "Erro na validação dos dados. Possíveis campos: resettoken, newpassword",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_auth_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_auth_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/refresh": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Gera novos access token e refresh token, usando o refresh token atual",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Atualizar tokens de autenticação",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer {refreshToken}",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Novos tokens de autenticação",
+                        "schema": {
+                            "$ref": "#/definitions/response.AuthTokensResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_auth_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/register": {
+            "post": {
+                "description": "Cria uma nova conta de usuário no sistema",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Registrar novo usuário",
+                "parameters": [
+                    {
+                        "description": "Dados do usuário para registro",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/input.CreateUser"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Usuário criado com sucesso",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserCreatedResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Erro na validação dos dados. Possíveis campos: name, nickname, email, password, birthdate",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_auth_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Alguns dos campos únicos já estão em uso",
+                        "schema": {
+                            "$ref": "#/definitions/controller.ConflictErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/city": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retorna uma lista de cidades filtradas por nome, com suporte a paginação",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cities"
+                ],
+                "summary": "Listar cidades",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Nome da cidade para busca",
+                        "name": "name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Número da página (opcional)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limite de resultados por página (opcional)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de cidades",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/response.GetCityReponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro na validação dos parâmetros. Possíveis campos: name, page, limit",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_city_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_city_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/city/nearby": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retorna uma lista de cidades próximas a uma localização geográfica (latitude e longitude)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cities"
+                ],
+                "summary": "Listar cidades próximas",
+                "parameters": [
+                    {
+                        "type": "number",
+                        "description": "Latitude da localização (-90 a 90)",
+                        "name": "latitude",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "Longitude da localização (-180 a 180)",
+                        "name": "longitude",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de cidades próximas",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/response.GetCityReponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro na validação dos parâmetros. Possíveis campos: latitude, longitude",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_city_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_city_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/event": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retorna a lista de eventos do usuário autenticado",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Listar eventos",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "example": 1,
+                        "description": "ID da cidade para filtrar (opcional)",
+                        "name": "cityID",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "2024-12-01",
+                        "description": "Data inicial para filtrar eventos (opcional, formato: 2006-01-02)",
+                        "name": "fromDate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "example": -23.5505,
+                        "description": "Latitude para filtrar eventos próximos (opcional, requer Longitude)",
+                        "name": "latitude",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 10,
+                        "description": "Limite de resultados por página (opcional)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "example": -46.6333,
+                        "description": "Longitude para filtrar eventos próximos (opcional, requer Latitude)",
+                        "name": "longitude",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "owner",
+                            "admin",
+                            "member"
+                        ],
+                        "type": "string",
+                        "example": "member",
+                        "description": "Tipo de membro do usuário no evento (opcional: owner, admin, member)",
+                        "name": "memberType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "Pedal",
+                        "description": "Nome do evento para busca (opcional)",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 1,
+                        "description": "Número da página (opcional, deve ser maior que 0)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "2024-12-31",
+                        "description": "Data final para filtrar eventos (opcional, formato: 2006-01-02)",
+                        "name": "toDate",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "public",
+                            "private"
+                        ],
+                        "type": "string",
+                        "example": "public",
+                        "description": "Visibilidade do evento (opcional: public ou private)",
+                        "name": "visibility",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de eventos",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/response.GetEventResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro na validação dos parâmetros",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Cria um novo evento",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Criar evento",
+                "parameters": [
+                    {
+                        "description": "Dados do evento",
+                        "name": "event",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/input.CreateEventInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Evento criado com sucesso",
+                        "schema": {
+                            "$ref": "#/definitions/response.PresginedEventPhotoResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Erro na validação dos dados",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/event/invite": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retorna os convites de eventos pendentes do usuário autenticado",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Listar convites pendentes",
+                "parameters": [
+                    {
+                        "maximum": 20,
+                        "type": "integer",
+                        "example": 10,
+                        "description": "Limite de resultados por página (opcional, máximo 20)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 1,
+                        "description": "Número da página (opcional, deve ser maior que 0)",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de convites pendentes",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/response.GetPendingInvitesResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro na validação dos parâmetros",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/event/photo/{eventId}": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Solicita uma URL pré-assinada para upload de foto do evento",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Solicitar upload de foto do evento",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do evento",
+                        "name": "eventId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Dados da requisição de foto",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/input.RequestNewPhotoInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "URL pré-assinada para upload",
+                        "schema": {
+                            "$ref": "#/definitions/response.PresginedEventPhotoResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Erro na validação dos dados",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Sem permissão para atualizar o evento",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Evento não encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Confirma o upload de foto após upload na URL pré-assinada",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Confirmar upload de foto do evento",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do evento",
+                        "name": "eventId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Confirmação do upload",
+                        "name": "confirmation",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ConfirmNewPhotoRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Foto confirmada com sucesso"
+                    },
+                    "400": {
+                        "description": "Erro na validação dos dados",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Sem permissão para atualizar o evento",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Evento não encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/event/{eventId}": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Atualiza os dados de um evento",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Atualizar evento",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do evento",
+                        "name": "eventId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Dados do evento para atualização",
+                        "name": "event",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/input.UpdateEventInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Evento atualizado com sucesso"
+                    },
+                    "400": {
+                        "description": "Erro na validação dos dados",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Sem permissão para atualizar o evento",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Evento não encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/event/{eventId}/invite": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Aceita ou rejeita um convite de evento pendente",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Responder convite pendente",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do evento",
+                        "name": "eventId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Resposta ao convite (accept/reject)",
+                        "name": "answer",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/input.PendingInviteAnswer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Resposta processada com sucesso"
+                    },
+                    "400": {
+                        "description": "Erro na validação dos dados",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Convite não encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/event/{eventId}/invite/{invitedId}": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Envia um convite para um usuário participar de um evento",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Convidar usuário para evento",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do evento",
+                        "name": "eventId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID do usuário a ser convidado",
+                        "name": "invitedId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Convite enviado com sucesso"
+                    },
+                    "400": {
+                        "description": "ID inválido",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Sem permissão para convidar",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Evento ou usuário não encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/event/{eventId}/subscriber": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Adiciona o usuário autenticado como participante de um evento",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Inscrever-se em evento",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do evento",
+                        "name": "eventId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Usuário inscrito no evento"
+                    },
+                    "400": {
+                        "description": "ID inválido",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Evento não encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Remove o usuário autenticado de um evento",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Cancelar inscrição em evento",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do evento",
+                        "name": "eventId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Inscrição cancelada com sucesso"
+                    },
+                    "400": {
+                        "description": "ID inválido",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Evento ou inscrição não encontrada",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/event/{eventId}/subscriber/{subscriberId}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Remove um participante de um evento (apenas administradores)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Remover participante do evento",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do evento",
+                        "name": "eventId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID do participante a ser removido",
+                        "name": "subscriberId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Participante removido com sucesso"
+                    },
+                    "400": {
+                        "description": "ID inválido",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Sem permissão para remover participante",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Evento ou participante não encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_event_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/group": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retorna a lista de grupos do usuário autenticado",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Groups"
+                ],
+                "summary": "Listar grupos",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "example": 1,
+                        "description": "ID da cidade para filtrar (opcional)",
+                        "name": "cityId",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 20,
+                        "type": "integer",
+                        "example": 10,
+                        "description": "Limite de resultados por página (opcional, máximo 20)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "example": true,
+                        "description": "Filtrar apenas grupos onde o usuário é membro (opcional)",
+                        "name": "member",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "Ciclistas",
+                        "description": "Nome do grupo para busca (opcional)",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 1,
+                        "description": "Número da página (opcional, deve ser maior que 0)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 1,
+                        "description": "ID do estado para filtrar (opcional)",
+                        "name": "stateId",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "public",
+                            "private"
+                        ],
+                        "type": "string",
+                        "example": "public",
+                        "description": "Visibilidade do grupo (opcional: public ou private)",
+                        "name": "visibility",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de grupos",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro na validação dos parâmetros",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Cria um novo grupo",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Groups"
+                ],
+                "summary": "Criar grupo",
+                "parameters": [
+                    {
+                        "description": "Dados do grupo",
+                        "name": "group",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/input.CreateGroup"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Grupo criado com sucesso",
+                        "schema": {
+                            "$ref": "#/definitions/response.PresignedGroupPhotosInfo"
+                        }
+                    },
+                    "400": {
+                        "description": "Erro na validação dos dados",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/group/invite": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retorna os convites de grupos pendentes do usuário autenticado",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Groups"
+                ],
+                "summary": "Listar convites pendentes",
+                "parameters": [
+                    {
+                        "maximum": 20,
+                        "type": "integer",
+                        "example": 10,
+                        "description": "Limite de resultados por página (opcional, máximo 20)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 1,
+                        "description": "Número da página (opcional, deve ser maior que 0)",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de convites pendentes",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro na validação dos parâmetros",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/group/{groupId}": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Atualiza os dados de um grupo",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Groups"
+                ],
+                "summary": "Atualizar grupo",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do grupo",
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Dados do grupo para atualização",
+                        "name": "group",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/input.UpdateGroup"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Grupo atualizado com sucesso"
+                    },
+                    "400": {
+                        "description": "Erro na validação dos dados",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Sem permissão para atualizar o grupo",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Grupo não encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/group/{groupId}/invite": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Aceita ou rejeita um convite de grupo pendente",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Groups"
+                ],
+                "summary": "Responder convite pendente",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do grupo",
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Resposta ao convite (accept/reject)",
+                        "name": "answer",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/input.AnswerPendingInvite"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Resposta processada com sucesso"
+                    },
+                    "400": {
+                        "description": "Erro na validação dos dados",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Convite não encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/group/{groupId}/invite/{invitedId}": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Envia um convite para um usuário entrar no grupo",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Groups"
+                ],
+                "summary": "Convidar usuário para grupo",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do grupo",
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID do usuário a ser convidado",
+                        "name": "invitedId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Convite enviado com sucesso"
+                    },
+                    "400": {
+                        "description": "ID inválido",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Sem permissão para convidar",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Grupo ou usuário não encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/group/{groupId}/member": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Adiciona o usuário autenticado a um grupo público",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Groups"
+                ],
+                "summary": "Entrar em grupo",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do grupo",
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Usuário adicionado ao grupo"
+                    },
+                    "400": {
+                        "description": "ID inválido",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Grupo privado ou sem permissão",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Grupo não encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Remove o usuário autenticado de um grupo",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Groups"
+                ],
+                "summary": "Sair do grupo",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do grupo",
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Usuário removido do grupo"
+                    },
+                    "400": {
+                        "description": "ID inválido",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Grupo ou membro não encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/group/{groupId}/member/{memberId}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Remove um membro de um grupo (apenas administradores)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Groups"
+                ],
+                "summary": "Remover membro do grupo",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do grupo",
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID do membro a ser removido",
+                        "name": "memberId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Membro removido com sucesso"
+                    },
+                    "400": {
+                        "description": "ID inválido",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Sem permissão para remover membro",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Grupo ou membro não encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/photos/{groupId}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Solicita URLs pré-assinadas para upload de fotos do grupo",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Groups"
+                ],
+                "summary": "Solicitar upload de fotos do grupo",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do grupo",
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Dados da requisição de fotos",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/input.RequestNewGroupPhotos"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "URLs pré-assinadas para upload",
+                        "schema": {
+                            "$ref": "#/definitions/response.PresignedGroupPhotosInfo"
+                        }
+                    },
+                    "400": {
+                        "description": "Erro na validação dos dados",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Sem permissão para atualizar fotos",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Grupo não encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Confirma o upload de fotos após upload nas URLs pré-assinadas",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Groups"
+                ],
+                "summary": "Confirmar upload de fotos do grupo",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do grupo",
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Confirmação do upload",
+                        "name": "confirmation",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/input.ConfirmNewPhotos"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Fotos confirmadas com sucesso"
+                    },
+                    "400": {
+                        "description": "Erro na validação dos dados",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Sem permissão para atualizar fotos",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Grupo não encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_group_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/route": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Cria uma nova rota com localização de início e destino",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Routes"
+                ],
+                "summary": "Criar rota",
+                "parameters": [
+                    {
+                        "description": "Dados da rota (localização inicial e destino)",
+                        "name": "route",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/input.CreateRouteInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Rota criada com sucesso",
+                        "schema": {
+                            "$ref": "#/definitions/response.RouteCreatedReponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Erro na validação dos dados. Possíveis campos: startLocation, destination",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_route_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_route_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/route/friends": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retorna a lista de amigos online que podem ser convidados para uma rota",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Routes"
+                ],
+                "summary": "Listar amigos online para convite",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Limite de resultados por página (1-99)",
+                        "name": "limit",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Número da página (maior que 0)",
+                        "name": "page",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de amigos online",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/response.OnlineFriendsResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro na validação dos parâmetros. Possíveis campos: limit, page",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_route_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_route_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/route/nearby": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retorna a lista de usuários próximos a uma localização que podem ser convidados para uma rota",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Routes"
+                ],
+                "summary": "Listar usuários próximos para convite",
+                "parameters": [
+                    {
+                        "type": "number",
+                        "description": "Latitude da localização (-85.05112878 a 85.05112878)",
+                        "name": "lat",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "Longitude da localização",
+                        "name": "long",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limite de resultados por página (1-99)",
+                        "name": "limit",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Número da página (maior que 0)",
+                        "name": "page",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de usuários próximos",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/response.NearbyUserToRouteResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro na validação dos parâmetros. Possíveis campos: lat, long, limit, page",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_route_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_route_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/route/{routeId}/invite": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Envia convites para uma lista de usuários participarem de uma rota",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Routes"
+                ],
+                "summary": "Convidar usuários para rota",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID da rota",
+                        "name": "routeId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Lista de IDs dos usuários a serem convidados",
+                        "name": "invite",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/input.UsersToInviteInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Convites enviados com sucesso"
+                    },
+                    "400": {
+                        "description": "Erro na validação dos dados. Possíveis campos: idsToInvite",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_route_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_route_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Sem permissão para convidar usuários para esta rota",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_route_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Rota não encontrada",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_route_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Aceita um convite para participar de uma rota, fornecendo as coordenadas iniciais",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Routes"
+                ],
+                "summary": "Aceitar convite de rota",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID da rota",
+                        "name": "routeId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Coordenadas geográficas iniciais do usuário",
+                        "name": "coordinates",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.CoordinatesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Convite aceito com sucesso"
+                    },
+                    "400": {
+                        "description": "Erro na validação dos dados. Possíveis campos: lat, long",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_route_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_route_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Rota ou convite não encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_route_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retorna uma lista de usuários com filtros opcionais",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Listar usuários",
+                "parameters": [
+                    {
+                        "maximum": 20,
+                        "type": "integer",
+                        "example": 10,
+                        "description": "Limite de resultados por página (opcional, máximo 20)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "minLength": 3,
+                        "type": "string",
+                        "example": "joao",
+                        "description": "Apelido para busca (opcional, mínimo 3 caracteres)",
+                        "name": "nickname",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 1,
+                        "description": "Número da página (opcional, deve ser maior que 0)",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de usuários",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/response.GetUserResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro na validação dos parâmetros",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Atualiza os dados do usuário autenticado",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Atualizar dados do usuário",
+                "parameters": [
+                    {
+                        "description": "Dados do usuário para atualização",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/input.UpdateUser"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Usuário atualizado com sucesso"
+                    },
+                    "400": {
+                        "description": "Erro na validação dos dados. Possíveis campos: name, birthdate, removeProfilePic",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/email-available": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Verifica se um email está disponível para uso",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Verificar disponibilidade de email",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Email a ser verificado",
+                        "name": "email",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Email disponível"
+                    },
+                    "400": {
+                        "description": "Erro na validação do email",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Email já está em uso",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/friendship": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retorna a lista de amigos do usuário autenticado",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Listar amigos",
+                "parameters": [
+                    {
+                        "maximum": 20,
+                        "type": "integer",
+                        "example": 10,
+                        "description": "Limite de resultados por página (opcional, máximo 20)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "minLength": 3,
+                        "type": "string",
+                        "example": "joao",
+                        "description": "Apelido para busca (opcional, mínimo 3 caracteres)",
+                        "name": "nickname",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 1,
+                        "description": "Número da página (opcional, deve ser maior que 0)",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de amigos",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/response.Friend"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro na validação dos parâmetros",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/friendship/requests": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retorna as solicitações de amizade pendentes do usuário autenticado",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Listar solicitações de amizade",
+                "parameters": [
+                    {
+                        "maximum": 20,
+                        "type": "integer",
+                        "example": 10,
+                        "description": "Limite de resultados por página (opcional, máximo 20)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 1,
+                        "description": "Número da página (opcional, deve ser maior que 0)",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de solicitações de amizade",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/response.FriendshipRequest"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro na validação dos parâmetros",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/friendship/{destinataryId}": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Envia uma solicitação de amizade para outro usuário",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Solicitar amizade",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do usuário destinatário",
+                        "name": "destinataryId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Solicitação de amizade enviada"
+                    },
+                    "400": {
+                        "description": "ID inválido",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Usuário destinatário não encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/friendship/{friendId}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Remove a amizade entre o usuário autenticado e outro usuário",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Remover amizade",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do amigo a ser removido",
+                        "name": "friendId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Amizade removida com sucesso"
+                    },
+                    "400": {
+                        "description": "ID inválido",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Amizade não encontrada",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/friendship/{requesterId}": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Aceita ou rejeita uma solicitação de amizade recebida",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Responder solicitação de amizade",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do usuário que enviou a solicitação",
+                        "name": "requesterId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Resposta à solicitação (accept/reject)",
+                        "name": "answer",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/input.FriendshipRequestAnswer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Resposta processada com sucesso"
+                    },
+                    "400": {
+                        "description": "Erro na validação dos dados",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Solicitação não encontrada",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/nickname-available": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Verifica se um nickname está disponível para uso",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Verificar disponibilidade de nickname",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Nickname a ser verificado",
+                        "name": "nickname",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Nickname disponível"
+                    },
+                    "400": {
+                        "description": "Erro na validação do nickname",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Nickname já está em uso",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/profile-pic": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Confirma o upload de uma nova foto de perfil após o upload na URL pré-assinada",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Confirmar nova foto de perfil",
+                "parameters": [
+                    {
+                        "description": "Confirmação do upload",
+                        "name": "confirmation",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/input.ConfirmNewProfilePic"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Foto de perfil confirmada com sucesso"
+                    },
+                    "400": {
+                        "description": "Erro na validação dos dados",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/profile-pic/": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Solicita uma URL pré-assinada para upload de nova foto de perfil",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Solicitar atualização de foto de perfil",
+                "parameters": [
+                    {
+                        "description": "Dados da requisição de atualização de foto",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/input.RequestProfilePicUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "URL pré-assinada para upload",
+                        "schema": {
+                            "$ref": "#/definitions/response.ProfilePicPresignedURL"
+                        }
+                    },
+                    "400": {
+                        "description": "Erro na validação dos dados",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retorna os dados de um usuário específico",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Obter usuário por ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do usuário",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dados do usuário",
+                        "schema": {
+                            "$ref": "#/definitions/response.GetUserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "ID inválido",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Usuário não encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_users_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/vehicle": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retorna a lista de veículos do usuário autenticado",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Vehicles"
+                ],
+                "summary": "Listar veículos",
+                "parameters": [
+                    {
+                        "maximum": 20,
+                        "type": "integer",
+                        "example": 10,
+                        "description": "Limite de resultados por página (opcional, máximo 20)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "Minha Moto",
+                        "description": "Apelido do veículo para busca (opcional)",
+                        "name": "nickname",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 1,
+                        "description": "Número da página (opcional, deve ser maior que 0)",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de veículos",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/response.Vehicle"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro na validação dos parâmetros",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_vehicle_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_vehicle_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Cria um novo veículo para o usuário autenticado",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Vehicles"
+                ],
+                "summary": "Criar veículo",
+                "parameters": [
+                    {
+                        "description": "Dados do veículo",
+                        "name": "vehicle",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/input.CreateVehicle"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "URL pré-assinada para upload da foto principal",
+                        "schema": {
+                            "$ref": "#/definitions/response.PresignedPhotoInfo"
+                        }
+                    },
+                    "400": {
+                        "description": "Erro na validação dos dados",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_vehicle_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_vehicle_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/vehicle/main-photo/{vehicleId}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Remove a foto principal de um veículo",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Vehicles"
+                ],
+                "summary": "Remover foto principal do veículo",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do veículo",
+                        "name": "vehicleId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Foto principal removida com sucesso"
+                    },
+                    "400": {
+                        "description": "ID inválido",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_vehicle_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_vehicle_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Sem permissão para atualizar o veículo",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_vehicle_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Veículo não encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_vehicle_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/vehicle/photo/{vehicleId}": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Solicita uma URL pré-assinada para upload de foto do veículo",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Vehicles"
+                ],
+                "summary": "Solicitar upload de foto do veículo",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do veículo",
+                        "name": "vehicleId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Dados da requisição de foto",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/input.RequestPhotoUpsert"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "URL pré-assinada para upload",
+                        "schema": {
+                            "$ref": "#/definitions/response.PresignedPhotoInfo"
+                        }
+                    },
+                    "400": {
+                        "description": "Erro na validação dos dados",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_vehicle_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_vehicle_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Sem permissão para atualizar o veículo",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_vehicle_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Veículo não encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_vehicle_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Confirma o upload de foto após upload na URL pré-assinada",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Vehicles"
+                ],
+                "summary": "Confirmar upload de foto do veículo",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do veículo",
+                        "name": "vehicleId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Confirmação do upload",
+                        "name": "confirmation",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/src_core_vehicle_controller.ConfirmNewPhotoRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Foto confirmada com sucesso"
+                    },
+                    "400": {
+                        "description": "Erro na validação dos dados",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_vehicle_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_vehicle_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Sem permissão para atualizar o veículo",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_vehicle_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Veículo não encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_vehicle_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/vehicle/{vehicleId}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Remove um veículo do usuário autenticado",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Vehicles"
+                ],
+                "summary": "Deletar veículo",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do veículo",
+                        "name": "vehicleId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Veículo deletado com sucesso"
+                    },
+                    "400": {
+                        "description": "ID inválido",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_vehicle_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_vehicle_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Sem permissão para deletar o veículo",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_vehicle_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Veículo não encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_vehicle_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Atualiza as informações de um veículo",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Vehicles"
+                ],
+                "summary": "Atualizar informações do veículo",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do veículo",
+                        "name": "vehicleId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Dados do veículo para atualização",
+                        "name": "vehicle",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/input.UpdateVehicleInfo"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Veículo atualizado com sucesso"
+                    },
+                    "400": {
+                        "description": "Erro na validação dos dados",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_vehicle_controller.ValidationErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_vehicle_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Sem permissão para atualizar o veículo",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_vehicle_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Veículo não encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_vehicle_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/vehicle/{vehicleId}/photo/{photoId}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Remove uma foto específica de um veículo",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Vehicles"
+                ],
+                "summary": "Remover foto do veículo",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do veículo",
+                        "name": "vehicleId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID da foto",
+                        "name": "photoId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Foto removida com sucesso"
+                    },
+                    "400": {
+                        "description": "ID inválido",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_vehicle_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou expirado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_vehicle_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Sem permissão para atualizar o veículo",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_vehicle_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Veículo ou foto não encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_vehicle_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "controller.ConflictErrorResponse": {
+            "description": "Resposta retornada quando o nickname ou email já estão em uso.",
+            "type": "object",
+            "properties": {
+                "email": {
+                    "description": "Email único do usuário",
+                    "type": "string",
+                    "example": "email already in use"
+                },
+                "nickname": {
+                    "description": "Apelido único do usuário",
+                    "type": "string",
+                    "example": "nickname already in use"
+                }
+            }
+        },
+        "controller.CoordinatesRequest": {
+            "type": "object",
+            "required": [
+                "lat",
+                "long"
+            ],
+            "properties": {
+                "lat": {
+                    "type": "number",
+                    "maximum": 85.05112878,
+                    "minimum": -85.05112878
+                },
+                "long": {
+                    "type": "number"
+                }
+            }
+        },
+        "entities.Coordinates": {
+            "description": "Coordenadas geográficas (latitude e longitude) para localização de eventos",
+            "type": "object",
+            "required": [
+                "latitude",
+                "longitude"
+            ],
+            "properties": {
+                "latitude": {
+                    "description": "Latitude da localização do evento",
+                    "type": "number",
+                    "example": -23.5505
+                },
+                "longitude": {
+                    "description": "Longitude da localização do evento",
+                    "type": "number",
+                    "example": -46.6333
+                }
+            }
+        },
+        "geoinput.Coordinates": {
+            "description": "Coordenadas geográficas para localização de pontos em uma rota",
+            "type": "object",
+            "required": [
+                "lat",
+                "long"
+            ],
+            "properties": {
+                "lat": {
+                    "description": "Latitude da localização (deve estar entre -85.05112878 e 85.05112878)",
+                    "type": "number",
+                    "maximum": 85.05112878,
+                    "minimum": -85.05112878,
+                    "example": -23.5505
+                },
+                "long": {
+                    "description": "Longitude da localização",
+                    "type": "number",
+                    "example": -46.6333
+                }
+            }
+        },
+        "input.AnswerPendingInvite": {
+            "description": "Resposta para aceitar ou rejeitar um convite pendente para participar de um grupo",
+            "type": "object",
+            "required": [
+                "answer"
+            ],
+            "properties": {
+                "answer": {
+                    "description": "Resposta ao convite (accept ou reject)",
+                    "type": "string",
+                    "enum": [
+                        "accept",
+                        "reject"
+                    ],
+                    "example": "accept"
+                }
+            }
+        },
+        "input.ConfirmNewPhotos": {
+            "description": "Chaves das fotos que foram enviadas com sucesso para confirmar o upload",
+            "type": "object",
+            "properties": {
+                "bannerKey": {
+                    "description": "Chave do banner no storage (opcional)",
+                    "type": "string",
+                    "example": "groups/123/banner.jpg"
+                },
+                "mainPhotoKey": {
+                    "description": "Chave da foto principal no storage (opcional)",
+                    "type": "string",
+                    "example": "groups/123/main-photo.jpg"
+                }
+            }
+        },
+        "input.ConfirmNewProfilePic": {
+            "description": "Chave da foto que foi enviada com sucesso para confirmar o upload",
+            "type": "object",
+            "required": [
+                "objectKey"
+            ],
+            "properties": {
+                "objectKey": {
+                    "description": "Chave da foto no storage",
+                    "type": "string",
+                    "example": "users/123/profile-pic.jpg"
+                }
+            }
+        },
+        "input.CreateEventInput": {
+            "description": "Dados necessários para criar um novo evento no sistema",
+            "type": "object",
+            "required": [
+                "cityId",
+                "date",
+                "description",
+                "location",
+                "name",
+                "visibility"
+            ],
+            "properties": {
+                "cityId": {
+                    "description": "ID da cidade onde o evento ocorrerá",
+                    "type": "integer",
+                    "example": 1
+                },
+                "date": {
+                    "description": "Data e hora do evento no formato RFC3339 (2006-01-02T15:04:05Z07:00)",
+                    "type": "string",
+                    "example": "2024-12-25T20:00:00-03:00"
+                },
+                "description": {
+                    "description": "Descrição do evento",
+                    "type": "string",
+                    "example": "Passeio ciclístico noturno pela cidade"
+                },
+                "groupId": {
+                    "description": "ID do grupo associado ao evento (opcional)",
+                    "type": "integer",
+                    "example": 5
+                },
+                "location": {
+                    "description": "Coordenadas geográficas da localização do evento",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entities.Coordinates"
+                        }
+                    ]
+                },
+                "name": {
+                    "description": "Nome do evento",
+                    "type": "string",
+                    "example": "Pedal Noturno"
+                },
+                "photoContentType": {
+                    "description": "Tipo de conteúdo da foto do evento (opcional: image/jpeg, image/png, image/webp)",
+                    "type": "string",
+                    "enum": [
+                        "image/jpeg",
+                        "image/png",
+                        "image/webp"
+                    ],
+                    "example": "image/jpeg"
+                },
+                "visibility": {
+                    "description": "Visibilidade do evento (public ou private)",
+                    "type": "string",
+                    "enum": [
+                        "public",
+                        "private"
+                    ],
+                    "example": "public"
+                }
+            }
+        },
+        "input.CreateGroup": {
+            "description": "Dados necessários para criar um novo grupo no sistema",
+            "type": "object",
+            "required": [
+                "cityId",
+                "description",
+                "name",
+                "visibility"
+            ],
+            "properties": {
+                "bannerContentType": {
+                    "description": "Tipo de conteúdo do banner (opcional: image/jpeg, image/png, image/webp)",
+                    "type": "string",
+                    "enum": [
+                        "image/jpeg",
+                        "image/png",
+                        "image/webp"
+                    ],
+                    "example": "image/png"
+                },
+                "cityId": {
+                    "description": "ID da cidade onde o grupo está localizado",
+                    "type": "integer",
+                    "example": 1
+                },
+                "description": {
+                    "description": "Descrição do grupo",
+                    "type": "string",
+                    "example": "Grupo para ciclistas da cidade"
+                },
+                "mainPhotoContentType": {
+                    "description": "Tipo de conteúdo da foto principal (opcional: image/jpeg, image/png, image/webp)",
+                    "type": "string",
+                    "enum": [
+                        "image/jpeg",
+                        "image/png",
+                        "image/webp"
+                    ],
+                    "example": "image/jpeg"
+                },
+                "name": {
+                    "description": "Nome do grupo",
+                    "type": "string",
+                    "example": "Grupo de Ciclistas"
+                },
+                "visibility": {
+                    "description": "Visibilidade do grupo (public ou private)",
+                    "type": "string",
+                    "enum": [
+                        "public",
+                        "private"
+                    ],
+                    "example": "public"
+                }
+            }
+        },
+        "input.CreateRouteInput": {
+            "description": "Dados necessários para criar uma nova rota com localização de início e destino",
+            "type": "object",
+            "required": [
+                "destination",
+                "startLocation"
+            ],
+            "properties": {
+                "destination": {
+                    "description": "Localização de destino da rota (coordenadas geográficas)",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/geoinput.Coordinates"
+                        }
+                    ]
+                },
+                "startLocation": {
+                    "description": "Localização inicial da rota (coordenadas geográficas)",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/geoinput.Coordinates"
+                        }
+                    ]
+                }
+            }
+        },
+        "input.CreateUser": {
+            "description": "Dados necessários para registrar um novo usuário no sistema",
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "nickname",
+                "password"
+            ],
+            "properties": {
+                "birthdate": {
+                    "description": "Data de nascimento no formato YYYY-MM-DD (opcional)",
+                    "type": "string",
+                    "example": "1990-01-15"
+                },
+                "email": {
+                    "description": "Email único do usuário",
+                    "type": "string",
+                    "example": "joao@email.com"
+                },
+                "name": {
+                    "description": "Nome completo do usuário",
+                    "type": "string",
+                    "example": "João Silva"
+                },
+                "nickname": {
+                    "description": "Apelido único do usuário (3-32 caracteres, apenas minúsculas)",
+                    "type": "string",
+                    "maxLength": 32,
+                    "minLength": 3,
+                    "example": "joaosilva"
+                },
+                "password": {
+                    "description": "Senha do usuário",
+                    "type": "string",
+                    "example": "senhaSegura123"
+                }
+            }
+        },
+        "input.CreateVehicle": {
+            "description": "Dados necessários para criar um novo veículo para o usuário autenticado",
+            "type": "object",
+            "required": [
+                "brand",
+                "model",
+                "nickname",
+                "year"
+            ],
+            "properties": {
+                "brand": {
+                    "description": "Marca do veículo",
+                    "type": "string",
+                    "example": "Honda"
+                },
+                "mainPhotoContentType": {
+                    "description": "Tipo de conteúdo da foto principal (opcional: image/jpeg, image/png, image/webp)",
+                    "type": "string",
+                    "enum": [
+                        "image/jpeg",
+                        "image/png",
+                        "image/webp"
+                    ],
+                    "example": "image/jpeg"
+                },
+                "model": {
+                    "description": "Modelo do veículo",
+                    "type": "string",
+                    "example": "CB 600F"
+                },
+                "nickname": {
+                    "description": "Apelido do veículo",
+                    "type": "string",
+                    "example": "Minha Moto"
+                },
+                "version": {
+                    "description": "Versão do veículo (opcional)",
+                    "type": "string",
+                    "example": "Hornet"
+                },
+                "year": {
+                    "description": "Ano do veículo (deve ser maior que 0)",
+                    "type": "integer",
+                    "example": 2020
+                }
+            }
+        },
+        "input.FriendshipRequestAnswer": {
+            "description": "Resposta para aceitar ou rejeitar uma solicitação de amizade pendente",
+            "type": "object",
+            "required": [
+                "answer"
+            ],
+            "properties": {
+                "answer": {
+                    "description": "Resposta à solicitação (accept ou reject)",
+                    "type": "string",
+                    "enum": [
+                        "accept",
+                        "reject"
+                    ],
+                    "example": "accept"
+                }
+            }
+        },
+        "input.Identifier": {
+            "description": "Identificador para localizar um usuário no sistema",
+            "type": "object",
+            "required": [
+                "identifier",
+                "identifierType"
+            ],
+            "properties": {
+                "identifier": {
+                    "description": "Identificador do usuário (email ou nickname)",
+                    "type": "string",
+                    "example": "usuario@email.com"
+                },
+                "identifierType": {
+                    "description": "Tipo de identificador usado (email ou nickname)",
+                    "type": "string",
+                    "enum": [
+                        "email",
+                        "nickname"
+                    ],
+                    "example": "email"
+                }
+            }
+        },
+        "input.LoginCredentials": {
+            "description": "Credenciais para autenticação do usuário",
+            "type": "object",
+            "required": [
+                "identifier",
+                "identifierType",
+                "password"
+            ],
+            "properties": {
+                "identifier": {
+                    "description": "Identificador do usuário (email ou nickname)",
+                    "type": "string",
+                    "example": "usuario@email.com"
+                },
+                "identifierType": {
+                    "description": "Tipo de identificador usado (email ou nickname)",
+                    "type": "string",
+                    "enum": [
+                        "email",
+                        "nickname"
+                    ],
+                    "example": "email"
+                },
+                "password": {
+                    "description": "Senha do usuário",
+                    "type": "string",
+                    "example": "senha123"
+                }
+            }
+        },
+        "input.PendingInviteAnswer": {
+            "description": "Resposta para aceitar ou rejeitar um convite pendente para participar de um evento",
+            "type": "object",
+            "required": [
+                "answer"
+            ],
+            "properties": {
+                "answer": {
+                    "description": "Resposta ao convite (accept ou reject)",
+                    "type": "string",
+                    "enum": [
+                        "accept",
+                        "reject"
+                    ],
+                    "example": "accept"
+                }
+            }
+        },
+        "input.RequestNewGroupPhotos": {
+            "description": "Dados para solicitar URLs pré-assinadas para upload de foto principal e/ou banner do grupo",
+            "type": "object",
+            "properties": {
+                "bannerContentType": {
+                    "description": "Tipo de conteúdo do banner (opcional: image/jpeg, image/png, image/webp)",
+                    "type": "string",
+                    "enum": [
+                        "image/jpeg",
+                        "image/png",
+                        "image/webp"
+                    ],
+                    "example": "image/png"
+                },
+                "mainPhotoContentType": {
+                    "description": "Tipo de conteúdo da foto principal (opcional: image/jpeg, image/png, image/webp)",
+                    "type": "string",
+                    "enum": [
+                        "image/jpeg",
+                        "image/png",
+                        "image/webp"
+                    ],
+                    "example": "image/jpeg"
+                }
+            }
+        },
+        "input.RequestNewPhotoInput": {
+            "description": "Dados para solicitar URL pré-assinada para upload de foto do evento",
+            "type": "object",
+            "required": [
+                "photoContentType"
+            ],
+            "properties": {
+                "photoContentType": {
+                    "description": "Tipo de conteúdo da foto (image/jpeg, image/png, image/webp)",
+                    "type": "string",
+                    "enum": [
+                        "image/jpeg",
+                        "image/png",
+                        "image/webp"
+                    ],
+                    "example": "image/jpeg"
+                }
+            }
+        },
+        "input.RequestPhotoUpsert": {
+            "description": "Dados para solicitar URL pré-assinada para upload de foto principal ou de feed do veículo",
+            "type": "object",
+            "required": [
+                "contentType",
+                "photoType"
+            ],
+            "properties": {
+                "contentType": {
+                    "description": "Tipo de conteúdo da foto (image/jpeg, image/png, image/webp)",
+                    "type": "string",
+                    "enum": [
+                        "image/jpeg",
+                        "image/png",
+                        "image/webp"
+                    ],
+                    "example": "image/jpeg"
+                },
+                "photoType": {
+                    "description": "Tipo de foto (main ou feed)",
+                    "type": "string",
+                    "enum": [
+                        "main",
+                        "feed"
+                    ],
+                    "example": "main"
+                }
+            }
+        },
+        "input.RequestProfilePicUpdate": {
+            "description": "Dados para solicitar URL pré-assinada para upload de foto de perfil",
+            "type": "object",
+            "required": [
+                "contentType"
+            ],
+            "properties": {
+                "contentType": {
+                    "description": "Tipo de conteúdo da foto (image/jpeg, image/png, image/webp)",
+                    "type": "string",
+                    "enum": [
+                        "image/jpeg",
+                        "image/png",
+                        "image/webp"
+                    ],
+                    "example": "image/jpeg"
+                }
+            }
+        },
+        "input.ResetPassword": {
+            "description": "Dados necessários para redefinir a senha do usuário",
+            "type": "object",
+            "required": [
+                "newPassword",
+                "resetToken"
+            ],
+            "properties": {
+                "newPassword": {
+                    "description": "Nova senha do usuário",
+                    "type": "string",
+                    "example": "novaSenha123"
+                },
+                "resetToken": {
+                    "description": "Token de redefinição de senha recebido por email",
+                    "type": "string",
+                    "example": "abc123def456"
+                }
+            }
+        },
+        "input.UpdateEventInput": {
+            "description": "Dados opcionais para atualizar informações de um evento existente",
+            "type": "object",
+            "properties": {
+                "cityId": {
+                    "description": "ID da cidade (opcional, requer Location se fornecido)",
+                    "type": "integer",
+                    "example": 2
+                },
+                "date": {
+                    "description": "Data e hora do evento no formato RFC3339 (opcional: 2006-01-02T15:04:05Z07:00)",
+                    "type": "string",
+                    "example": "2024-12-26T20:00:00-03:00"
+                },
+                "description": {
+                    "description": "Descrição do evento (opcional)",
+                    "type": "string",
+                    "example": "Nova descrição do evento"
+                },
+                "groupId": {
+                    "description": "ID do grupo associado (opcional)",
+                    "type": "integer",
+                    "example": 6
+                },
+                "location": {
+                    "description": "Coordenadas geográficas da localização (opcional, requer CityID se fornecido)",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entities.Coordinates"
+                        }
+                    ]
+                },
+                "name": {
+                    "description": "Nome do evento (opcional)",
+                    "type": "string",
+                    "example": "Novo Nome do Evento"
+                },
+                "visibility": {
+                    "description": "Visibilidade do evento (opcional: public ou private)",
+                    "type": "string",
+                    "enum": [
+                        "public",
+                        "private"
+                    ],
+                    "example": "private"
+                }
+            }
+        },
+        "input.UpdateGroup": {
+            "description": "Dados opcionais para atualizar informações de um grupo existente",
+            "type": "object",
+            "properties": {
+                "cityId": {
+                    "description": "ID da cidade (opcional)",
+                    "type": "integer",
+                    "example": 2
+                },
+                "description": {
+                    "description": "Descrição do grupo (opcional)",
+                    "type": "string",
+                    "example": "Nova descrição do grupo"
+                },
+                "name": {
+                    "description": "Nome do grupo (opcional)",
+                    "type": "string",
+                    "example": "Novo Nome do Grupo"
+                },
+                "stateId": {
+                    "description": "ID do estado (opcional)",
+                    "type": "integer",
+                    "example": 1
+                },
+                "visibility": {
+                    "description": "Visibilidade do grupo (opcional: public ou private)",
+                    "type": "string",
+                    "enum": [
+                        "public",
+                        "private"
+                    ],
+                    "example": "private"
+                }
+            }
+        },
+        "input.UpdateUser": {
+            "description": "Dados opcionais para atualizar informações do usuário autenticado",
+            "type": "object",
+            "properties": {
+                "birthdate": {
+                    "description": "Data de nascimento no formato YYYY-MM-DD (opcional)",
+                    "type": "string",
+                    "example": "1990-01-15"
+                },
+                "name": {
+                    "description": "Nome completo do usuário (opcional)",
+                    "type": "string",
+                    "example": "João Silva"
+                },
+                "removeProfilePic": {
+                    "description": "Flag para remover a foto de perfil (opcional)",
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "input.UpdateVehicleInfo": {
+            "description": "Dados opcionais para atualizar informações de um veículo existente",
+            "type": "object",
+            "properties": {
+                "brand": {
+                    "description": "Marca do veículo (opcional)",
+                    "type": "string",
+                    "example": "Yamaha"
+                },
+                "model": {
+                    "description": "Modelo do veículo (opcional)",
+                    "type": "string",
+                    "example": "MT-07"
+                },
+                "nickname": {
+                    "description": "Apelido do veículo (opcional)",
+                    "type": "string",
+                    "example": "Minha Moto Atualizada"
+                },
+                "version": {
+                    "description": "Versão do veículo (opcional)",
+                    "type": "string",
+                    "example": "ABS"
+                },
+                "year": {
+                    "description": "Ano do veículo (opcional, deve ser maior que 0)",
+                    "type": "integer",
+                    "example": 2021
+                }
+            }
+        },
+        "input.UsersToInviteInput": {
+            "description": "Lista de IDs dos usuários que serão convidados para participar da rota",
+            "type": "object",
+            "required": [
+                "idsToInvite"
+            ],
+            "properties": {
+                "idsToInvite": {
+                    "description": "IDs dos usuários a serem convidados (mínimo 1 usuário, cada ID deve ser maior que 0)",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "response.AuthTokensResponse": {
+            "description": "Tokens de autenticação JWT",
+            "type": "object",
+            "properties": {
+                "accessToken": {
+                    "description": "Token de acesso JWT (válido por tempo limitado)",
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                },
+                "refreshToken": {
+                    "description": "Token de refresh JWT (usado para obter novos tokens)",
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                }
+            }
+        },
+        "response.Friend": {
+            "description": "Informações sobre um amigo do usuário autenticado",
+            "type": "object",
+            "properties": {
+                "ProfilePicUrl": {
+                    "description": "URL da foto de perfil do amigo (opcional)",
+                    "type": "string",
+                    "example": "https://example.com/users/15/profile.jpg"
+                },
+                "friendsSince": {
+                    "description": "Data em que se tornaram amigos (opcional)",
+                    "type": "string",
+                    "example": "2024-06-20T14:00:00Z"
+                },
+                "id": {
+                    "description": "ID do amigo",
+                    "type": "integer",
+                    "example": 15
+                },
+                "name": {
+                    "description": "Nome completo do amigo",
+                    "type": "string",
+                    "example": "Maria Santos"
+                },
+                "nickname": {
+                    "description": "Apelido do amigo",
+                    "type": "string",
+                    "example": "mariasantos"
+                },
+                "since": {
+                    "description": "Data de criação da conta do amigo",
+                    "type": "string",
+                    "example": "2024-01-15T10:30:00Z"
+                }
+            }
+        },
+        "response.FriendshipRequest": {
+            "description": "Informações sobre uma solicitação de amizade pendente",
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "ID do usuário que enviou a solicitação",
+                    "type": "integer",
+                    "example": 42
+                },
+                "nickname": {
+                    "description": "Apelido do usuário que enviou a solicitação",
+                    "type": "string",
+                    "example": "joaosilva"
+                },
+                "profilePicUrl": {
+                    "description": "URL da foto de perfil do usuário (opcional)",
+                    "type": "string",
+                    "example": "https://example.com/users/42/profile.jpg"
+                }
+            }
+        },
+        "response.GetCityReponse": {
+            "description": "Informações de uma cidade retornada na busca/listagem",
+            "type": "object",
+            "properties": {
+                "cityId": {
+                    "description": "ID da cidade",
+                    "type": "integer",
+                    "example": 1
+                },
+                "cityName": {
+                    "description": "Nome da cidade",
+                    "type": "string",
+                    "example": "São Paulo"
+                },
+                "countryName": {
+                    "description": "Nome do país",
+                    "type": "string",
+                    "example": "Brasil"
+                },
+                "stateName": {
+                    "description": "Nome do estado",
+                    "type": "string",
+                    "example": "SP"
+                }
+            }
+        },
+        "response.GetEventResponse": {
+            "description": "Informações completas de um evento retornado na busca/listagem",
+            "type": "object",
+            "properties": {
+                "address": {
+                    "description": "Endereço do evento (formato JSON)",
+                    "type": "object"
+                },
+                "coordinates": {
+                    "description": "Coordenadas geográficas do evento (formato JSON)",
+                    "type": "object"
+                },
+                "date": {
+                    "description": "Data e hora do evento",
+                    "type": "string",
+                    "example": "2024-12-25T20:00:00Z"
+                },
+                "description": {
+                    "description": "Descrição do evento",
+                    "type": "string",
+                    "example": "Passeio ciclístico noturno pela cidade"
+                },
+                "group": {
+                    "description": "Informações do grupo associado (opcional, formato JSON)",
+                    "type": "object"
+                },
+                "id": {
+                    "description": "ID do evento",
+                    "type": "integer",
+                    "example": 456
+                },
+                "memberRole": {
+                    "description": "Papel do usuário no evento (owner, admin, member, subscriber)",
+                    "type": "string",
+                    "example": "subscriber"
+                },
+                "name": {
+                    "description": "Nome do evento",
+                    "type": "string",
+                    "example": "Pedal Noturno"
+                },
+                "photo": {
+                    "description": "URL da foto do evento (opcional)",
+                    "type": "string",
+                    "example": "https://example.com/events/456/photo.jpg"
+                },
+                "subscribersCount": {
+                    "description": "Número de inscritos no evento (opcional)",
+                    "type": "integer",
+                    "example": 25
+                },
+                "visibility": {
+                    "description": "Visibilidade do evento (public ou private)",
+                    "type": "string",
+                    "example": "public"
+                }
+            }
+        },
+        "response.GetPendingInvitesResponse": {
+            "description": "Informações sobre um convite pendente para participar de um evento",
+            "type": "object",
+            "properties": {
+                "eventId": {
+                    "description": "ID do evento",
+                    "type": "integer",
+                    "example": 456
+                },
+                "eventName": {
+                    "description": "Nome do evento",
+                    "type": "string",
+                    "example": "Pedal Noturno"
+                },
+                "eventPhoto": {
+                    "description": "URL da foto do evento",
+                    "type": "string",
+                    "example": "https://example.com/events/456/photo.jpg"
+                },
+                "invitedBy": {
+                    "description": "Apelido do usuário que enviou o convite",
+                    "type": "string",
+                    "example": "joaosilva"
+                }
+            }
+        },
+        "response.GetUserResponse": {
+            "description": "Informações de um usuário retornado na busca/listagem",
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "ID do usuário",
+                    "type": "integer",
+                    "example": 42
+                },
+                "name": {
+                    "description": "Nome completo do usuário",
+                    "type": "string",
+                    "example": "João Silva"
+                },
+                "nickname": {
+                    "description": "Apelido único do usuário",
+                    "type": "string",
+                    "example": "joaosilva"
+                },
+                "profilePicUrl": {
+                    "description": "URL da foto de perfil do usuário (se houver)",
+                    "type": "string",
+                    "example": "https://example.com/users/42/profile.jpg"
+                },
+                "since": {
+                    "description": "Data de criação da conta",
+                    "type": "string",
+                    "example": "2024-01-15T10:30:00Z"
+                }
+            }
+        },
+        "response.NearbyUserToRouteResponse": {
+            "description": "Informações de um usuário próximo disponível para convite",
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "ID do usuário",
+                    "type": "integer",
+                    "example": 15
+                },
+                "nickname": {
+                    "description": "Apelido do usuário",
+                    "type": "string",
+                    "example": "mariasantos"
+                },
+                "profilePic": {
+                    "description": "URL da foto de perfil do usuário",
+                    "type": "string",
+                    "example": "https://example.com/profile.jpg"
+                }
+            }
+        },
+        "response.OnlineFriendsResponse": {
+            "description": "Informações de um amigo online disponível para convite",
+            "type": "object",
+            "properties": {
+                "friendId": {
+                    "description": "ID do amigo",
+                    "type": "integer",
+                    "example": 42
+                },
+                "nickname": {
+                    "description": "Apelido do amigo",
+                    "type": "string",
+                    "example": "joaosilva"
+                },
+                "profilePic": {
+                    "description": "URL da foto de perfil do amigo",
+                    "type": "string",
+                    "example": "https://example.com/profile.jpg"
+                }
+            }
+        },
+        "response.Photo": {
+            "description": "Informações sobre uma foto adicional do veículo",
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "ID da foto",
+                    "type": "integer",
+                    "example": 456
+                },
+                "reference": {
+                    "description": "URL da foto",
+                    "type": "string",
+                    "example": "https://example.com/vehicles/123/photos/456.jpg"
+                }
+            }
+        },
+        "response.PresginedEventPhotoResponse": {
+            "description": "URL pré-assinada e chave para upload de foto do evento",
+            "type": "object",
+            "properties": {
+                "eventId": {
+                    "description": "ID do evento",
+                    "type": "integer",
+                    "example": 456
+                },
+                "key": {
+                    "description": "Chave da foto no storage",
+                    "type": "string",
+                    "example": "events/456/photo.jpg"
+                },
+                "url": {
+                    "description": "URL pré-assinada para upload da foto",
+                    "type": "string",
+                    "example": "https://s3.amazonaws.com/bucket/events/456/photo.jpg?X-Amz-Signature=..."
+                }
+            }
+        },
+        "response.PresignedGroupPhotosInfo": {
+            "description": "URLs pré-assinadas e chaves para upload de foto principal e banner do grupo",
+            "type": "object",
+            "properties": {
+                "bannerKey": {
+                    "description": "Chave do banner no storage (opcional)",
+                    "type": "string",
+                    "example": "groups/123/banner.jpg"
+                },
+                "groupId": {
+                    "description": "ID do grupo",
+                    "type": "integer",
+                    "example": 123
+                },
+                "mainPhotoKey": {
+                    "description": "Chave da foto principal no storage (opcional)",
+                    "type": "string",
+                    "example": "groups/123/main-photo.jpg"
+                },
+                "presignedBannerUrl": {
+                    "description": "URL pré-assinada para upload do banner (opcional)",
+                    "type": "string",
+                    "example": "https://s3.amazonaws.com/bucket/groups/123/banner.jpg?X-Amz-Signature=..."
+                },
+                "presignedMainPhotoUrl": {
+                    "description": "URL pré-assinada para upload da foto principal (opcional)",
+                    "type": "string",
+                    "example": "https://s3.amazonaws.com/bucket/groups/123/main.jpg?X-Amz-Signature=..."
+                }
+            }
+        },
+        "response.PresignedPhotoInfo": {
+            "description": "URL pré-assinada e chave para upload de foto do veículo",
+            "type": "object",
+            "properties": {
+                "objectKey": {
+                    "description": "Chave da foto no storage",
+                    "type": "string",
+                    "example": "vehicles/123/photo.jpg"
+                },
+                "presignedVehiclePhotoUrl": {
+                    "description": "URL pré-assinada para upload da foto do veículo",
+                    "type": "string",
+                    "example": "https://s3.amazonaws.com/bucket/vehicles/123/photo.jpg?X-Amz-Signature=..."
+                },
+                "vehicleId": {
+                    "description": "ID do veículo",
+                    "type": "integer",
+                    "example": 123
+                }
+            }
+        },
+        "response.ProfilePicPresignedURL": {
+            "description": "URL pré-assinada e chave para upload de foto de perfil do usuário",
+            "type": "object",
+            "properties": {
+                "objectKey": {
+                    "description": "Chave da foto no storage",
+                    "type": "string",
+                    "example": "users/123/profile-pic.jpg"
+                },
+                "presignedUrl": {
+                    "description": "URL pré-assinada para upload da foto de perfil",
+                    "type": "string",
+                    "example": "https://s3.amazonaws.com/bucket/users/123/profile-pic.jpg?X-Amz-Signature=..."
+                }
+            }
+        },
+        "response.RouteCreatedReponse": {
+            "description": "Resposta retornada quando uma rota é criada com sucesso",
+            "type": "object",
+            "properties": {
+                "routeId": {
+                    "description": "ID da rota criada",
+                    "type": "integer",
+                    "example": 123
+                }
+            }
+        },
+        "response.UserCreatedResponse": {
+            "description": "Resposta retornada quando um usuário é criado com sucesso",
+            "type": "object",
+            "properties": {
+                "birthdate": {
+                    "description": "Data de nascimento (se houver)",
+                    "type": "string"
+                },
+                "createdAt": {
+                    "description": "Data de criação",
+                    "type": "string"
+                },
+                "email": {
+                    "description": "Email do usuário",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Nome completo do usuário",
+                    "type": "string"
+                },
+                "nickname": {
+                    "description": "Apelido único do usuário",
+                    "type": "string"
+                },
+                "profilePic": {
+                    "description": "URL da foto de perfil (se houver)",
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "description": "Data de última atualização",
+                    "type": "string"
+                }
+            }
+        },
+        "response.Vehicle": {
+            "description": "Informações completas de um veículo retornado na busca/listagem",
+            "type": "object",
+            "properties": {
+                "brand": {
+                    "description": "Marca do veículo",
+                    "type": "string",
+                    "example": "Honda"
+                },
+                "createdAt": {
+                    "description": "Data de criação do veículo",
+                    "type": "string",
+                    "example": "2024-01-15T10:30:00Z"
+                },
+                "id": {
+                    "description": "ID do veículo",
+                    "type": "integer",
+                    "example": 123
+                },
+                "mainPhotoUrl": {
+                    "description": "URL da foto principal do veículo (opcional)",
+                    "type": "string",
+                    "example": "https://example.com/vehicles/123/main.jpg"
+                },
+                "model": {
+                    "description": "Modelo do veículo",
+                    "type": "string",
+                    "example": "Civic"
+                },
+                "nickname": {
+                    "description": "Apelido do veículo",
+                    "type": "string",
+                    "example": "Ligeirinho"
+                },
+                "photos": {
+                    "description": "Lista de fotos adicionais do veículo",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.Photo"
+                    }
+                },
+                "version": {
+                    "description": "Versão do veículo (opcional)",
+                    "type": "string",
+                    "example": "Hatch EG8"
+                },
+                "year": {
+                    "description": "Ano do veículo",
+                    "type": "integer",
+                    "example": 1994
+                }
+            }
+        },
+        "src_core_auth_controller.ErrorMessageResponse": {
+            "description": "Resposta retornada quando ocorre um erro que não requer detalhes adicionais, apenas uma mensagem descritiva.",
+            "type": "object",
+            "properties": {
+                "message": {
+                    "description": "Mensagem descritiva do erro",
+                    "type": "string"
+                }
+            }
+        },
+        "src_core_auth_controller.ValidationErrorResponse": {
+            "description": "Resposta retornada quando há erros de validação nos dados enviados. O campo \"errors\" contém um mapa onde a chave é o nome do campo (em minúsculas) e o valor é a mensagem de erro.",
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "description": "Mapa de erros de validação, onde a chave é o nome do campo (em minúsculas) e o valor é a mensagem de erro",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "src_core_city_controller.ErrorMessageResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "src_core_city_controller.ValidationErrorResponse": {
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "src_core_event_controller.ConfirmNewPhotoRequest": {
+            "type": "object",
+            "required": [
+                "key"
+            ],
+            "properties": {
+                "key": {
+                    "type": "string"
+                }
+            }
+        },
+        "src_core_event_controller.ErrorMessageResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "src_core_event_controller.ValidationErrorResponse": {
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "src_core_group_controller.ErrorMessageResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "src_core_group_controller.ValidationErrorResponse": {
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "src_core_route_controller.ErrorMessageResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "src_core_route_controller.ValidationErrorResponse": {
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "src_core_users_controller.ErrorMessageResponse": {
+            "description": "Resposta retornada quando ocorre um erro que não requer detalhes adicionais",
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "src_core_users_controller.ValidationErrorResponse": {
+            "description": "Resposta retornada quando há erros de validação nos dados enviados",
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "src_core_vehicle_controller.ConfirmNewPhotoRequest": {
+            "type": "object",
+            "required": [
+                "key"
+            ],
+            "properties": {
+                "key": {
+                    "type": "string"
+                }
+            }
+        },
+        "src_core_vehicle_controller.ErrorMessageResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "src_core_vehicle_controller.ValidationErrorResponse": {
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Digite \"Bearer \" seguido do token JWT. Exemplo: \"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

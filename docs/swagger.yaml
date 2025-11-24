@@ -1,0 +1,3145 @@
+basePath: /
+definitions:
+  controller.ConflictErrorResponse:
+    description: Resposta retornada quando o nickname ou email já estão em uso.
+    properties:
+      email:
+        description: Email único do usuário
+        example: email already in use
+        type: string
+      nickname:
+        description: Apelido único do usuário
+        example: nickname already in use
+        type: string
+    type: object
+  controller.CoordinatesRequest:
+    properties:
+      lat:
+        maximum: 85.05112878
+        minimum: -85.05112878
+        type: number
+      long:
+        type: number
+    required:
+    - lat
+    - long
+    type: object
+  entities.Coordinates:
+    description: Coordenadas geográficas (latitude e longitude) para localização de
+      eventos
+    properties:
+      latitude:
+        description: Latitude da localização do evento
+        example: -23.5505
+        type: number
+      longitude:
+        description: Longitude da localização do evento
+        example: -46.6333
+        type: number
+    required:
+    - latitude
+    - longitude
+    type: object
+  geoinput.Coordinates:
+    description: Coordenadas geográficas para localização de pontos em uma rota
+    properties:
+      lat:
+        description: Latitude da localização (deve estar entre -85.05112878 e 85.05112878)
+        example: -23.5505
+        maximum: 85.05112878
+        minimum: -85.05112878
+        type: number
+      long:
+        description: Longitude da localização
+        example: -46.6333
+        type: number
+    required:
+    - lat
+    - long
+    type: object
+  input.AnswerPendingInvite:
+    description: Resposta para aceitar ou rejeitar um convite pendente para participar
+      de um grupo
+    properties:
+      answer:
+        description: Resposta ao convite (accept ou reject)
+        enum:
+        - accept
+        - reject
+        example: accept
+        type: string
+    required:
+    - answer
+    type: object
+  input.ConfirmNewPhotos:
+    description: Chaves das fotos que foram enviadas com sucesso para confirmar o
+      upload
+    properties:
+      bannerKey:
+        description: Chave do banner no storage (opcional)
+        example: groups/123/banner.jpg
+        type: string
+      mainPhotoKey:
+        description: Chave da foto principal no storage (opcional)
+        example: groups/123/main-photo.jpg
+        type: string
+    type: object
+  input.ConfirmNewProfilePic:
+    description: Chave da foto que foi enviada com sucesso para confirmar o upload
+    properties:
+      objectKey:
+        description: Chave da foto no storage
+        example: users/123/profile-pic.jpg
+        type: string
+    required:
+    - objectKey
+    type: object
+  input.CreateEventInput:
+    description: Dados necessários para criar um novo evento no sistema
+    properties:
+      cityId:
+        description: ID da cidade onde o evento ocorrerá
+        example: 1
+        type: integer
+      date:
+        description: Data e hora do evento no formato RFC3339 (2006-01-02T15:04:05Z07:00)
+        example: "2024-12-25T20:00:00-03:00"
+        type: string
+      description:
+        description: Descrição do evento
+        example: Passeio ciclístico noturno pela cidade
+        type: string
+      groupId:
+        description: ID do grupo associado ao evento (opcional)
+        example: 5
+        type: integer
+      location:
+        allOf:
+        - $ref: '#/definitions/entities.Coordinates'
+        description: Coordenadas geográficas da localização do evento
+      name:
+        description: Nome do evento
+        example: Pedal Noturno
+        type: string
+      photoContentType:
+        description: 'Tipo de conteúdo da foto do evento (opcional: image/jpeg, image/png,
+          image/webp)'
+        enum:
+        - image/jpeg
+        - image/png
+        - image/webp
+        example: image/jpeg
+        type: string
+      visibility:
+        description: Visibilidade do evento (public ou private)
+        enum:
+        - public
+        - private
+        example: public
+        type: string
+    required:
+    - cityId
+    - date
+    - description
+    - location
+    - name
+    - visibility
+    type: object
+  input.CreateGroup:
+    description: Dados necessários para criar um novo grupo no sistema
+    properties:
+      bannerContentType:
+        description: 'Tipo de conteúdo do banner (opcional: image/jpeg, image/png,
+          image/webp)'
+        enum:
+        - image/jpeg
+        - image/png
+        - image/webp
+        example: image/png
+        type: string
+      cityId:
+        description: ID da cidade onde o grupo está localizado
+        example: 1
+        type: integer
+      description:
+        description: Descrição do grupo
+        example: Grupo para ciclistas da cidade
+        type: string
+      mainPhotoContentType:
+        description: 'Tipo de conteúdo da foto principal (opcional: image/jpeg, image/png,
+          image/webp)'
+        enum:
+        - image/jpeg
+        - image/png
+        - image/webp
+        example: image/jpeg
+        type: string
+      name:
+        description: Nome do grupo
+        example: Grupo de Ciclistas
+        type: string
+      visibility:
+        description: Visibilidade do grupo (public ou private)
+        enum:
+        - public
+        - private
+        example: public
+        type: string
+    required:
+    - cityId
+    - description
+    - name
+    - visibility
+    type: object
+  input.CreateRouteInput:
+    description: Dados necessários para criar uma nova rota com localização de início
+      e destino
+    properties:
+      destination:
+        allOf:
+        - $ref: '#/definitions/geoinput.Coordinates'
+        description: Localização de destino da rota (coordenadas geográficas)
+      startLocation:
+        allOf:
+        - $ref: '#/definitions/geoinput.Coordinates'
+        description: Localização inicial da rota (coordenadas geográficas)
+    required:
+    - destination
+    - startLocation
+    type: object
+  input.CreateUser:
+    description: Dados necessários para registrar um novo usuário no sistema
+    properties:
+      birthdate:
+        description: Data de nascimento no formato YYYY-MM-DD (opcional)
+        example: "1990-01-15"
+        type: string
+      email:
+        description: Email único do usuário
+        example: joao@email.com
+        type: string
+      name:
+        description: Nome completo do usuário
+        example: João Silva
+        type: string
+      nickname:
+        description: Apelido único do usuário (3-32 caracteres, apenas minúsculas)
+        example: joaosilva
+        maxLength: 32
+        minLength: 3
+        type: string
+      password:
+        description: Senha do usuário
+        example: senhaSegura123
+        type: string
+    required:
+    - email
+    - name
+    - nickname
+    - password
+    type: object
+  input.CreateVehicle:
+    description: Dados necessários para criar um novo veículo para o usuário autenticado
+    properties:
+      brand:
+        description: Marca do veículo
+        example: Honda
+        type: string
+      mainPhotoContentType:
+        description: 'Tipo de conteúdo da foto principal (opcional: image/jpeg, image/png,
+          image/webp)'
+        enum:
+        - image/jpeg
+        - image/png
+        - image/webp
+        example: image/jpeg
+        type: string
+      model:
+        description: Modelo do veículo
+        example: CB 600F
+        type: string
+      nickname:
+        description: Apelido do veículo
+        example: Minha Moto
+        type: string
+      version:
+        description: Versão do veículo (opcional)
+        example: Hornet
+        type: string
+      year:
+        description: Ano do veículo (deve ser maior que 0)
+        example: 2020
+        type: integer
+    required:
+    - brand
+    - model
+    - nickname
+    - year
+    type: object
+  input.FriendshipRequestAnswer:
+    description: Resposta para aceitar ou rejeitar uma solicitação de amizade pendente
+    properties:
+      answer:
+        description: Resposta à solicitação (accept ou reject)
+        enum:
+        - accept
+        - reject
+        example: accept
+        type: string
+    required:
+    - answer
+    type: object
+  input.Identifier:
+    description: Identificador para localizar um usuário no sistema
+    properties:
+      identifier:
+        description: Identificador do usuário (email ou nickname)
+        example: usuario@email.com
+        type: string
+      identifierType:
+        description: Tipo de identificador usado (email ou nickname)
+        enum:
+        - email
+        - nickname
+        example: email
+        type: string
+    required:
+    - identifier
+    - identifierType
+    type: object
+  input.LoginCredentials:
+    description: Credenciais para autenticação do usuário
+    properties:
+      identifier:
+        description: Identificador do usuário (email ou nickname)
+        example: usuario@email.com
+        type: string
+      identifierType:
+        description: Tipo de identificador usado (email ou nickname)
+        enum:
+        - email
+        - nickname
+        example: email
+        type: string
+      password:
+        description: Senha do usuário
+        example: senha123
+        type: string
+    required:
+    - identifier
+    - identifierType
+    - password
+    type: object
+  input.PendingInviteAnswer:
+    description: Resposta para aceitar ou rejeitar um convite pendente para participar
+      de um evento
+    properties:
+      answer:
+        description: Resposta ao convite (accept ou reject)
+        enum:
+        - accept
+        - reject
+        example: accept
+        type: string
+    required:
+    - answer
+    type: object
+  input.RequestNewGroupPhotos:
+    description: Dados para solicitar URLs pré-assinadas para upload de foto principal
+      e/ou banner do grupo
+    properties:
+      bannerContentType:
+        description: 'Tipo de conteúdo do banner (opcional: image/jpeg, image/png,
+          image/webp)'
+        enum:
+        - image/jpeg
+        - image/png
+        - image/webp
+        example: image/png
+        type: string
+      mainPhotoContentType:
+        description: 'Tipo de conteúdo da foto principal (opcional: image/jpeg, image/png,
+          image/webp)'
+        enum:
+        - image/jpeg
+        - image/png
+        - image/webp
+        example: image/jpeg
+        type: string
+    type: object
+  input.RequestNewPhotoInput:
+    description: Dados para solicitar URL pré-assinada para upload de foto do evento
+    properties:
+      photoContentType:
+        description: Tipo de conteúdo da foto (image/jpeg, image/png, image/webp)
+        enum:
+        - image/jpeg
+        - image/png
+        - image/webp
+        example: image/jpeg
+        type: string
+    required:
+    - photoContentType
+    type: object
+  input.RequestPhotoUpsert:
+    description: Dados para solicitar URL pré-assinada para upload de foto principal
+      ou de feed do veículo
+    properties:
+      contentType:
+        description: Tipo de conteúdo da foto (image/jpeg, image/png, image/webp)
+        enum:
+        - image/jpeg
+        - image/png
+        - image/webp
+        example: image/jpeg
+        type: string
+      photoType:
+        description: Tipo de foto (main ou feed)
+        enum:
+        - main
+        - feed
+        example: main
+        type: string
+    required:
+    - contentType
+    - photoType
+    type: object
+  input.RequestProfilePicUpdate:
+    description: Dados para solicitar URL pré-assinada para upload de foto de perfil
+    properties:
+      contentType:
+        description: Tipo de conteúdo da foto (image/jpeg, image/png, image/webp)
+        enum:
+        - image/jpeg
+        - image/png
+        - image/webp
+        example: image/jpeg
+        type: string
+    required:
+    - contentType
+    type: object
+  input.ResetPassword:
+    description: Dados necessários para redefinir a senha do usuário
+    properties:
+      newPassword:
+        description: Nova senha do usuário
+        example: novaSenha123
+        type: string
+      resetToken:
+        description: Token de redefinição de senha recebido por email
+        example: abc123def456
+        type: string
+    required:
+    - newPassword
+    - resetToken
+    type: object
+  input.UpdateEventInput:
+    description: Dados opcionais para atualizar informações de um evento existente
+    properties:
+      cityId:
+        description: ID da cidade (opcional, requer Location se fornecido)
+        example: 2
+        type: integer
+      date:
+        description: 'Data e hora do evento no formato RFC3339 (opcional: 2006-01-02T15:04:05Z07:00)'
+        example: "2024-12-26T20:00:00-03:00"
+        type: string
+      description:
+        description: Descrição do evento (opcional)
+        example: Nova descrição do evento
+        type: string
+      groupId:
+        description: ID do grupo associado (opcional)
+        example: 6
+        type: integer
+      location:
+        allOf:
+        - $ref: '#/definitions/entities.Coordinates'
+        description: Coordenadas geográficas da localização (opcional, requer CityID
+          se fornecido)
+      name:
+        description: Nome do evento (opcional)
+        example: Novo Nome do Evento
+        type: string
+      visibility:
+        description: 'Visibilidade do evento (opcional: public ou private)'
+        enum:
+        - public
+        - private
+        example: private
+        type: string
+    type: object
+  input.UpdateGroup:
+    description: Dados opcionais para atualizar informações de um grupo existente
+    properties:
+      cityId:
+        description: ID da cidade (opcional)
+        example: 2
+        type: integer
+      description:
+        description: Descrição do grupo (opcional)
+        example: Nova descrição do grupo
+        type: string
+      name:
+        description: Nome do grupo (opcional)
+        example: Novo Nome do Grupo
+        type: string
+      stateId:
+        description: ID do estado (opcional)
+        example: 1
+        type: integer
+      visibility:
+        description: 'Visibilidade do grupo (opcional: public ou private)'
+        enum:
+        - public
+        - private
+        example: private
+        type: string
+    type: object
+  input.UpdateUser:
+    description: Dados opcionais para atualizar informações do usuário autenticado
+    properties:
+      birthdate:
+        description: Data de nascimento no formato YYYY-MM-DD (opcional)
+        example: "1990-01-15"
+        type: string
+      name:
+        description: Nome completo do usuário (opcional)
+        example: João Silva
+        type: string
+      removeProfilePic:
+        description: Flag para remover a foto de perfil (opcional)
+        example: false
+        type: boolean
+    type: object
+  input.UpdateVehicleInfo:
+    description: Dados opcionais para atualizar informações de um veículo existente
+    properties:
+      brand:
+        description: Marca do veículo (opcional)
+        example: Yamaha
+        type: string
+      model:
+        description: Modelo do veículo (opcional)
+        example: MT-07
+        type: string
+      nickname:
+        description: Apelido do veículo (opcional)
+        example: Minha Moto Atualizada
+        type: string
+      version:
+        description: Versão do veículo (opcional)
+        example: ABS
+        type: string
+      year:
+        description: Ano do veículo (opcional, deve ser maior que 0)
+        example: 2021
+        type: integer
+    type: object
+  input.UsersToInviteInput:
+    description: Lista de IDs dos usuários que serão convidados para participar da
+      rota
+    properties:
+      idsToInvite:
+        description: IDs dos usuários a serem convidados (mínimo 1 usuário, cada ID
+          deve ser maior que 0)
+        items:
+          type: integer
+        minItems: 1
+        type: array
+    required:
+    - idsToInvite
+    type: object
+  response.AuthTokensResponse:
+    description: Tokens de autenticação JWT
+    properties:
+      accessToken:
+        description: Token de acesso JWT (válido por tempo limitado)
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+      refreshToken:
+        description: Token de refresh JWT (usado para obter novos tokens)
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    type: object
+  response.Friend:
+    description: Informações sobre um amigo do usuário autenticado
+    properties:
+      ProfilePicUrl:
+        description: URL da foto de perfil do amigo (opcional)
+        example: https://example.com/users/15/profile.jpg
+        type: string
+      friendsSince:
+        description: Data em que se tornaram amigos (opcional)
+        example: "2024-06-20T14:00:00Z"
+        type: string
+      id:
+        description: ID do amigo
+        example: 15
+        type: integer
+      name:
+        description: Nome completo do amigo
+        example: Maria Santos
+        type: string
+      nickname:
+        description: Apelido do amigo
+        example: mariasantos
+        type: string
+      since:
+        description: Data de criação da conta do amigo
+        example: "2024-01-15T10:30:00Z"
+        type: string
+    type: object
+  response.FriendshipRequest:
+    description: Informações sobre uma solicitação de amizade pendente
+    properties:
+      id:
+        description: ID do usuário que enviou a solicitação
+        example: 42
+        type: integer
+      nickname:
+        description: Apelido do usuário que enviou a solicitação
+        example: joaosilva
+        type: string
+      profilePicUrl:
+        description: URL da foto de perfil do usuário (opcional)
+        example: https://example.com/users/42/profile.jpg
+        type: string
+    type: object
+  response.GetCityReponse:
+    description: Informações de uma cidade retornada na busca/listagem
+    properties:
+      cityId:
+        description: ID da cidade
+        example: 1
+        type: integer
+      cityName:
+        description: Nome da cidade
+        example: São Paulo
+        type: string
+      countryName:
+        description: Nome do país
+        example: Brasil
+        type: string
+      stateName:
+        description: Nome do estado
+        example: SP
+        type: string
+    type: object
+  response.GetEventResponse:
+    description: Informações completas de um evento retornado na busca/listagem
+    properties:
+      address:
+        description: Endereço do evento (formato JSON)
+        type: object
+      coordinates:
+        description: Coordenadas geográficas do evento (formato JSON)
+        type: object
+      date:
+        description: Data e hora do evento
+        example: "2024-12-25T20:00:00Z"
+        type: string
+      description:
+        description: Descrição do evento
+        example: Passeio ciclístico noturno pela cidade
+        type: string
+      group:
+        description: Informações do grupo associado (opcional, formato JSON)
+        type: object
+      id:
+        description: ID do evento
+        example: 456
+        type: integer
+      memberRole:
+        description: Papel do usuário no evento (owner, admin, member, subscriber)
+        example: subscriber
+        type: string
+      name:
+        description: Nome do evento
+        example: Pedal Noturno
+        type: string
+      photo:
+        description: URL da foto do evento (opcional)
+        example: https://example.com/events/456/photo.jpg
+        type: string
+      subscribersCount:
+        description: Número de inscritos no evento (opcional)
+        example: 25
+        type: integer
+      visibility:
+        description: Visibilidade do evento (public ou private)
+        example: public
+        type: string
+    type: object
+  response.GetPendingInvitesResponse:
+    description: Informações sobre um convite pendente para participar de um evento
+    properties:
+      eventId:
+        description: ID do evento
+        example: 456
+        type: integer
+      eventName:
+        description: Nome do evento
+        example: Pedal Noturno
+        type: string
+      eventPhoto:
+        description: URL da foto do evento
+        example: https://example.com/events/456/photo.jpg
+        type: string
+      invitedBy:
+        description: Apelido do usuário que enviou o convite
+        example: joaosilva
+        type: string
+    type: object
+  response.GetUserResponse:
+    description: Informações de um usuário retornado na busca/listagem
+    properties:
+      id:
+        description: ID do usuário
+        example: 42
+        type: integer
+      name:
+        description: Nome completo do usuário
+        example: João Silva
+        type: string
+      nickname:
+        description: Apelido único do usuário
+        example: joaosilva
+        type: string
+      profilePicUrl:
+        description: URL da foto de perfil do usuário (se houver)
+        example: https://example.com/users/42/profile.jpg
+        type: string
+      since:
+        description: Data de criação da conta
+        example: "2024-01-15T10:30:00Z"
+        type: string
+    type: object
+  response.NearbyUserToRouteResponse:
+    description: Informações de um usuário próximo disponível para convite
+    properties:
+      id:
+        description: ID do usuário
+        example: 15
+        type: integer
+      nickname:
+        description: Apelido do usuário
+        example: mariasantos
+        type: string
+      profilePic:
+        description: URL da foto de perfil do usuário
+        example: https://example.com/profile.jpg
+        type: string
+    type: object
+  response.OnlineFriendsResponse:
+    description: Informações de um amigo online disponível para convite
+    properties:
+      friendId:
+        description: ID do amigo
+        example: 42
+        type: integer
+      nickname:
+        description: Apelido do amigo
+        example: joaosilva
+        type: string
+      profilePic:
+        description: URL da foto de perfil do amigo
+        example: https://example.com/profile.jpg
+        type: string
+    type: object
+  response.Photo:
+    description: Informações sobre uma foto adicional do veículo
+    properties:
+      id:
+        description: ID da foto
+        example: 456
+        type: integer
+      reference:
+        description: URL da foto
+        example: https://example.com/vehicles/123/photos/456.jpg
+        type: string
+    type: object
+  response.PresginedEventPhotoResponse:
+    description: URL pré-assinada e chave para upload de foto do evento
+    properties:
+      eventId:
+        description: ID do evento
+        example: 456
+        type: integer
+      key:
+        description: Chave da foto no storage
+        example: events/456/photo.jpg
+        type: string
+      url:
+        description: URL pré-assinada para upload da foto
+        example: https://s3.amazonaws.com/bucket/events/456/photo.jpg?X-Amz-Signature=...
+        type: string
+    type: object
+  response.PresignedGroupPhotosInfo:
+    description: URLs pré-assinadas e chaves para upload de foto principal e banner
+      do grupo
+    properties:
+      bannerKey:
+        description: Chave do banner no storage (opcional)
+        example: groups/123/banner.jpg
+        type: string
+      groupId:
+        description: ID do grupo
+        example: 123
+        type: integer
+      mainPhotoKey:
+        description: Chave da foto principal no storage (opcional)
+        example: groups/123/main-photo.jpg
+        type: string
+      presignedBannerUrl:
+        description: URL pré-assinada para upload do banner (opcional)
+        example: https://s3.amazonaws.com/bucket/groups/123/banner.jpg?X-Amz-Signature=...
+        type: string
+      presignedMainPhotoUrl:
+        description: URL pré-assinada para upload da foto principal (opcional)
+        example: https://s3.amazonaws.com/bucket/groups/123/main.jpg?X-Amz-Signature=...
+        type: string
+    type: object
+  response.PresignedPhotoInfo:
+    description: URL pré-assinada e chave para upload de foto do veículo
+    properties:
+      objectKey:
+        description: Chave da foto no storage
+        example: vehicles/123/photo.jpg
+        type: string
+      presignedVehiclePhotoUrl:
+        description: URL pré-assinada para upload da foto do veículo
+        example: https://s3.amazonaws.com/bucket/vehicles/123/photo.jpg?X-Amz-Signature=...
+        type: string
+      vehicleId:
+        description: ID do veículo
+        example: 123
+        type: integer
+    type: object
+  response.ProfilePicPresignedURL:
+    description: URL pré-assinada e chave para upload de foto de perfil do usuário
+    properties:
+      objectKey:
+        description: Chave da foto no storage
+        example: users/123/profile-pic.jpg
+        type: string
+      presignedUrl:
+        description: URL pré-assinada para upload da foto de perfil
+        example: https://s3.amazonaws.com/bucket/users/123/profile-pic.jpg?X-Amz-Signature=...
+        type: string
+    type: object
+  response.RouteCreatedReponse:
+    description: Resposta retornada quando uma rota é criada com sucesso
+    properties:
+      routeId:
+        description: ID da rota criada
+        example: 123
+        type: integer
+    type: object
+  response.UserCreatedResponse:
+    description: Resposta retornada quando um usuário é criado com sucesso
+    properties:
+      birthdate:
+        description: Data de nascimento (se houver)
+        type: string
+      createdAt:
+        description: Data de criação
+        type: string
+      email:
+        description: Email do usuário
+        type: string
+      name:
+        description: Nome completo do usuário
+        type: string
+      nickname:
+        description: Apelido único do usuário
+        type: string
+      profilePic:
+        description: URL da foto de perfil (se houver)
+        type: string
+      updatedAt:
+        description: Data de última atualização
+        type: string
+    type: object
+  response.Vehicle:
+    description: Informações completas de um veículo retornado na busca/listagem
+    properties:
+      brand:
+        description: Marca do veículo
+        example: Honda
+        type: string
+      createdAt:
+        description: Data de criação do veículo
+        example: "2024-01-15T10:30:00Z"
+        type: string
+      id:
+        description: ID do veículo
+        example: 123
+        type: integer
+      mainPhotoUrl:
+        description: URL da foto principal do veículo (opcional)
+        example: https://example.com/vehicles/123/main.jpg
+        type: string
+      model:
+        description: Modelo do veículo
+        example: Civic
+        type: string
+      nickname:
+        description: Apelido do veículo
+        example: Ligeirinho
+        type: string
+      photos:
+        description: Lista de fotos adicionais do veículo
+        items:
+          $ref: '#/definitions/response.Photo'
+        type: array
+      version:
+        description: Versão do veículo (opcional)
+        example: Hatch EG8
+        type: string
+      year:
+        description: Ano do veículo
+        example: 1994
+        type: integer
+    type: object
+  src_core_auth_controller.ErrorMessageResponse:
+    description: Resposta retornada quando ocorre um erro que não requer detalhes
+      adicionais, apenas uma mensagem descritiva.
+    properties:
+      message:
+        description: Mensagem descritiva do erro
+        type: string
+    type: object
+  src_core_auth_controller.ValidationErrorResponse:
+    description: Resposta retornada quando há erros de validação nos dados enviados.
+      O campo "errors" contém um mapa onde a chave é o nome do campo (em minúsculas)
+      e o valor é a mensagem de erro.
+    properties:
+      errors:
+        additionalProperties:
+          type: string
+        description: Mapa de erros de validação, onde a chave é o nome do campo (em
+          minúsculas) e o valor é a mensagem de erro
+        type: object
+    type: object
+  src_core_city_controller.ErrorMessageResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  src_core_city_controller.ValidationErrorResponse:
+    properties:
+      errors:
+        additionalProperties:
+          type: string
+        type: object
+    type: object
+  src_core_event_controller.ConfirmNewPhotoRequest:
+    properties:
+      key:
+        type: string
+    required:
+    - key
+    type: object
+  src_core_event_controller.ErrorMessageResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  src_core_event_controller.ValidationErrorResponse:
+    properties:
+      errors:
+        additionalProperties:
+          type: string
+        type: object
+    type: object
+  src_core_group_controller.ErrorMessageResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  src_core_group_controller.ValidationErrorResponse:
+    properties:
+      errors:
+        additionalProperties:
+          type: string
+        type: object
+    type: object
+  src_core_route_controller.ErrorMessageResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  src_core_route_controller.ValidationErrorResponse:
+    properties:
+      errors:
+        additionalProperties:
+          type: string
+        type: object
+    type: object
+  src_core_users_controller.ErrorMessageResponse:
+    description: Resposta retornada quando ocorre um erro que não requer detalhes
+      adicionais
+    properties:
+      message:
+        type: string
+    type: object
+  src_core_users_controller.ValidationErrorResponse:
+    description: Resposta retornada quando há erros de validação nos dados enviados
+    properties:
+      errors:
+        additionalProperties:
+          type: string
+        type: object
+    type: object
+  src_core_vehicle_controller.ConfirmNewPhotoRequest:
+    properties:
+      key:
+        type: string
+    required:
+    - key
+    type: object
+  src_core_vehicle_controller.ErrorMessageResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  src_core_vehicle_controller.ValidationErrorResponse:
+    properties:
+      errors:
+        additionalProperties:
+          type: string
+        type: object
+    type: object
+host: localhost:3000
+info:
+  contact: {}
+  description: API do Revit integrada com Swagger via Fiber.
+  title: Revit API
+  version: "1.0"
+paths:
+  /api/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Realiza login do usuário e retorna tokens de acesso e refresh
+      parameters:
+      - description: Credenciais de login (email ou nickname + senha + tipo de identificador)
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/input.LoginCredentials'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tokens de autenticação
+          schema:
+            $ref: '#/definitions/response.AuthTokensResponse'
+        "400":
+          description: 'Erro na validação dos dados. Possíveis campos: identifier,
+            password, identifierType'
+          schema:
+            $ref: '#/definitions/src_core_auth_controller.ValidationErrorResponse'
+        "401":
+          description: Credenciais inválidas
+          schema:
+            $ref: '#/definitions/src_core_auth_controller.ErrorMessageResponse'
+      summary: Autenticar usuário
+      tags:
+      - Auth
+  /api/auth/password:
+    patch:
+      consumes:
+      - application/json
+      description: Redefine a senha do usuário usando o token de redefinição
+      parameters:
+      - description: Token de redefinição e nova senha
+        in: body
+        name: resetData
+        required: true
+        schema:
+          $ref: '#/definitions/input.ResetPassword'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Senha redefinida com sucesso
+        "400":
+          description: 'Erro na validação dos dados. Possíveis campos: resettoken,
+            newpassword'
+          schema:
+            $ref: '#/definitions/src_core_auth_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_auth_controller.ErrorMessageResponse'
+      summary: Redefinir senha
+      tags:
+      - Auth
+    post:
+      consumes:
+      - application/json
+      description: Envia email com token para redefinição de senha
+      parameters:
+      - description: Email ou nickname do usuário
+        in: body
+        name: identifier
+        required: true
+        schema:
+          $ref: '#/definitions/input.Identifier'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Email enviado com sucesso
+        "400":
+          description: 'Erro na validação dos dados. Possíveis campos: identifier,
+            identifierType'
+          schema:
+            $ref: '#/definitions/src_core_auth_controller.ValidationErrorResponse'
+        "404":
+          description: Usuário não encontrado
+          schema:
+            $ref: '#/definitions/src_core_auth_controller.ErrorMessageResponse'
+      summary: Solicitar redefinição de senha
+      tags:
+      - Auth
+  /api/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Gera novos access token e refresh token, usando o refresh token
+        atual
+      parameters:
+      - description: Bearer {refreshToken}
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Novos tokens de autenticação
+          schema:
+            $ref: '#/definitions/response.AuthTokensResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_auth_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar tokens de autenticação
+      tags:
+      - Auth
+  /api/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Cria uma nova conta de usuário no sistema
+      parameters:
+      - description: Dados do usuário para registro
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/input.CreateUser'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Usuário criado com sucesso
+          schema:
+            $ref: '#/definitions/response.UserCreatedResponse'
+        "400":
+          description: 'Erro na validação dos dados. Possíveis campos: name, nickname,
+            email, password, birthdate'
+          schema:
+            $ref: '#/definitions/src_core_auth_controller.ValidationErrorResponse'
+        "409":
+          description: Alguns dos campos únicos já estão em uso
+          schema:
+            $ref: '#/definitions/controller.ConflictErrorResponse'
+      summary: Registrar novo usuário
+      tags:
+      - Auth
+  /api/city:
+    get:
+      consumes:
+      - application/json
+      description: Retorna uma lista de cidades filtradas por nome, com suporte a
+        paginação
+      parameters:
+      - description: Nome da cidade para busca
+        in: query
+        name: name
+        required: true
+        type: string
+      - description: Número da página (opcional)
+        in: query
+        name: page
+        type: integer
+      - description: Limite de resultados por página (opcional)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de cidades
+          schema:
+            items:
+              $ref: '#/definitions/response.GetCityReponse'
+            type: array
+        "400":
+          description: 'Erro na validação dos parâmetros. Possíveis campos: name,
+            page, limit'
+          schema:
+            $ref: '#/definitions/src_core_city_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_city_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar cidades
+      tags:
+      - Cities
+  /api/city/nearby:
+    get:
+      consumes:
+      - application/json
+      description: Retorna uma lista de cidades próximas a uma localização geográfica
+        (latitude e longitude)
+      parameters:
+      - description: Latitude da localização (-90 a 90)
+        in: query
+        name: latitude
+        required: true
+        type: number
+      - description: Longitude da localização (-180 a 180)
+        in: query
+        name: longitude
+        required: true
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de cidades próximas
+          schema:
+            items:
+              $ref: '#/definitions/response.GetCityReponse'
+            type: array
+        "400":
+          description: 'Erro na validação dos parâmetros. Possíveis campos: latitude,
+            longitude'
+          schema:
+            $ref: '#/definitions/src_core_city_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_city_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar cidades próximas
+      tags:
+      - Cities
+  /api/event:
+    get:
+      consumes:
+      - application/json
+      description: Retorna a lista de eventos do usuário autenticado
+      parameters:
+      - description: ID da cidade para filtrar (opcional)
+        example: 1
+        in: query
+        name: cityID
+        type: integer
+      - description: 'Data inicial para filtrar eventos (opcional, formato: 2006-01-02)'
+        example: "2024-12-01"
+        in: query
+        name: fromDate
+        type: string
+      - description: Latitude para filtrar eventos próximos (opcional, requer Longitude)
+        example: -23.5505
+        in: query
+        name: latitude
+        type: number
+      - description: Limite de resultados por página (opcional)
+        example: 10
+        in: query
+        name: limit
+        type: integer
+      - description: Longitude para filtrar eventos próximos (opcional, requer Latitude)
+        example: -46.6333
+        in: query
+        name: longitude
+        type: number
+      - description: 'Tipo de membro do usuário no evento (opcional: owner, admin,
+          member)'
+        enum:
+        - owner
+        - admin
+        - member
+        example: member
+        in: query
+        name: memberType
+        type: string
+      - description: Nome do evento para busca (opcional)
+        example: Pedal
+        in: query
+        name: name
+        type: string
+      - description: Número da página (opcional, deve ser maior que 0)
+        example: 1
+        in: query
+        name: page
+        type: integer
+      - description: 'Data final para filtrar eventos (opcional, formato: 2006-01-02)'
+        example: "2024-12-31"
+        in: query
+        name: toDate
+        type: string
+      - description: 'Visibilidade do evento (opcional: public ou private)'
+        enum:
+        - public
+        - private
+        example: public
+        in: query
+        name: visibility
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de eventos
+          schema:
+            items:
+              $ref: '#/definitions/response.GetEventResponse'
+            type: array
+        "400":
+          description: Erro na validação dos parâmetros
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar eventos
+      tags:
+      - Events
+    post:
+      consumes:
+      - application/json
+      description: Cria um novo evento
+      parameters:
+      - description: Dados do evento
+        in: body
+        name: event
+        required: true
+        schema:
+          $ref: '#/definitions/input.CreateEventInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Evento criado com sucesso
+          schema:
+            $ref: '#/definitions/response.PresginedEventPhotoResponse'
+        "400":
+          description: Erro na validação dos dados
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Criar evento
+      tags:
+      - Events
+  /api/event/{eventId}:
+    patch:
+      consumes:
+      - application/json
+      description: Atualiza os dados de um evento
+      parameters:
+      - description: ID do evento
+        in: path
+        name: eventId
+        required: true
+        type: integer
+      - description: Dados do evento para atualização
+        in: body
+        name: event
+        required: true
+        schema:
+          $ref: '#/definitions/input.UpdateEventInput'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Evento atualizado com sucesso
+        "400":
+          description: Erro na validação dos dados
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ErrorMessageResponse'
+        "403":
+          description: Sem permissão para atualizar o evento
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ErrorMessageResponse'
+        "404":
+          description: Evento não encontrado
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar evento
+      tags:
+      - Events
+  /api/event/{eventId}/invite:
+    patch:
+      consumes:
+      - application/json
+      description: Aceita ou rejeita um convite de evento pendente
+      parameters:
+      - description: ID do evento
+        in: path
+        name: eventId
+        required: true
+        type: integer
+      - description: Resposta ao convite (accept/reject)
+        in: body
+        name: answer
+        required: true
+        schema:
+          $ref: '#/definitions/input.PendingInviteAnswer'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Resposta processada com sucesso
+        "400":
+          description: Erro na validação dos dados
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ErrorMessageResponse'
+        "404":
+          description: Convite não encontrado
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Responder convite pendente
+      tags:
+      - Events
+  /api/event/{eventId}/invite/{invitedId}:
+    post:
+      consumes:
+      - application/json
+      description: Envia um convite para um usuário participar de um evento
+      parameters:
+      - description: ID do evento
+        in: path
+        name: eventId
+        required: true
+        type: integer
+      - description: ID do usuário a ser convidado
+        in: path
+        name: invitedId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Convite enviado com sucesso
+        "400":
+          description: ID inválido
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ErrorMessageResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ErrorMessageResponse'
+        "403":
+          description: Sem permissão para convidar
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ErrorMessageResponse'
+        "404":
+          description: Evento ou usuário não encontrado
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Convidar usuário para evento
+      tags:
+      - Events
+  /api/event/{eventId}/subscriber:
+    delete:
+      consumes:
+      - application/json
+      description: Remove o usuário autenticado de um evento
+      parameters:
+      - description: ID do evento
+        in: path
+        name: eventId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Inscrição cancelada com sucesso
+        "400":
+          description: ID inválido
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ErrorMessageResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ErrorMessageResponse'
+        "404":
+          description: Evento ou inscrição não encontrada
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Cancelar inscrição em evento
+      tags:
+      - Events
+    post:
+      consumes:
+      - application/json
+      description: Adiciona o usuário autenticado como participante de um evento
+      parameters:
+      - description: ID do evento
+        in: path
+        name: eventId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Usuário inscrito no evento
+        "400":
+          description: ID inválido
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ErrorMessageResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ErrorMessageResponse'
+        "404":
+          description: Evento não encontrado
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Inscrever-se em evento
+      tags:
+      - Events
+  /api/event/{eventId}/subscriber/{subscriberId}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove um participante de um evento (apenas administradores)
+      parameters:
+      - description: ID do evento
+        in: path
+        name: eventId
+        required: true
+        type: integer
+      - description: ID do participante a ser removido
+        in: path
+        name: subscriberId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Participante removido com sucesso
+        "400":
+          description: ID inválido
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ErrorMessageResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ErrorMessageResponse'
+        "403":
+          description: Sem permissão para remover participante
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ErrorMessageResponse'
+        "404":
+          description: Evento ou participante não encontrado
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Remover participante do evento
+      tags:
+      - Events
+  /api/event/invite:
+    get:
+      consumes:
+      - application/json
+      description: Retorna os convites de eventos pendentes do usuário autenticado
+      parameters:
+      - description: Limite de resultados por página (opcional, máximo 20)
+        example: 10
+        in: query
+        maximum: 20
+        name: limit
+        type: integer
+      - description: Número da página (opcional, deve ser maior que 0)
+        example: 1
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de convites pendentes
+          schema:
+            items:
+              $ref: '#/definitions/response.GetPendingInvitesResponse'
+            type: array
+        "400":
+          description: Erro na validação dos parâmetros
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar convites pendentes
+      tags:
+      - Events
+  /api/event/photo/{eventId}:
+    patch:
+      consumes:
+      - application/json
+      description: Confirma o upload de foto após upload na URL pré-assinada
+      parameters:
+      - description: ID do evento
+        in: path
+        name: eventId
+        required: true
+        type: integer
+      - description: Confirmação do upload
+        in: body
+        name: confirmation
+        required: true
+        schema:
+          $ref: '#/definitions/src_core_event_controller.ConfirmNewPhotoRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Foto confirmada com sucesso
+        "400":
+          description: Erro na validação dos dados
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ErrorMessageResponse'
+        "403":
+          description: Sem permissão para atualizar o evento
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ErrorMessageResponse'
+        "404":
+          description: Evento não encontrado
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Confirmar upload de foto do evento
+      tags:
+      - Events
+    post:
+      consumes:
+      - application/json
+      description: Solicita uma URL pré-assinada para upload de foto do evento
+      parameters:
+      - description: ID do evento
+        in: path
+        name: eventId
+        required: true
+        type: integer
+      - description: Dados da requisição de foto
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/input.RequestNewPhotoInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: URL pré-assinada para upload
+          schema:
+            $ref: '#/definitions/response.PresginedEventPhotoResponse'
+        "400":
+          description: Erro na validação dos dados
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ErrorMessageResponse'
+        "403":
+          description: Sem permissão para atualizar o evento
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ErrorMessageResponse'
+        "404":
+          description: Evento não encontrado
+          schema:
+            $ref: '#/definitions/src_core_event_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Solicitar upload de foto do evento
+      tags:
+      - Events
+  /api/group:
+    get:
+      consumes:
+      - application/json
+      description: Retorna a lista de grupos do usuário autenticado
+      parameters:
+      - description: ID da cidade para filtrar (opcional)
+        example: 1
+        in: query
+        name: cityId
+        type: integer
+      - description: Limite de resultados por página (opcional, máximo 20)
+        example: 10
+        in: query
+        maximum: 20
+        name: limit
+        type: integer
+      - description: Filtrar apenas grupos onde o usuário é membro (opcional)
+        example: true
+        in: query
+        name: member
+        type: boolean
+      - description: Nome do grupo para busca (opcional)
+        example: Ciclistas
+        in: query
+        name: name
+        type: string
+      - description: Número da página (opcional, deve ser maior que 0)
+        example: 1
+        in: query
+        name: page
+        type: integer
+      - description: ID do estado para filtrar (opcional)
+        example: 1
+        in: query
+        name: stateId
+        type: integer
+      - description: 'Visibilidade do grupo (opcional: public ou private)'
+        enum:
+        - public
+        - private
+        example: public
+        in: query
+        name: visibility
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de grupos
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "400":
+          description: Erro na validação dos parâmetros
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar grupos
+      tags:
+      - Groups
+    post:
+      consumes:
+      - application/json
+      description: Cria um novo grupo
+      parameters:
+      - description: Dados do grupo
+        in: body
+        name: group
+        required: true
+        schema:
+          $ref: '#/definitions/input.CreateGroup'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Grupo criado com sucesso
+          schema:
+            $ref: '#/definitions/response.PresignedGroupPhotosInfo'
+        "400":
+          description: Erro na validação dos dados
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Criar grupo
+      tags:
+      - Groups
+  /api/group/{groupId}:
+    patch:
+      consumes:
+      - application/json
+      description: Atualiza os dados de um grupo
+      parameters:
+      - description: ID do grupo
+        in: path
+        name: groupId
+        required: true
+        type: integer
+      - description: Dados do grupo para atualização
+        in: body
+        name: group
+        required: true
+        schema:
+          $ref: '#/definitions/input.UpdateGroup'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Grupo atualizado com sucesso
+        "400":
+          description: Erro na validação dos dados
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ErrorMessageResponse'
+        "403":
+          description: Sem permissão para atualizar o grupo
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ErrorMessageResponse'
+        "404":
+          description: Grupo não encontrado
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar grupo
+      tags:
+      - Groups
+  /api/group/{groupId}/invite:
+    patch:
+      consumes:
+      - application/json
+      description: Aceita ou rejeita um convite de grupo pendente
+      parameters:
+      - description: ID do grupo
+        in: path
+        name: groupId
+        required: true
+        type: integer
+      - description: Resposta ao convite (accept/reject)
+        in: body
+        name: answer
+        required: true
+        schema:
+          $ref: '#/definitions/input.AnswerPendingInvite'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Resposta processada com sucesso
+        "400":
+          description: Erro na validação dos dados
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ErrorMessageResponse'
+        "404":
+          description: Convite não encontrado
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Responder convite pendente
+      tags:
+      - Groups
+  /api/group/{groupId}/invite/{invitedId}:
+    post:
+      consumes:
+      - application/json
+      description: Envia um convite para um usuário entrar no grupo
+      parameters:
+      - description: ID do grupo
+        in: path
+        name: groupId
+        required: true
+        type: integer
+      - description: ID do usuário a ser convidado
+        in: path
+        name: invitedId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Convite enviado com sucesso
+        "400":
+          description: ID inválido
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ErrorMessageResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ErrorMessageResponse'
+        "403":
+          description: Sem permissão para convidar
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ErrorMessageResponse'
+        "404":
+          description: Grupo ou usuário não encontrado
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Convidar usuário para grupo
+      tags:
+      - Groups
+  /api/group/{groupId}/member:
+    delete:
+      consumes:
+      - application/json
+      description: Remove o usuário autenticado de um grupo
+      parameters:
+      - description: ID do grupo
+        in: path
+        name: groupId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Usuário removido do grupo
+        "400":
+          description: ID inválido
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ErrorMessageResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ErrorMessageResponse'
+        "404":
+          description: Grupo ou membro não encontrado
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Sair do grupo
+      tags:
+      - Groups
+    post:
+      consumes:
+      - application/json
+      description: Adiciona o usuário autenticado a um grupo público
+      parameters:
+      - description: ID do grupo
+        in: path
+        name: groupId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Usuário adicionado ao grupo
+        "400":
+          description: ID inválido
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ErrorMessageResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ErrorMessageResponse'
+        "403":
+          description: Grupo privado ou sem permissão
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ErrorMessageResponse'
+        "404":
+          description: Grupo não encontrado
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Entrar em grupo
+      tags:
+      - Groups
+  /api/group/{groupId}/member/{memberId}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove um membro de um grupo (apenas administradores)
+      parameters:
+      - description: ID do grupo
+        in: path
+        name: groupId
+        required: true
+        type: integer
+      - description: ID do membro a ser removido
+        in: path
+        name: memberId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Membro removido com sucesso
+        "400":
+          description: ID inválido
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ErrorMessageResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ErrorMessageResponse'
+        "403":
+          description: Sem permissão para remover membro
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ErrorMessageResponse'
+        "404":
+          description: Grupo ou membro não encontrado
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Remover membro do grupo
+      tags:
+      - Groups
+  /api/group/invite:
+    get:
+      consumes:
+      - application/json
+      description: Retorna os convites de grupos pendentes do usuário autenticado
+      parameters:
+      - description: Limite de resultados por página (opcional, máximo 20)
+        example: 10
+        in: query
+        maximum: 20
+        name: limit
+        type: integer
+      - description: Número da página (opcional, deve ser maior que 0)
+        example: 1
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de convites pendentes
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "400":
+          description: Erro na validação dos parâmetros
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar convites pendentes
+      tags:
+      - Groups
+  /api/photos/{groupId}:
+    patch:
+      consumes:
+      - application/json
+      description: Confirma o upload de fotos após upload nas URLs pré-assinadas
+      parameters:
+      - description: ID do grupo
+        in: path
+        name: groupId
+        required: true
+        type: integer
+      - description: Confirmação do upload
+        in: body
+        name: confirmation
+        required: true
+        schema:
+          $ref: '#/definitions/input.ConfirmNewPhotos'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Fotos confirmadas com sucesso
+        "400":
+          description: Erro na validação dos dados
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ErrorMessageResponse'
+        "403":
+          description: Sem permissão para atualizar fotos
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ErrorMessageResponse'
+        "404":
+          description: Grupo não encontrado
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Confirmar upload de fotos do grupo
+      tags:
+      - Groups
+    put:
+      consumes:
+      - application/json
+      description: Solicita URLs pré-assinadas para upload de fotos do grupo
+      parameters:
+      - description: ID do grupo
+        in: path
+        name: groupId
+        required: true
+        type: integer
+      - description: Dados da requisição de fotos
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/input.RequestNewGroupPhotos'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: URLs pré-assinadas para upload
+          schema:
+            $ref: '#/definitions/response.PresignedGroupPhotosInfo'
+        "400":
+          description: Erro na validação dos dados
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ErrorMessageResponse'
+        "403":
+          description: Sem permissão para atualizar fotos
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ErrorMessageResponse'
+        "404":
+          description: Grupo não encontrado
+          schema:
+            $ref: '#/definitions/src_core_group_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Solicitar upload de fotos do grupo
+      tags:
+      - Groups
+  /api/route:
+    post:
+      consumes:
+      - application/json
+      description: Cria uma nova rota com localização de início e destino
+      parameters:
+      - description: Dados da rota (localização inicial e destino)
+        in: body
+        name: route
+        required: true
+        schema:
+          $ref: '#/definitions/input.CreateRouteInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Rota criada com sucesso
+          schema:
+            $ref: '#/definitions/response.RouteCreatedReponse'
+        "400":
+          description: 'Erro na validação dos dados. Possíveis campos: startLocation,
+            destination'
+          schema:
+            $ref: '#/definitions/src_core_route_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_route_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Criar rota
+      tags:
+      - Routes
+  /api/route/{routeId}/invite:
+    patch:
+      consumes:
+      - application/json
+      description: Aceita um convite para participar de uma rota, fornecendo as coordenadas
+        iniciais
+      parameters:
+      - description: ID da rota
+        in: path
+        name: routeId
+        required: true
+        type: integer
+      - description: Coordenadas geográficas iniciais do usuário
+        in: body
+        name: coordinates
+        required: true
+        schema:
+          $ref: '#/definitions/controller.CoordinatesRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Convite aceito com sucesso
+        "400":
+          description: 'Erro na validação dos dados. Possíveis campos: lat, long'
+          schema:
+            $ref: '#/definitions/src_core_route_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_route_controller.ErrorMessageResponse'
+        "404":
+          description: Rota ou convite não encontrado
+          schema:
+            $ref: '#/definitions/src_core_route_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Aceitar convite de rota
+      tags:
+      - Routes
+    put:
+      consumes:
+      - application/json
+      description: Envia convites para uma lista de usuários participarem de uma rota
+      parameters:
+      - description: ID da rota
+        in: path
+        name: routeId
+        required: true
+        type: integer
+      - description: Lista de IDs dos usuários a serem convidados
+        in: body
+        name: invite
+        required: true
+        schema:
+          $ref: '#/definitions/input.UsersToInviteInput'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Convites enviados com sucesso
+        "400":
+          description: 'Erro na validação dos dados. Possíveis campos: idsToInvite'
+          schema:
+            $ref: '#/definitions/src_core_route_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_route_controller.ErrorMessageResponse'
+        "403":
+          description: Sem permissão para convidar usuários para esta rota
+          schema:
+            $ref: '#/definitions/src_core_route_controller.ErrorMessageResponse'
+        "404":
+          description: Rota não encontrada
+          schema:
+            $ref: '#/definitions/src_core_route_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Convidar usuários para rota
+      tags:
+      - Routes
+  /api/route/friends:
+    get:
+      consumes:
+      - application/json
+      description: Retorna a lista de amigos online que podem ser convidados para
+        uma rota
+      parameters:
+      - description: Limite de resultados por página (1-99)
+        in: query
+        name: limit
+        required: true
+        type: integer
+      - description: Número da página (maior que 0)
+        in: query
+        name: page
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de amigos online
+          schema:
+            items:
+              $ref: '#/definitions/response.OnlineFriendsResponse'
+            type: array
+        "400":
+          description: 'Erro na validação dos parâmetros. Possíveis campos: limit,
+            page'
+          schema:
+            $ref: '#/definitions/src_core_route_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_route_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar amigos online para convite
+      tags:
+      - Routes
+  /api/route/nearby:
+    get:
+      consumes:
+      - application/json
+      description: Retorna a lista de usuários próximos a uma localização que podem
+        ser convidados para uma rota
+      parameters:
+      - description: Latitude da localização (-85.05112878 a 85.05112878)
+        in: query
+        name: lat
+        required: true
+        type: number
+      - description: Longitude da localização
+        in: query
+        name: long
+        required: true
+        type: number
+      - description: Limite de resultados por página (1-99)
+        in: query
+        name: limit
+        required: true
+        type: integer
+      - description: Número da página (maior que 0)
+        in: query
+        name: page
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de usuários próximos
+          schema:
+            items:
+              $ref: '#/definitions/response.NearbyUserToRouteResponse'
+            type: array
+        "400":
+          description: 'Erro na validação dos parâmetros. Possíveis campos: lat, long,
+            limit, page'
+          schema:
+            $ref: '#/definitions/src_core_route_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_route_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar usuários próximos para convite
+      tags:
+      - Routes
+  /api/user:
+    get:
+      consumes:
+      - application/json
+      description: Retorna uma lista de usuários com filtros opcionais
+      parameters:
+      - description: Limite de resultados por página (opcional, máximo 20)
+        example: 10
+        in: query
+        maximum: 20
+        name: limit
+        type: integer
+      - description: Apelido para busca (opcional, mínimo 3 caracteres)
+        example: joao
+        in: query
+        minLength: 3
+        name: nickname
+        type: string
+      - description: Número da página (opcional, deve ser maior que 0)
+        example: 1
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de usuários
+          schema:
+            items:
+              $ref: '#/definitions/response.GetUserResponse'
+            type: array
+        "400":
+          description: Erro na validação dos parâmetros
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar usuários
+      tags:
+      - Users
+    patch:
+      consumes:
+      - application/json
+      description: Atualiza os dados do usuário autenticado
+      parameters:
+      - description: Dados do usuário para atualização
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/input.UpdateUser'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Usuário atualizado com sucesso
+        "400":
+          description: 'Erro na validação dos dados. Possíveis campos: name, birthdate,
+            removeProfilePic'
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar dados do usuário
+      tags:
+      - Users
+  /api/user/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retorna os dados de um usuário específico
+      parameters:
+      - description: ID do usuário
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Dados do usuário
+          schema:
+            $ref: '#/definitions/response.GetUserResponse'
+        "400":
+          description: ID inválido
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ErrorMessageResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ErrorMessageResponse'
+        "404":
+          description: Usuário não encontrado
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Obter usuário por ID
+      tags:
+      - Users
+  /api/user/email-available:
+    get:
+      consumes:
+      - application/json
+      description: Verifica se um email está disponível para uso
+      parameters:
+      - description: Email a ser verificado
+        in: query
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Email disponível
+        "400":
+          description: Erro na validação do email
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ErrorMessageResponse'
+        "409":
+          description: Email já está em uso
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Verificar disponibilidade de email
+      tags:
+      - Users
+  /api/user/friendship:
+    get:
+      consumes:
+      - application/json
+      description: Retorna a lista de amigos do usuário autenticado
+      parameters:
+      - description: Limite de resultados por página (opcional, máximo 20)
+        example: 10
+        in: query
+        maximum: 20
+        name: limit
+        type: integer
+      - description: Apelido para busca (opcional, mínimo 3 caracteres)
+        example: joao
+        in: query
+        minLength: 3
+        name: nickname
+        type: string
+      - description: Número da página (opcional, deve ser maior que 0)
+        example: 1
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de amigos
+          schema:
+            items:
+              $ref: '#/definitions/response.Friend'
+            type: array
+        "400":
+          description: Erro na validação dos parâmetros
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar amigos
+      tags:
+      - Users
+  /api/user/friendship/{destinataryId}:
+    post:
+      consumes:
+      - application/json
+      description: Envia uma solicitação de amizade para outro usuário
+      parameters:
+      - description: ID do usuário destinatário
+        in: path
+        name: destinataryId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Solicitação de amizade enviada
+        "400":
+          description: ID inválido
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ErrorMessageResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ErrorMessageResponse'
+        "404":
+          description: Usuário destinatário não encontrado
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Solicitar amizade
+      tags:
+      - Users
+  /api/user/friendship/{friendId}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a amizade entre o usuário autenticado e outro usuário
+      parameters:
+      - description: ID do amigo a ser removido
+        in: path
+        name: friendId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Amizade removida com sucesso
+        "400":
+          description: ID inválido
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ErrorMessageResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ErrorMessageResponse'
+        "404":
+          description: Amizade não encontrada
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Remover amizade
+      tags:
+      - Users
+  /api/user/friendship/{requesterId}:
+    patch:
+      consumes:
+      - application/json
+      description: Aceita ou rejeita uma solicitação de amizade recebida
+      parameters:
+      - description: ID do usuário que enviou a solicitação
+        in: path
+        name: requesterId
+        required: true
+        type: integer
+      - description: Resposta à solicitação (accept/reject)
+        in: body
+        name: answer
+        required: true
+        schema:
+          $ref: '#/definitions/input.FriendshipRequestAnswer'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Resposta processada com sucesso
+        "400":
+          description: Erro na validação dos dados
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ErrorMessageResponse'
+        "404":
+          description: Solicitação não encontrada
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Responder solicitação de amizade
+      tags:
+      - Users
+  /api/user/friendship/requests:
+    get:
+      consumes:
+      - application/json
+      description: Retorna as solicitações de amizade pendentes do usuário autenticado
+      parameters:
+      - description: Limite de resultados por página (opcional, máximo 20)
+        example: 10
+        in: query
+        maximum: 20
+        name: limit
+        type: integer
+      - description: Número da página (opcional, deve ser maior que 0)
+        example: 1
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de solicitações de amizade
+          schema:
+            items:
+              $ref: '#/definitions/response.FriendshipRequest'
+            type: array
+        "400":
+          description: Erro na validação dos parâmetros
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar solicitações de amizade
+      tags:
+      - Users
+  /api/user/nickname-available:
+    get:
+      consumes:
+      - application/json
+      description: Verifica se um nickname está disponível para uso
+      parameters:
+      - description: Nickname a ser verificado
+        in: query
+        name: nickname
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Nickname disponível
+        "400":
+          description: Erro na validação do nickname
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ErrorMessageResponse'
+        "409":
+          description: Nickname já está em uso
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Verificar disponibilidade de nickname
+      tags:
+      - Users
+  /api/user/profile-pic:
+    patch:
+      consumes:
+      - application/json
+      description: Confirma o upload de uma nova foto de perfil após o upload na URL
+        pré-assinada
+      parameters:
+      - description: Confirmação do upload
+        in: body
+        name: confirmation
+        required: true
+        schema:
+          $ref: '#/definitions/input.ConfirmNewProfilePic'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Foto de perfil confirmada com sucesso
+        "400":
+          description: Erro na validação dos dados
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Confirmar nova foto de perfil
+      tags:
+      - Users
+  /api/user/profile-pic/:
+    post:
+      consumes:
+      - application/json
+      description: Solicita uma URL pré-assinada para upload de nova foto de perfil
+      parameters:
+      - description: Dados da requisição de atualização de foto
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/input.RequestProfilePicUpdate'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: URL pré-assinada para upload
+          schema:
+            $ref: '#/definitions/response.ProfilePicPresignedURL'
+        "400":
+          description: Erro na validação dos dados
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_users_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Solicitar atualização de foto de perfil
+      tags:
+      - Users
+  /api/vehicle:
+    get:
+      consumes:
+      - application/json
+      description: Retorna a lista de veículos do usuário autenticado
+      parameters:
+      - description: Limite de resultados por página (opcional, máximo 20)
+        example: 10
+        in: query
+        maximum: 20
+        name: limit
+        type: integer
+      - description: Apelido do veículo para busca (opcional)
+        example: Minha Moto
+        in: query
+        name: nickname
+        type: string
+      - description: Número da página (opcional, deve ser maior que 0)
+        example: 1
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de veículos
+          schema:
+            items:
+              $ref: '#/definitions/response.Vehicle'
+            type: array
+        "400":
+          description: Erro na validação dos parâmetros
+          schema:
+            $ref: '#/definitions/src_core_vehicle_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_vehicle_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar veículos
+      tags:
+      - Vehicles
+    post:
+      consumes:
+      - application/json
+      description: Cria um novo veículo para o usuário autenticado
+      parameters:
+      - description: Dados do veículo
+        in: body
+        name: vehicle
+        required: true
+        schema:
+          $ref: '#/definitions/input.CreateVehicle'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: URL pré-assinada para upload da foto principal
+          schema:
+            $ref: '#/definitions/response.PresignedPhotoInfo'
+        "400":
+          description: Erro na validação dos dados
+          schema:
+            $ref: '#/definitions/src_core_vehicle_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_vehicle_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Criar veículo
+      tags:
+      - Vehicles
+  /api/vehicle/{vehicleId}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove um veículo do usuário autenticado
+      parameters:
+      - description: ID do veículo
+        in: path
+        name: vehicleId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Veículo deletado com sucesso
+        "400":
+          description: ID inválido
+          schema:
+            $ref: '#/definitions/src_core_vehicle_controller.ErrorMessageResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_vehicle_controller.ErrorMessageResponse'
+        "403":
+          description: Sem permissão para deletar o veículo
+          schema:
+            $ref: '#/definitions/src_core_vehicle_controller.ErrorMessageResponse'
+        "404":
+          description: Veículo não encontrado
+          schema:
+            $ref: '#/definitions/src_core_vehicle_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Deletar veículo
+      tags:
+      - Vehicles
+    patch:
+      consumes:
+      - application/json
+      description: Atualiza as informações de um veículo
+      parameters:
+      - description: ID do veículo
+        in: path
+        name: vehicleId
+        required: true
+        type: integer
+      - description: Dados do veículo para atualização
+        in: body
+        name: vehicle
+        required: true
+        schema:
+          $ref: '#/definitions/input.UpdateVehicleInfo'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Veículo atualizado com sucesso
+        "400":
+          description: Erro na validação dos dados
+          schema:
+            $ref: '#/definitions/src_core_vehicle_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_vehicle_controller.ErrorMessageResponse'
+        "403":
+          description: Sem permissão para atualizar o veículo
+          schema:
+            $ref: '#/definitions/src_core_vehicle_controller.ErrorMessageResponse'
+        "404":
+          description: Veículo não encontrado
+          schema:
+            $ref: '#/definitions/src_core_vehicle_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar informações do veículo
+      tags:
+      - Vehicles
+  /api/vehicle/{vehicleId}/photo/{photoId}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove uma foto específica de um veículo
+      parameters:
+      - description: ID do veículo
+        in: path
+        name: vehicleId
+        required: true
+        type: integer
+      - description: ID da foto
+        in: path
+        name: photoId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Foto removida com sucesso
+        "400":
+          description: ID inválido
+          schema:
+            $ref: '#/definitions/src_core_vehicle_controller.ErrorMessageResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_vehicle_controller.ErrorMessageResponse'
+        "403":
+          description: Sem permissão para atualizar o veículo
+          schema:
+            $ref: '#/definitions/src_core_vehicle_controller.ErrorMessageResponse'
+        "404":
+          description: Veículo ou foto não encontrado
+          schema:
+            $ref: '#/definitions/src_core_vehicle_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Remover foto do veículo
+      tags:
+      - Vehicles
+  /api/vehicle/main-photo/{vehicleId}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a foto principal de um veículo
+      parameters:
+      - description: ID do veículo
+        in: path
+        name: vehicleId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Foto principal removida com sucesso
+        "400":
+          description: ID inválido
+          schema:
+            $ref: '#/definitions/src_core_vehicle_controller.ErrorMessageResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_vehicle_controller.ErrorMessageResponse'
+        "403":
+          description: Sem permissão para atualizar o veículo
+          schema:
+            $ref: '#/definitions/src_core_vehicle_controller.ErrorMessageResponse'
+        "404":
+          description: Veículo não encontrado
+          schema:
+            $ref: '#/definitions/src_core_vehicle_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Remover foto principal do veículo
+      tags:
+      - Vehicles
+  /api/vehicle/photo/{vehicleId}:
+    patch:
+      consumes:
+      - application/json
+      description: Confirma o upload de foto após upload na URL pré-assinada
+      parameters:
+      - description: ID do veículo
+        in: path
+        name: vehicleId
+        required: true
+        type: integer
+      - description: Confirmação do upload
+        in: body
+        name: confirmation
+        required: true
+        schema:
+          $ref: '#/definitions/src_core_vehicle_controller.ConfirmNewPhotoRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Foto confirmada com sucesso
+        "400":
+          description: Erro na validação dos dados
+          schema:
+            $ref: '#/definitions/src_core_vehicle_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_vehicle_controller.ErrorMessageResponse'
+        "403":
+          description: Sem permissão para atualizar o veículo
+          schema:
+            $ref: '#/definitions/src_core_vehicle_controller.ErrorMessageResponse'
+        "404":
+          description: Veículo não encontrado
+          schema:
+            $ref: '#/definitions/src_core_vehicle_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Confirmar upload de foto do veículo
+      tags:
+      - Vehicles
+    post:
+      consumes:
+      - application/json
+      description: Solicita uma URL pré-assinada para upload de foto do veículo
+      parameters:
+      - description: ID do veículo
+        in: path
+        name: vehicleId
+        required: true
+        type: integer
+      - description: Dados da requisição de foto
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/input.RequestPhotoUpsert'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: URL pré-assinada para upload
+          schema:
+            $ref: '#/definitions/response.PresignedPhotoInfo'
+        "400":
+          description: Erro na validação dos dados
+          schema:
+            $ref: '#/definitions/src_core_vehicle_controller.ValidationErrorResponse'
+        "401":
+          description: Token inválido ou expirado
+          schema:
+            $ref: '#/definitions/src_core_vehicle_controller.ErrorMessageResponse'
+        "403":
+          description: Sem permissão para atualizar o veículo
+          schema:
+            $ref: '#/definitions/src_core_vehicle_controller.ErrorMessageResponse'
+        "404":
+          description: Veículo não encontrado
+          schema:
+            $ref: '#/definitions/src_core_vehicle_controller.ErrorMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Solicitar upload de foto do veículo
+      tags:
+      - Vehicles
+securityDefinitions:
+  BearerAuth:
+    description: 'Digite "Bearer " seguido do token JWT. Exemplo: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

@@ -4,13 +4,13 @@ import (
 	"strings"
 
 	"github.com/g3techlabs/revit-api/src/core/auth/errors"
-	usersInput "github.com/g3techlabs/revit-api/src/core/users/input"
-	usersResponse "github.com/g3techlabs/revit-api/src/core/users/response"
+	"github.com/g3techlabs/revit-api/src/core/auth/input"
+	"github.com/g3techlabs/revit-api/src/core/auth/response"
 	"github.com/g3techlabs/revit-api/src/response/generics"
 	"github.com/g3techlabs/revit-api/src/utils"
 )
 
-func (as *AuthService) RegisterUser(input *usersInput.CreateUser) (*usersResponse.UserCreatedResponse, error) {
+func (as *AuthService) RegisterUser(input *input.CreateUser) (*response.UserCreatedResponse, error) {
 	if err := as.validator.Validate(input); err != nil {
 		return nil, err
 	}

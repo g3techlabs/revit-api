@@ -3,9 +3,7 @@ package services
 import (
 	"github.com/g3techlabs/revit-api/src/core/auth/input"
 	"github.com/g3techlabs/revit-api/src/core/auth/response"
-	usersInput "github.com/g3techlabs/revit-api/src/core/users/input"
 	"github.com/g3techlabs/revit-api/src/core/users/repository"
-	usersResponse "github.com/g3techlabs/revit-api/src/core/users/response"
 	"github.com/g3techlabs/revit-api/src/infra/mail"
 	"github.com/g3techlabs/revit-api/src/infra/token"
 	"github.com/g3techlabs/revit-api/src/validation"
@@ -13,7 +11,7 @@ import (
 )
 
 type IAuthService interface {
-	RegisterUser(input *usersInput.CreateUser) (*usersResponse.UserCreatedResponse, error)
+	RegisterUser(input *input.CreateUser) (*response.UserCreatedResponse, error)
 	Login(credentials *input.LoginCredentials) (*response.AuthTokensResponse, error)
 	RefreshTokens(refreshToken string) (*response.AuthTokensResponse, error)
 	ResetPassword(input *input.ResetPassword) error

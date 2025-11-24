@@ -6,16 +6,29 @@ import (
 	"gorm.io/datatypes"
 )
 
+// GetGroupsResponse representa um grupo retornado na listagem
+// @Description Informações completas de um grupo retornado na busca/listagem
 type GetGroupsResponse struct {
-	ID             uint           `json:"id"`
-	Name           string         `json:"name"`
-	Description    string         `json:"description"`
-	MainPhoto      *string        `json:"mainPhoto"`
-	Banner         *string        `json:"banner"`
-	CreatedAt      time.Time      `json:"createdAt"`
-	Visibility     string         `json:"visibility"`
-	City           string         `json:"city"`
-	State          string         `json:"state"`
-	MemberType     *string        `json:"memberType"`
+	// ID do grupo
+	ID uint `json:"id" example:"123"`
+	// Nome do grupo
+	Name string `json:"name" example:"Grupo de Ciclistas"`
+	// Descrição do grupo
+	Description string `json:"description" example:"Grupo para ciclistas da cidade"`
+	// URL da foto principal do grupo (opcional)
+	MainPhoto *string `json:"mainPhoto" example:"https://example.com/groups/123/main.jpg"`
+	// URL do banner do grupo (opcional)
+	Banner *string `json:"banner" example:"https://example.com/groups/123/banner.jpg"`
+	// Data de criação do grupo
+	CreatedAt time.Time `json:"createdAt" example:"2024-01-15T10:30:00Z"`
+	// Visibilidade do grupo (public ou private)
+	Visibility string `json:"visibility" example:"public"`
+	// Nome da cidade
+	City string `json:"city" example:"São Paulo"`
+	// Nome do estado
+	State string `json:"state" example:"SP"`
+	// Tipo de membro do usuário no grupo (opcional: owner, admin, member)
+	MemberType *string `json:"memberType" example:"member"`
+	// Lista de amigos no grupo (formato JSON)
 	FriendsInGroup datatypes.JSON `json:"friendsInGroup"`
 }

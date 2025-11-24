@@ -6,7 +6,7 @@ import (
 	"github.com/g3techlabs/revit-api/src/response/generics"
 )
 
-func (es *EventService) GetPendingInvites(userId uint, query *input.GetPendingInvitesFilters) (*[]response.GetPendingInvites, error) {
+func (es *EventService) GetPendingInvites(userId uint, query *input.GetPendingInvitesFilters) (*[]response.GetPendingInvitesResponse, error) {
 	if err := es.validator.Validate(query); err != nil {
 		return nil, err
 	}

@@ -23,7 +23,7 @@ type EventRepository interface {
 	InsertNewEventSubscriber(userId, eventId uint) error
 	RevokeEventSubscription(userId, eventId uint) error
 	MakeEventInvitation(eventAdminId, eventId, invitedId uint) error
-	GetPendingInvites(userId, limit, page uint) (*[]response.GetPendingInvites, error)
+	GetPendingInvites(userId, limit, page uint) (*[]response.GetPendingInvitesResponse, error)
 	AcceptPendingInvite(eventId uint, userId uint) error
 	RejectPendingInvite(eventId uint, userId uint) error
 	RemoveSubscriber(eventAdminId, eventId, subscriberId uint) error
@@ -434,8 +434,8 @@ func (er *eventRepository) makeInvitation(eventAdminId, eventId, invitedId uint)
 	return err
 }
 
-func (er *eventRepository) GetPendingInvites(userId, limit, page uint) (*[]response.GetPendingInvites, error) {
-	var invites []response.GetPendingInvites
+func (er *eventRepository) GetPendingInvites(userId, limit, page uint) (*[]response.GetPendingInvitesResponse, error) {
+	var invites []response.GetPendingInvitesResponse
 
 	query := er.db.Model(&models.EventSubscriber{}).
 		Select("e.id AS event_id", "e.name AS event_name", "'"+cloudFrontUrl+"' || e.photo AS event_photo", "u.nickname AS invited_by").
@@ -449,7 +449,7 @@ func (er *eventRepository) GetPendingInvites(userId, limit, page uint) (*[]respo
 	}
 
 	if len(invites) == 0 {
-		empty := make([]response.GetPendingInvites, 0)
+		empty := make([]response.GetPendingInvitesResponse, 0)
 		return &empty, nil
 	}
 
