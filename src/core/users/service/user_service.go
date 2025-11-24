@@ -19,8 +19,6 @@ type IUserService interface {
 	AnswerFriendshipRequest(userId, requesterId uint, answer *input.FriendshipRequestAnswer) (*response.FriendshipRequestAnswered, error)
 	RemoveFriendship(userId, friendId uint) error
 	GetFriendshipRequests(userId uint, query *input.GetFriendshipRequestsQuery) (*[]response.FriendshipRequest, error)
-	CheckIfEmailAvailable(email *input.EmailInput) (bool, error)
-	CheckIfNicknameAvailable(nickname *input.NicknameInput) (bool, error)
 }
 
 type UserService struct {
