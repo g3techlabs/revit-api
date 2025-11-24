@@ -179,6 +179,17 @@ func (c AuthController) ResetPassword(ctx *fiber.Ctx) error {
 	return ctx.SendStatus(fiber.StatusNoContent)
 }
 
+// CheckIfEmailAvailable godoc
+// @Summary Verificar disponibilidade de email
+// @Description Verifica se um email está disponível para uso no sistema
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param email query string true "Email a ser verificado" example(joao@email.com)
+// @Success 204 "Email disponível"
+// @Failure 400 {object} ErrorMessageResponse "Parâmetro de email inválido ou ausente"
+// @Failure 409 {object} ErrorMessageResponse "Email já está em uso"
+// @Router /api/auth/email-available [get]
 func (c *AuthController) CheckIfEmailAvailable(ctx *fiber.Ctx) error {
 	var input input.EmailInput
 
@@ -198,6 +209,17 @@ func (c *AuthController) CheckIfEmailAvailable(ctx *fiber.Ctx) error {
 	return ctx.SendStatus(fiber.StatusNoContent)
 }
 
+// CheckIfNicknameAvailable godoc
+// @Summary Verificar disponibilidade de nickname
+// @Description Verifica se um nickname está disponível para uso no sistema
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param nickname query string true "Nickname a ser verificado (3-32 caracteres, apenas minúsculas)" example(joaosilva)
+// @Success 204 "Nickname disponível"
+// @Failure 400 {object} ErrorMessageResponse "Parâmetro de nickname inválido ou ausente"
+// @Failure 409 {object} ErrorMessageResponse "Nickname já está em uso"
+// @Router /api/auth/nickname-available [get]
 func (c *AuthController) CheckIfNicknameAvailable(ctx *fiber.Ctx) error {
 	var input input.NicknameInput
 

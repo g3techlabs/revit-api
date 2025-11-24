@@ -15,6 +15,48 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/auth/email-available": {
+            "get": {
+                "description": "Verifica se um email está disponível para uso no sistema",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Verificar disponibilidade de email",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "joao@email.com",
+                        "description": "Email a ser verificado",
+                        "name": "email",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Email disponível"
+                    },
+                    "400": {
+                        "description": "Parâmetro de email inválido ou ausente",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_auth_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Email já está em uso",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_auth_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/auth/login": {
             "post": {
                 "description": "Realiza login do usuário e retorna tokens de acesso e refresh",
@@ -54,6 +96,48 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Credenciais inválidas",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_auth_controller.ErrorMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/nickname-available": {
+            "get": {
+                "description": "Verifica se um nickname está disponível para uso no sistema",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Verificar disponibilidade de nickname",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "joaosilva",
+                        "description": "Nickname a ser verificado (3-32 caracteres, apenas minúsculas)",
+                        "name": "nickname",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Nickname disponível"
+                    },
+                    "400": {
+                        "description": "Parâmetro de nickname inválido ou ausente",
+                        "schema": {
+                            "$ref": "#/definitions/src_core_auth_controller.ErrorMessageResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Nickname já está em uso",
                         "schema": {
                             "$ref": "#/definitions/src_core_auth_controller.ErrorMessageResponse"
                         }
@@ -2219,58 +2303,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/user/email-available": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Verifica se um email está disponível para uso",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Users"
-                ],
-                "summary": "Verificar disponibilidade de email",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Email a ser verificado",
-                        "name": "email",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Email disponível"
-                    },
-                    "400": {
-                        "description": "Erro na validação do email",
-                        "schema": {
-                            "$ref": "#/definitions/src_core_users_controller.ValidationErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Token inválido ou expirado",
-                        "schema": {
-                            "$ref": "#/definitions/src_core_users_controller.ErrorMessageResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "Email já está em uso",
-                        "schema": {
-                            "$ref": "#/definitions/src_core_users_controller.ErrorMessageResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/api/user/friendship": {
             "get": {
                 "security": [
@@ -2557,58 +2589,6 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Solicitação não encontrada",
-                        "schema": {
-                            "$ref": "#/definitions/src_core_users_controller.ErrorMessageResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/user/nickname-available": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Verifica se um nickname está disponível para uso",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Users"
-                ],
-                "summary": "Verificar disponibilidade de nickname",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Nickname a ser verificado",
-                        "name": "nickname",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Nickname disponível"
-                    },
-                    "400": {
-                        "description": "Erro na validação do nickname",
-                        "schema": {
-                            "$ref": "#/definitions/src_core_users_controller.ValidationErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Token inválido ou expirado",
-                        "schema": {
-                            "$ref": "#/definitions/src_core_users_controller.ErrorMessageResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "Nickname já está em uso",
                         "schema": {
                             "$ref": "#/definitions/src_core_users_controller.ErrorMessageResponse"
                         }

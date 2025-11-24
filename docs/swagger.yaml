@@ -1018,6 +1018,34 @@ info:
   title: Revit API
   version: "1.0"
 paths:
+  /api/auth/email-available:
+    get:
+      consumes:
+      - application/json
+      description: Verifica se um email está disponível para uso no sistema
+      parameters:
+      - description: Email a ser verificado
+        example: joao@email.com
+        in: query
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Email disponível
+        "400":
+          description: Parâmetro de email inválido ou ausente
+          schema:
+            $ref: '#/definitions/src_core_auth_controller.ErrorMessageResponse'
+        "409":
+          description: Email já está em uso
+          schema:
+            $ref: '#/definitions/src_core_auth_controller.ErrorMessageResponse'
+      summary: Verificar disponibilidade de email
+      tags:
+      - Auth
   /api/auth/login:
     post:
       consumes:
@@ -1047,6 +1075,34 @@ paths:
           schema:
             $ref: '#/definitions/src_core_auth_controller.ErrorMessageResponse'
       summary: Autenticar usuário
+      tags:
+      - Auth
+  /api/auth/nickname-available:
+    get:
+      consumes:
+      - application/json
+      description: Verifica se um nickname está disponível para uso no sistema
+      parameters:
+      - description: Nickname a ser verificado (3-32 caracteres, apenas minúsculas)
+        example: joaosilva
+        in: query
+        name: nickname
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Nickname disponível
+        "400":
+          description: Parâmetro de nickname inválido ou ausente
+          schema:
+            $ref: '#/definitions/src_core_auth_controller.ErrorMessageResponse'
+        "409":
+          description: Nickname já está em uso
+          schema:
+            $ref: '#/definitions/src_core_auth_controller.ErrorMessageResponse'
+      summary: Verificar disponibilidade de nickname
       tags:
       - Auth
   /api/auth/password:
@@ -2498,39 +2554,6 @@ paths:
       summary: Obter usuário por ID
       tags:
       - Users
-  /api/user/email-available:
-    get:
-      consumes:
-      - application/json
-      description: Verifica se um email está disponível para uso
-      parameters:
-      - description: Email a ser verificado
-        in: query
-        name: email
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: Email disponível
-        "400":
-          description: Erro na validação do email
-          schema:
-            $ref: '#/definitions/src_core_users_controller.ValidationErrorResponse'
-        "401":
-          description: Token inválido ou expirado
-          schema:
-            $ref: '#/definitions/src_core_users_controller.ErrorMessageResponse'
-        "409":
-          description: Email já está em uso
-          schema:
-            $ref: '#/definitions/src_core_users_controller.ErrorMessageResponse'
-      security:
-      - BearerAuth: []
-      summary: Verificar disponibilidade de email
-      tags:
-      - Users
   /api/user/friendship:
     get:
       consumes:
@@ -2718,39 +2741,6 @@ paths:
       security:
       - BearerAuth: []
       summary: Listar solicitações de amizade
-      tags:
-      - Users
-  /api/user/nickname-available:
-    get:
-      consumes:
-      - application/json
-      description: Verifica se um nickname está disponível para uso
-      parameters:
-      - description: Nickname a ser verificado
-        in: query
-        name: nickname
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: Nickname disponível
-        "400":
-          description: Erro na validação do nickname
-          schema:
-            $ref: '#/definitions/src_core_users_controller.ValidationErrorResponse'
-        "401":
-          description: Token inválido ou expirado
-          schema:
-            $ref: '#/definitions/src_core_users_controller.ErrorMessageResponse'
-        "409":
-          description: Nickname já está em uso
-          schema:
-            $ref: '#/definitions/src_core_users_controller.ErrorMessageResponse'
-      security:
-      - BearerAuth: []
-      summary: Verificar disponibilidade de nickname
       tags:
       - Users
   /api/user/profile-pic:
