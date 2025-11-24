@@ -1,0 +1,520 @@
+asyncapi: 3.0.0
+info:
+  title: Revit API - WebSocket
+  version: 1.0.0
+  description: |
+    API WebSocket do Revit para comunicação em tempo real.
+    Esta API permite comunicação bidirecional para funcionalidades de geolocalização e rotas.
+  contact:
+    name: Revit API Support
+  license:
+    name: MIT
+  tags:
+    - name: Geolocation
+      description: Funcionalidades relacionadas à geolocalização
+    - name: Routes
+      description: Funcionalidades relacionadas a rotas
+    - name: Real-time
+      description: Comunicação em tempo real
+
+servers:
+  production:
+    host: localhost:3000
+    protocol: ws
+    pathname: /ws
+    description: Servidor WebSocket de produção. Autenticação via JWT Bearer Token no header Authorization durante o handshake.
+  development:
+    host: localhost:3000
+    protocol: ws
+    pathname: /ws
+    description: Servidor WebSocket de desenvolvimento. Autenticação via JWT Bearer Token no header Authorization durante o handshake.
+
+defaultContentType: application/json
+
+channels:
+  user-actions:
+    address: /
+    description: Canal para ações do usuário (mensagens enviadas pelo cliente)
+    messages:
+      putUserLocation:
+        $ref: '#/components/messages/PutUserLocation'
+      startRoute:
+        $ref: '#/components/messages/StartRoute'
+      participantFinishRoute:
+        $ref: '#/components/messages/ParticipantFinishRoute'
+      leaveRoute:
+        $ref: '#/components/messages/LeaveRoute'
+
+  server-events:
+    address: /
+    description: Canal para eventos do servidor (mensagens recebidas pelo cliente)
+    messages:
+      routeInvite:
+        $ref: '#/components/messages/RouteInvite'
+      startRouteNotification:
+        $ref: '#/components/messages/StartRouteNotification'
+      newUserInRoute:
+        $ref: '#/components/messages/NewUserInRoute'
+      userMoved:
+        $ref: '#/components/messages/UserMoved'
+      participantLeftRoute:
+        $ref: '#/components/messages/ParticipantLeftRoute'
+      userFinishedRoute:
+        $ref: '#/components/messages/UserFinishedRoute'
+
+operations:
+  putUserLocation:
+    action: send
+    channel:
+      $ref: '#/channels/user-actions'
+    title: Atualizar localização do usuário
+    summary: Envia a localização atual do usuário para o servidor
+    description: |
+      Atualiza a localização geográfica do usuário no sistema. O servidor notificará outros usuários próximos sobre o movimento.
+    messages:
+      - $ref: '#/channels/user-actions/messages/putUserLocation'
+    tags:
+      - name: Geolocation
+
+  startRoute:
+    action: send
+    channel:
+      $ref: '#/channels/user-actions'
+    title: Iniciar rota
+    summary: Solicita o início de uma rota
+    description: |
+      Solicita ao servidor que inicie uma rota específica. O servidor notificará todos os participantes da rota.
+    messages:
+      - $ref: '#/channels/user-actions/messages/startRoute'
+    tags:
+      - name: Routes
+
+  participantFinishRoute:
+    action: send
+    channel:
+      $ref: '#/channels/user-actions'
+    title: Finalizar participação na rota
+    summary: Indica que o usuário finalizou a rota
+    description: |
+      Notifica o servidor que o usuário chegou ao destino da rota. O servidor calculará o tempo de chegada e ordem de chegada.
+    messages:
+      - $ref: '#/channels/user-actions/messages/participantFinishRoute'
+    tags:
+      - name: Routes
+
+  leaveRoute:
+    action: send
+    channel:
+      $ref: '#/channels/user-actions'
+    title: Sair da rota
+    summary: Solicita saída de uma rota ativa
+    description: |
+      Solicita ao servidor que remova o usuário de uma rota ativa. O servidor notificará os participantes restantes.
+    messages:
+      - $ref: '#/channels/user-actions/messages/leaveRoute'
+    tags:
+      - name: Routes
+
+  receiveRouteInvite:
+    action: receive
+    channel:
+      $ref: '#/channels/server-events'
+    title: Receber convite de rota
+    summary: Recebe um convite para participar de uma rota
+    description: |
+      Notificação recebida quando outro usuário convida o usuário atual para participar de uma rota.
+    messages:
+      - $ref: '#/channels/server-events/messages/routeInvite'
+    tags:
+      - name: Routes
+
+  receiveStartRoute:
+    action: receive
+    channel:
+      $ref: '#/channels/server-events'
+    title: Receber notificação de início de rota
+    summary: Recebe notificação quando uma rota é iniciada
+    description: |
+      Notificação recebida quando uma rota é iniciada pelo dono. Contém o timestamp de quando a rota deve ser exibida.
+    messages:
+      - $ref: '#/channels/server-events/messages/startRouteNotification'
+    tags:
+      - name: Routes
+
+  receiveNewUserInRoute:
+    action: receive
+    channel:
+      $ref: '#/channels/server-events'
+    title: Receber notificação de novo usuário na rota
+    summary: Recebe notificação quando um novo usuário entra na rota
+    description: |
+      Notificação recebida quando um novo participante aceita o convite e entra na rota.
+    messages:
+      - $ref: '#/channels/server-events/messages/newUserInRoute'
+    tags:
+      - name: Routes
+
+  receiveUserMoved:
+    action: receive
+    channel:
+      $ref: '#/channels/server-events'
+    title: Receber atualização de movimento de usuário
+    summary: Recebe notificação quando um usuário próximo se move
+    description: |
+      Notificação recebida quando um usuário próximo (na mesma rota ou em free roam) atualiza sua localização.
+    messages:
+      - $ref: '#/channels/server-events/messages/userMoved'
+    tags:
+      - name: Geolocation
+
+  receiveParticipantLeftRoute:
+    action: receive
+    channel:
+      $ref: '#/channels/server-events'
+    title: Receber notificação de saída de participante
+    summary: Recebe notificação quando um participante sai da rota
+    description: |
+      Notificação recebida quando um participante da rota sai antes de finalizar.
+    messages:
+      - $ref: '#/channels/server-events/messages/participantLeftRoute'
+    tags:
+      - name: Routes
+
+  receiveUserFinishedRoute:
+    action: receive
+    channel:
+      $ref: '#/channels/server-events'
+    title: Receber confirmação de finalização de rota
+    summary: Recebe confirmação quando o usuário finaliza a rota
+    description: |
+      Notificação recebida confirmando que o usuário finalizou a rota com sucesso. Contém informações sobre tempo de chegada e ordem de chegada.
+    messages:
+      - $ref: '#/channels/server-events/messages/userFinishedRoute'
+    tags:
+      - name: Routes
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Autenticação via JWT Bearer Token.
+        O token deve ser enviado no header Authorization durante o handshake WebSocket.
+        Formato: "Bearer {token}"
+
+  messages:
+    PutUserLocation:
+      name: put-user-location
+      title: Atualizar Localização do Usuário
+      summary: Mensagem para atualizar a localização geográfica do usuário
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/Coordinates'
+      examples:
+        - payload:
+            lat: -23.5505
+            long: -46.6333
+
+    StartRoute:
+      name: start-route
+      title: Iniciar Rota
+      summary: Mensagem para solicitar o início de uma rota
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/StartRoutePayload'
+      examples:
+        - payload:
+            routeID: 123
+
+    ParticipantFinishRoute:
+      name: participant-finish-route
+      title: Finalizar Participação na Rota
+      summary: Mensagem para indicar que o usuário finalizou a rota
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/Coordinates'
+      examples:
+        - payload:
+            lat: -23.5632
+            long: -46.6544
+
+    LeaveRoute:
+      name: leave-route
+      title: Sair da Rota
+      summary: Mensagem para solicitar saída de uma rota ativa
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/Coordinates'
+      examples:
+        - payload:
+            lat: -23.5505
+            long: -46.6333
+
+    RouteInvite:
+      name: route-invite
+      title: Convite de Rota
+      summary: Notificação de convite para participar de uma rota
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/RouteInvitePayload'
+      examples:
+        - payload:
+            routeId: 123
+            destination:
+              lat: -23.5632
+              long: -46.6544
+            inviter:
+              inviterName: joaosilva
+              inviterProfilePic: https://example.com/users/42/profile.jpg
+
+    StartRouteNotification:
+      name: start-route
+      title: Notificação de Início de Rota
+      summary: Notificação quando uma rota é iniciada
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/StartRouteNotificationPayload'
+      examples:
+        - payload:
+            routeId: 123
+            displayAtTimestamp: 1703520000
+
+    NewUserInRoute:
+      name: new-user-in-route
+      title: Novo Usuário na Rota
+      summary: Notificação quando um novo usuário entra na rota
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/UserDetails'
+      examples:
+        - payload:
+            userId: 42
+            nickname: joaosilva
+            profilePic: https://example.com/users/42/profile.jpg
+
+    UserMoved:
+      name: user-moved
+      title: Usuário Movido
+      summary: Notificação quando um usuário próximo atualiza sua localização
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/UserMovedPayload'
+      examples:
+        - payload:
+            lat: -23.5505
+            lng: -46.6333
+            userId: 42
+            timestamp: "2024-01-15T10:30:00Z"
+
+    ParticipantLeftRoute:
+      name: participant-left-route
+      title: Participante Saiu da Rota
+      summary: Notificação quando um participante sai da rota
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ParticipantLeftRoutePayload'
+      examples:
+        - payload:
+            userId: 42
+
+    UserFinishedRoute:
+      name: user-finished-route
+      title: Usuário Finalizou a Rota
+      summary: Confirmação quando o usuário finaliza a rota com sucesso
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/UserFinishedRoutePayload'
+      examples:
+        - payload:
+            userId: 42
+            arrivalTime: "2024-01-15T10:45:00Z"
+            arrivalOrder: 1
+
+  schemas:
+    WebSocketMessage:
+      type: object
+      description: Estrutura base de todas as mensagens WebSocket
+      required:
+        - event
+        - payload
+      properties:
+        event:
+          type: string
+          description: Nome do evento
+          example: put-user-location
+        payload:
+          type: object
+          description: Dados do evento (varia conforme o tipo de evento)
+
+    Coordinates:
+      type: object
+      description: Coordenadas geográficas (latitude e longitude)
+      required:
+        - lat
+        - long
+      properties:
+        lat:
+          type: number
+          format: float
+          description: Latitude da localização (deve estar entre -85.05112878 e 85.05112878)
+          example: -23.5505
+        long:
+          type: number
+          format: float
+          description: Longitude da localização
+          example: -46.6333
+
+    StartRoutePayload:
+      type: object
+      description: Payload para solicitar início de uma rota
+      required:
+        - routeID
+      properties:
+        routeID:
+          type: integer
+          format: uint32
+          description: ID da rota a ser iniciada
+          example: 123
+
+    RouteInvitePayload:
+      type: object
+      description: Payload de convite para participar de uma rota
+      required:
+        - routeId
+        - destination
+        - inviter
+      properties:
+        routeId:
+          type: integer
+          format: uint32
+          description: ID da rota
+          example: 123
+        destination:
+          $ref: '#/components/schemas/Coordinates'
+        inviter:
+          $ref: '#/components/schemas/InviterDetails'
+
+    InviterDetails:
+      type: object
+      description: Informações do usuário que enviou o convite
+      required:
+        - inviterName
+      properties:
+        inviterName:
+          type: string
+          description: Apelido do usuário que enviou o convite
+          example: joaosilva
+        inviterProfilePic:
+          type: string
+          format: uri
+          description: URL da foto de perfil do usuário que enviou o convite (opcional)
+          nullable: true
+          example: https://example.com/users/42/profile.jpg
+
+    StartRouteNotificationPayload:
+      type: object
+      description: Payload de notificação de início de rota
+      required:
+        - routeId
+        - displayAtTimestamp
+      properties:
+        routeId:
+          type: integer
+          format: uint32
+          description: ID da rota iniciada
+          example: 123
+        displayAtTimestamp:
+          type: integer
+          format: int64
+          description: Timestamp Unix (em segundos) de quando a rota deve ser exibida
+          example: 1703520000
+
+    UserDetails:
+      type: object
+      description: Informações básicas de um usuário
+      required:
+        - userId
+        - nickname
+        - profilePic
+      properties:
+        userId:
+          type: integer
+          format: uint32
+          description: ID do usuário
+          example: 42
+        nickname:
+          type: string
+          description: Apelido do usuário
+          example: joaosilva
+        profilePic:
+          type: string
+          format: uri
+          description: URL da foto de perfil do usuário
+          example: https://example.com/users/42/profile.jpg
+
+    UserMovedPayload:
+      type: object
+      description: Payload de notificação de movimento de usuário
+      required:
+        - lat
+        - lng
+        - userId
+        - timestamp
+      properties:
+        lat:
+          type: number
+          format: float
+          description: Nova latitude do usuário
+          example: -23.5505
+        lng:
+          type: number
+          format: float
+          description: Nova longitude do usuário
+          example: -46.6333
+        userId:
+          type: integer
+          format: uint32
+          description: ID do usuário que se moveu
+          example: 42
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp UTC do movimento
+          example: "2024-01-15T10:30:00Z"
+
+    ParticipantLeftRoutePayload:
+      type: object
+      description: Payload de notificação de saída de participante da rota
+      required:
+        - userId
+      properties:
+        userId:
+          type: integer
+          format: uint32
+          description: ID do usuário que saiu da rota
+          example: 42
+
+    UserFinishedRoutePayload:
+      type: object
+      description: Payload de confirmação de finalização de rota
+      required:
+        - userId
+        - arrivalTime
+        - arrivalOrder
+      properties:
+        userId:
+          type: integer
+          format: uint32
+          description: ID do usuário que finalizou a rota
+          example: 42
+        arrivalTime:
+          type: string
+          format: date-time
+          description: Data e hora de chegada ao destino
+          example: "2024-01-15T10:45:00Z"
+        arrivalOrder:
+          type: integer
+          description: Ordem de chegada (1 = primeiro, 2 = segundo, etc.)
+          example: 1

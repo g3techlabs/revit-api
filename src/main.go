@@ -32,6 +32,9 @@ func main() {
 	// Rota Swagger: http://localhost:3000/swagger/index.html
 	app.Get("/swagger/*", swagger.HandlerDefault)
 
+	// Rota WebSocket Docs: http://localhost:3000/ws-docs/index.html
+	app.Static("/docs", "./ws-docs", fiber.Static{Index: "index.html", Browse: true})
+
 	router.SetupRoutes(app, logger)
 
 	logger.Fatal(app.Listen(":3000"))
