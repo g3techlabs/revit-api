@@ -1,11 +1,11 @@
-package service
+package services
 
 import (
-	"github.com/g3techlabs/revit-api/src/core/users/input"
+	"github.com/g3techlabs/revit-api/src/core/auth/input"
 	"github.com/g3techlabs/revit-api/src/response/generics"
 )
 
-func (us *UserService) CheckIfNicknameAvailable(nickname *input.NicknameInput) (bool, error) {
+func (us *AuthService) CheckIfNicknameAvailable(nickname *input.NicknameInput) (bool, error) {
 	if err := us.validator.Validate(nickname); err != nil {
 		return false, err
 	}
@@ -21,7 +21,7 @@ func (us *UserService) CheckIfNicknameAvailable(nickname *input.NicknameInput) (
 	return true, nil
 }
 
-func (us *UserService) isNicknameTaken(nickname string) (bool, error) {
+func (us *AuthService) isNicknameTaken(nickname string) (bool, error) {
 	foundUser, err := us.userRepo.FindUserByNickname(nickname)
 	return foundUser != nil, err
 }

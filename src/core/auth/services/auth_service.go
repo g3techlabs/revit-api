@@ -16,6 +16,8 @@ type IAuthService interface {
 	RefreshTokens(refreshToken string) (*response.AuthTokensResponse, error)
 	ResetPassword(input *input.ResetPassword) error
 	SendPassResetEmail(input *input.Identifier) error
+	CheckIfEmailAvailable(email *input.EmailInput) (bool, error)
+	CheckIfNicknameAvailable(nickname *input.NicknameInput) (bool, error)
 }
 
 type AuthService struct {

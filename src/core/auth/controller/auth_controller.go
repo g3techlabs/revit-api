@@ -178,3 +178,41 @@ func (c AuthController) ResetPassword(ctx *fiber.Ctx) error {
 
 	return ctx.SendStatus(fiber.StatusNoContent)
 }
+
+func (c *AuthController) CheckIfEmailAvailable(ctx *fiber.Ctx) error {
+	var input input.EmailInput
+
+	if err := ctx.QueryParser(&input); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid body request")
+	}
+
+	isEmailAvailable, err := c.AuthService.CheckIfEmailAvailable(&input)
+	if err != nil {
+		return err
+	}
+
+	if !isEmailAvailable {
+		return fiber.NewError(fiber.StatusConflict, "Email already taken")
+	}
+
+	return ctx.SendStatus(fiber.StatusNoContent)
+}
+
+func (c *AuthController) CheckIfNicknameAvailable(ctx *fiber.Ctx) error {
+	var input input.NicknameInput
+
+	if err := ctx.QueryParser(&input); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid body request")
+	}
+
+	isEmailAvailable, err := c.AuthService.CheckIfNicknameAvailable(&input)
+	if err != nil {
+		return err
+	}
+
+	if !isEmailAvailable {
+		return fiber.NewError(fiber.StatusConflict, "Nickname already taken")
+	}
+
+	return ctx.SendStatus(fiber.StatusNoContent)
+}

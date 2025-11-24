@@ -46,16 +46,9 @@ func (as *AuthService) RegisterUser(input *input.CreateUser) (*response.UserCrea
 	return userResponse, nil
 }
 
-func (as AuthService) verifyUniqueFieldsAvailability(nickname string, email string) (bool, bool) {
-	return as.isNicknameTaken(nickname), as.isEmailTaken(email)
-}
+func (as *AuthService) verifyUniqueFieldsAvailability(nickname string, email string) (bool, bool) {
+	isEmailTaken, _ := as.isEmailTaken(email)
+	isNicknameTaken, _ := as.isNicknameTaken(nickname)
 
-func (as AuthService) isNicknameTaken(nickname string) bool {
-	foundUser, _ := as.userRepo.FindUserByNickname(nickname)
-	return foundUser != nil
-}
-
-func (as AuthService) isEmailTaken(email string) bool {
-	foundUser, _ := as.userRepo.FindUserByEmail(email)
-	return foundUser != nil
+	return isNicknameTaken, isEmailTaken
 }

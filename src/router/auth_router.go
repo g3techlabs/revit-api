@@ -14,6 +14,8 @@ func AuthRoutes(router fiber.Router, as services.IAuthService, logger utils.ILog
 
 	auth := router.Group("/auth")
 
+	auth.Get("/email-available", authController.CheckIfEmailAvailable)
+	auth.Get("/nickname-available", authController.CheckIfNicknameAvailable)
 	auth.Post("/register", authController.RegisterUser)
 	auth.Post("/login", authController.Login)
 	auth.Post("/refresh", authController.RefreshTokens)
