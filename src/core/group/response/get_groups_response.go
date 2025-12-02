@@ -8,7 +8,7 @@ import (
 
 // GetGroupsResponse representa um grupo retornado na listagem
 // @Description Informações completas de um grupo retornado na busca/listagem
-type GetGroupsResponse struct {
+type GroupResponse struct {
 	// ID do grupo
 	ID uint `json:"id" example:"123"`
 	// Nome do grupo
@@ -31,4 +31,12 @@ type GetGroupsResponse struct {
 	MemberType *string `json:"memberType" example:"member"`
 	// Lista de amigos no grupo (formato JSON)
 	FriendsInGroup datatypes.JSON `json:"friendsInGroup"`
+	// Total de membros no grupo
+	TotalMembers uint `json:"totalMembers" example:"150"`
+}
+
+type GetGroupsResponse struct {
+	Groups      []GroupResponse `json:"groups"`
+	CurrentPage uint            `json:"currentPage" example:"1"`
+	TotalPages  uint            `json:"totalPages" example:"10"`
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/g3techlabs/revit-api/src/response/generics"
 )
 
-func (gs *GroupService) GetGroups(userId uint, query *input.GetGroupsQuery) (*[]response.GetGroupsResponse, error) {
+func (gs *GroupService) GetGroups(userId uint, query *input.GetGroupsQuery) (*response.GetGroupsResponse, error) {
 	if err := gs.validator.Validate(query); err != nil {
 		return nil, err
 	}
