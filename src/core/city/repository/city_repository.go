@@ -30,7 +30,7 @@ func (cr *cityRepository) GetCities(cityName string, page, limit uint) (*[]respo
 	pattern := fmt.Sprintf("%%%s%%", strings.ToLower(cityName))
 
 	query := cr.db.Model(&models.City{}).
-		Select("city.id as city_id", "city.name AS city_name", "state.name AS state_name", "country.name AS country_name").
+		Select("city.id as city_id", "city.name AS city_name", "state.acronym AS state_name", "country.name AS country_name").
 		Joins("JOIN state ON city.state_id = state.id").
 		Joins("JOIN country ON state.country_id = country.id").
 		Where("lower(city.name) LIKE ?", pattern).

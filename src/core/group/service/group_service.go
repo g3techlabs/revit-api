@@ -12,6 +12,8 @@ type IGroupService interface {
 	CreateGroup(userId uint, data *input.CreateGroup) (*response.PresignedGroupPhotosInfo, error)
 	ConfirmNewPhotos(userId, groupId uint, data *input.ConfirmNewPhotos) error
 	GetGroups(userId uint, query *input.GetGroupsQuery) (*response.GetGroupsResponse, error)
+	GetGroup(userId, groupId uint) (*response.GroupResponse, error)
+	GetMembers(userId, groupId uint, query *input.GetMembersInput) (*response.GroupMembersResponse, error)
 	UpdateGroup(userId, groupId uint, data *input.UpdateGroup) error
 	RequestNewGroupPhotos(userId, groupId uint, data *input.RequestNewGroupPhotos) (*response.PresignedGroupPhotosInfo, error)
 	JoinGroup(userId, groupId uint) error

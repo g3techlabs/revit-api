@@ -6,6 +6,7 @@ import (
 	"github.com/g3techlabs/revit-api/src/core/group/input"
 	"github.com/g3techlabs/revit-api/src/core/group/response"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func (gr *groupRepository) GetGroups(userId uint, filters *input.GetGroupsQuery) (*response.GetGroupsResponse, error) {
@@ -36,18 +37,19 @@ func (gr *groupRepository) GetGroups(userId uint, filters *input.GetGroupsQuery)
 		totalPages = uint(math.Ceil(float64(totalCount) / float64(limit)))
 	}
 
-	var groups []response.GroupResponse
+	var groups []response.SimpleGroup
 
 	mainQuery := gr.buildGetGroupsBaseQuery(userId, acceptedStatusId)
 	mainQuery = gr.buildGetGroupsWhereStatement2(mainQuery, filters)
 	mainQuery = gr.buildPagination(mainQuery, limit, page)
+	mainQuery = gr.buildOrderBy(mainQuery, filters.Name)
 
 	if err := mainQuery.Scan(&groups).Error; err != nil {
 		return nil, err
 	}
 
 	if groups == nil {
-		groups = make([]response.GroupResponse, 0)
+		groups = make([]response.SimpleGroup, 0)
 	}
 
 	return &response.GetGroupsResponse{
@@ -59,47 +61,21 @@ func (gr *groupRepository) GetGroups(userId uint, filters *input.GetGroupsQuery)
 
 func (gr *groupRepository) buildGetGroupsBaseQuery(userId uint, acceptedStatusId uint) *gorm.DB {
 
-	friendsSubquery := gr.db.Table("group_member gm_friend").
-		Select("gm_friend.user_id, users.nickname, users.profile_pic").
-		Joins("JOIN users ON users.id = gm_friend.user_id").
-		Joins(`JOIN friendship f ON (
-            (f.requester_id = ? AND f.receiver_id = users.id)
-            OR (f.receiver_id = ? AND f.requester_id = users.id)
-        )`, userId, userId).
-		Where("gm_friend.group_id = g.id AND gm_friend.invite_status_id = ?", acceptedStatusId).
-		Order("users.nickname").
-		Limit(3)
-
 	return gr.db.Table("groups g").
 		Select(`
 			g.id,
 			g.name,
-			g.description,
 			CAST(? AS text) || g.main_photo AS main_photo,
 			CAST(? AS text) || g.banner AS banner,
-			g.created_at,
-			v.name AS visibility,
-			c.name AS city,
-			s.name AS state,
 			r.name AS member_type,
-			COALESCE(
-				json_agg(
-					DISTINCT jsonb_build_object(
-						'nickname', u.nickname,
-						'profilePicUrl', CAST(? AS text) || u.profile_pic
-					)
-				) FILTER (WHERE u.user_id IS NOT NULL),
-				'[]'
-			) AS friends_in_group,
-			COUNT(DISTINCT gm_total.user_id) AS total_members 
-		`, cloudFrontUrl, cloudFrontUrl, cloudFrontUrl).
+			COUNT(DISTINCT gm_total.user_id) AS total_members
+		`, cloudFrontUrl, cloudFrontUrl).
 		Joins("JOIN visibility v ON v.id = g.visibility_id").
 		Joins("JOIN city c ON c.id = g.city_id").
 		Joins("JOIN state s ON s.id = c.state_id").
 		Joins("LEFT JOIN group_member gm_user ON gm_user.group_id = g.id AND gm_user.user_id = ? AND invite_status_id = ?", userId, acceptedStatusId).
 		Joins("LEFT JOIN role r ON r.id = gm_user.role_id").
-		Joins("LEFT JOIN group_member gm_total ON gm_total.group_id = g.id AND gm_total.invite_status_id = ?", acceptedStatusId).
-		Joins("LEFT JOIN LATERAL (?) AS u ON TRUE", friendsSubquery).
+		Joins("LEFT JOIN group_member gm_total ON gm_total.group_id = g.id AND gm_total.invite_status_id = ? AND gm_total.left_at IS NULL AND gm_total.removed_by IS NULL", acceptedStatusId).
 		Group("g.id, v.name, c.name, s.name, r.name")
 }
 
@@ -117,14 +93,11 @@ func (gr *groupRepository) buildGetGroupsWhereStatement2(query *gorm.DB, filters
 	if filters.StateId != 0 {
 		query = query.Where("c.state_id = ?", filters.StateId)
 	}
-	if filters.Visibility != "" {
-		query = query.Where("LOWER(v.name) = LOWER(?)", filters.Visibility)
-	}
 	if filters.Member {
 		query = query.Where("gm_user.user_id IS NOT NULL")
 	}
 
-	query = query.Where("EXISTS (SELECT 1 FROM group_member WHERE group_member.group_id = g.id AND left_at IS NULL)")
+	query = query.Where("EXISTS (SELECT 1 FROM group_member WHERE group_member.group_id = g.id AND invite_status_id = ? AND left_at IS NULL AND removed_by IS NULL)", acceptedStatusId)
 	query = query.Where("(g.visibility_id = ? OR gm_user.user_id IS NOT NULL)", PublicVisibility)
 
 	return query
@@ -134,5 +107,13 @@ func (gr *groupRepository) buildPagination(query *gorm.DB, limit, page int) *gor
 
 	offset := (page - 1) * limit
 
-	return query.Limit(limit).Offset(offset).Order("g.created_at DESC")
+	return query.Limit(limit).Offset(offset)
+}
+
+func (gr *groupRepository) buildOrderBy(query *gorm.DB, name string) *gorm.DB {
+	if name != "" {
+		return query.Order(clause.Expr{SQL: "similarity(g.name, ?) DESC", Vars: []any{name}})
+	}
+
+	return query.Order("g.created_at DESC")
 }

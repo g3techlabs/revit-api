@@ -69,11 +69,11 @@ func (gr *groupRepository) makeNewGroupOwnerIfNeeded(isQuitterTheOwner bool, gro
 		return err
 	}
 
-	if err := gr.makeNewOwner(&ownerCandidate, tx); err != nil {
-		return err
+	if ownerCandidate.UserID == 0 {
+		return nil
 	}
 
-	return nil
+	return gr.makeNewOwner(&ownerCandidate, tx)
 }
 
 func (gr *groupRepository) queryNewOwnerCandidate(groupId uint, tx *gorm.DB, model *models.GroupMember) error {

@@ -18,6 +18,9 @@ import (
 type GroupRepository interface {
 	CreateGroup(userId uint, data *models.Group) error
 	GetGroups(userId uint, filters *input.GetGroupsQuery) (*response.GetGroupsResponse, error)
+	GetGroup(userId, groupId uint) (*response.GroupResponse, error)
+	GetMembers(groupId uint, queryParams input.GetMembersInput) (*response.GroupMembersResponse, error)
+	CanUserViewGroup(userId, groupId uint) (bool, error)
 	UpdateMainPhoto(userId, groupId uint, banner string) error
 	UpdateBanner(userId, groupId uint, banner string) error
 	UpdateGroup(userId, groupId uint, data *input.UpdateGroup) error

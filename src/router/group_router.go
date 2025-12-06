@@ -17,10 +17,11 @@ func GroupRoutes(router fiber.Router, groupService service.IGroupService, middle
 	group.Post("/", groupController.CreateGroup)
 	group.Get("/", groupController.GetGroups)
 	group.Get("/invite", groupController.GetPendingInvites)
+	group.Get("/:groupId", groupController.GetGroup)
+	group.Get("/:groupId/member", groupController.GetMembers)
 
-	photos := router.Group("/photos")
-	photos.Put("/:groupId", groupController.RequestNewGroupPhotos)
-	photos.Patch("/:groupId", groupController.ConfirmNewPhotos)
+	group.Put("/photos/:groupId", groupController.RequestNewGroupPhotos)
+	group.Patch("/photos/:groupId", groupController.ConfirmNewPhotos)
 
 	group.Post("/:groupId/member", groupController.JoinGroup)
 	group.Delete("/:groupId/member", groupController.QuitGroup)
