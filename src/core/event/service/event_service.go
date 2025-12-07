@@ -11,7 +11,7 @@ import (
 type IEventService interface {
 	CreateEvent(userId uint, data *input.CreateEventInput) (*response.PresginedEventPhotoResponse, error)
 	ConfirmNewPhoto(userId, eventId uint, data *input.ConfirmNewPhoto) error
-	GetEvents(userId uint, filters *input.GetEventsFilters) (*[]response.GetEventResponse, error)
+	GetEvents(userId uint, filters *input.GetEventsFilters) (*response.GetEventsResponse, error)
 	UpdateEvent(userId, eventId uint, data *input.UpdateEventInput) error
 	RequestNewPhoto(userId, eventId uint, data *input.RequestNewPhotoInput) (*response.PresginedEventPhotoResponse, error)
 	SubscribeToEvent(userId, eventId uint) error
@@ -20,6 +20,7 @@ type IEventService interface {
 	GetPendingInvites(userId uint, query *input.GetPendingInvitesFilters) (*[]response.GetPendingInvitesResponse, error)
 	AnswerPendingInvite(userId, eventId uint, answer *input.PendingInviteAnswer) error
 	RemoveSubscriber(eventAdminId, eventId, subscriberId uint) error
+	GetEventSubscribers(userId, eventId uint, query *input.GetEventSubscribersInput) (*response.EventSubscribersResponse, error)
 }
 
 type EventService struct {

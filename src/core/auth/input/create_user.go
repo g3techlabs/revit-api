@@ -6,18 +6,11 @@ import (
 	"github.com/g3techlabs/revit-api/src/db/models"
 )
 
-// CreateUser representa os dados para criação de um novo usuário
-// @Description Dados necessários para registrar um novo usuário no sistema
 type CreateUser struct {
-	// Nome completo do usuário
-	Name string `json:"name" validate:"required" example:"João Silva"`
-	// Apelido único do usuário (3-32 caracteres, apenas minúsculas)
-	Nickname string `json:"nickname" validate:"required,min=3,max=32,lowercase" example:"joaosilva"`
-	// Email único do usuário
-	Email string `json:"email" validate:"required,email" example:"joao@email.com"`
-	// Senha do usuário
-	Password string `json:"password" validate:"required,password" example:"senhaSegura123"`
-	// Data de nascimento no formato YYYY-MM-DD (opcional)
+	Name      string  `json:"name" validate:"required" example:"João Silva"`
+	Nickname  string  `json:"nickname" validate:"required,min=3,max=32,lowercase" example:"joaosilva"`
+	Email     string  `json:"email" validate:"required,email" example:"joao@email.com"`
+	Password  string  `json:"password" validate:"required,password" example:"senhaSegura123"`
 	Birthdate *string `json:"birthdate" validate:"omitempty,datetime=2006-01-02" example:"1990-01-15"`
 }
 

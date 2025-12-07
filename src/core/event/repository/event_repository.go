@@ -16,7 +16,7 @@ import (
 type EventRepository interface {
 	CreateEvent(userId uint, data *models.Event) error
 	UpdatePhoto(userId, eventId uint, photoKey string) error
-	GetEvents(userId uint, filters *input.GetEventsFilters) (*[]response.GetEventResponse, error)
+	GetEvents(userId uint, filters *input.GetEventsFilters) (*response.GetEventsResponse, error)
 	IsUserAdmin(userId, eventId uint) (bool, error)
 	IsUserGroupAdmin(userId, groupId uint) (bool, error)
 	UpdateEvent(userId, eventId uint, newDate *time.Time, data *input.UpdateEventInput) error
@@ -27,6 +27,8 @@ type EventRepository interface {
 	AcceptPendingInvite(eventId uint, userId uint) error
 	RejectPendingInvite(eventId uint, userId uint) error
 	RemoveSubscriber(eventAdminId, eventId, subscriberId uint) error
+	GetEventSubscribers(eventId uint, queryParams input.GetEventSubscribersInput) (*response.EventSubscribersResponse, error)
+	CanUserViewEvent(userId, eventId uint) (bool, error)
 }
 
 type eventRepository struct {

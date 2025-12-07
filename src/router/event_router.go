@@ -21,6 +21,7 @@ func EventRoutes(router fiber.Router, eventService service.IEventService, m *mid
 	event.Patch("/photo/:eventId", eventController.ConfirmNewPhoto)
 	event.Post("/photo/:eventId", eventController.RequestNewPhoto)
 
+	event.Get("/:eventId/subscriber", eventController.GetEventSubscribers)
 	event.Post("/:eventId/subscriber", eventController.SubscribeIntoEvent)
 	event.Delete("/:eventId/subscriber", eventController.RevokeEventSubscription)
 	event.Delete("/:eventId/subscriber/:subscriberId", eventController.RemoveSubscriber)

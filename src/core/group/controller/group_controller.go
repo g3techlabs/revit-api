@@ -4,7 +4,6 @@ import (
 	"strconv"
 
 	"github.com/g3techlabs/revit-api/src/core/group/input"
-	_ "github.com/g3techlabs/revit-api/src/core/group/response"
 	"github.com/g3techlabs/revit-api/src/core/group/service"
 	"github.com/g3techlabs/revit-api/src/response/generics"
 	"github.com/gofiber/fiber/v2"

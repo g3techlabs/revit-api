@@ -6,7 +6,7 @@ import (
 	"github.com/g3techlabs/revit-api/src/response/generics"
 )
 
-func (es *EventService) GetEvents(userId uint, query *input.GetEventsFilters) (*[]response.GetEventResponse, error) {
+func (es *EventService) GetEvents(userId uint, query *input.GetEventsFilters) (*response.GetEventsResponse, error) {
 	if err := es.validator.Validate(query); err != nil {
 		return nil, err
 	}
