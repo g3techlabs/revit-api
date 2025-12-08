@@ -17,7 +17,7 @@ type SimpleEvent struct {
 	Address            datatypes.JSON  `json:"address"`
 	Coordinates        datatypes.JSON  `json:"coordinates"`
 	Group              *datatypes.JSON `json:"group"`
-	MemberRole         string          `json:"memberRole"`
+	MemberRole         *string         `json:"memberRole"`
 	FriendsSubscribers datatypes.JSON  `json:"friendsSubscribers"`
 	Host               *datatypes.JSON `json:"host"`
 }

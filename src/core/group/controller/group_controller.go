@@ -86,6 +86,26 @@ func (c *GroupController) GetGroups(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusOK).JSON(response)
 }
 
+func (c *GroupController) GetAdminGroups(ctx *fiber.Ctx) error {
+	query := new(input.GetAdminGroupsInput)
+
+	if err := ctx.QueryParser(query); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid query parameters")
+	}
+
+	userId, ok := ctx.Locals("userId").(uint)
+	if !ok {
+		return generics.Unauthorized("Invalid or non-existent auth token")
+	}
+
+	response, err := c.groupService.GetAdminGroups(userId, query)
+	if err != nil {
+		return err
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(response)
+}
+
 func (c *GroupController) GetGroup(ctx *fiber.Ctx) error {
 	groupParam := ctx.Params("groupId")
 

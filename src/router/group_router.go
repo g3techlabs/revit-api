@@ -16,6 +16,7 @@ func GroupRoutes(router fiber.Router, groupService service.IGroupService, middle
 	group := router.Group("/group", middleware.Auth())
 	group.Post("/", groupController.CreateGroup)
 	group.Get("/", groupController.GetGroups)
+	group.Get("/admin", groupController.GetAdminGroups)
 	group.Get("/invite", groupController.GetPendingInvites)
 	group.Get("/:groupId", groupController.GetGroup)
 	group.Get("/:groupId/member", groupController.GetMembers)

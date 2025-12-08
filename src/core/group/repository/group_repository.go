@@ -32,6 +32,7 @@ type GroupRepository interface {
 	AcceptPendingInvite(groupId, userId uint) error
 	RejectPendingInvite(groupId, userId uint) error
 	RemoveMember(groupAdminId, groupId, groupMemberId uint) error
+	GetAdminGroups(userId uint, queryParams input.GetAdminGroupsInput) (*response.GetAdminGroupsResponse, error)
 }
 
 type groupRepository struct {

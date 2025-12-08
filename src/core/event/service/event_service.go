@@ -21,6 +21,7 @@ type IEventService interface {
 	AnswerPendingInvite(userId, eventId uint, answer *input.PendingInviteAnswer) error
 	RemoveSubscriber(eventAdminId, eventId, subscriberId uint) error
 	GetEventSubscribers(userId, eventId uint, query *input.GetEventSubscribersInput) (*response.EventSubscribersResponse, error)
+	CancelEvent(userId, eventId uint) error
 }
 
 type EventService struct {

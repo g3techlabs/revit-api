@@ -45,7 +45,7 @@ func (er *eventRepository) GetEvents(userId uint, filters *input.GetEventsFilter
 		Where("es_host.role_id = ? AND es_host.invite_status_id = ? AND es_host.left_at IS NULL AND es_host.removed_by IS NULL", ownerRoleId, acceptedStatusId)
 
 	countQuery := er.buildGetEventsBaseQuery(countSubquery, userRoleSubquery, friendsSubscribersSubquery, hostSubquery)
-	countQuery = er.buildWhereStatement(filters, countQuery, userId)
+	countQuery = er.buildWhereStatement(filters, countQuery)
 	countQuery = countQuery.Select("event.id")
 
 	var totalCount int64
@@ -61,7 +61,7 @@ func (er *eventRepository) GetEvents(userId uint, filters *input.GetEventsFilter
 	var events []response.SimpleEvent
 
 	mainQuery := er.buildGetEventsBaseQuery(countSubquery, userRoleSubquery, friendsSubscribersSubquery, hostSubquery)
-	mainQuery = er.buildWhereStatement(filters, mainQuery, userId)
+	mainQuery = er.buildWhereStatement(filters, mainQuery)
 	mainQuery = er.buildOrderByStatement(mainQuery, filters)
 	mainQuery = er.buildPagination(mainQuery, uint(limit), uint(page))
 
@@ -107,16 +107,16 @@ func (er *eventRepository) buildGetEventsBaseQuery(countSubquery, userRoleSubque
 		Joins("LEFT JOIN (?) AS user_role ON user_role.event_id = event.id", userRoleSubquery).
 		Joins("LEFT JOIN (?) AS friends_subscribers ON friends_subscribers.event_id = event.id", friendsSubscribersSubquery).
 		Joins("LEFT JOIN (?) AS host_data ON host_data.event_id = event.id", hostSubquery).
-		Where("event.canceled = FALSE")
+		Where("event.canceled = FALSE AND event.date >= NOW()")
 }
 
-func (er *eventRepository) buildWhereStatement(f *input.GetEventsFilters, query *gorm.DB, userId uint) *gorm.DB {
+func (er *eventRepository) buildWhereStatement(f *input.GetEventsFilters, query *gorm.DB) *gorm.DB {
 	if f == nil {
 		return query
 	}
 
-	if f.MemberType != nil {
-		query = query.Where("user_role.role_name = ?", *f.MemberType)
+	if f.Type != "" {
+		query = query.Where("user_role.role_name = ?", f.Type)
 	}
 
 	if f.Name != "" {
@@ -129,22 +129,6 @@ func (er *eventRepository) buildWhereStatement(f *input.GetEventsFilters, query 
 	}
 	if f.ToDate != "" {
 		query = query.Where("event.date <= ?", f.ToDate)
-	}
-
-	if f.Visibility != "" {
-		switch f.Visibility {
-		case "public":
-			query = query.Where("event.visibility_id = ?", 1)
-		case "private":
-			query = query.Where("event.visibility_id = ?", 2)
-		}
-	}
-
-	if f.Visibility == "private" {
-		query = query.Where(
-			"EXISTS (SELECT 1 FROM event_subscriber es WHERE es.event_id = event.id AND es.user_id = ? AND es.invite_status_id = ? AND es.left_at IS NULL AND es.removed_by IS NULL)",
-			userId, acceptedStatusId,
-		)
 	}
 
 	if f.CityID != 0 {

@@ -29,6 +29,7 @@ func EventRoutes(router fiber.Router, eventService service.IEventService, m *mid
 	event.Patch("/:eventId/invite", eventController.AnswerPendingInvite)
 
 	event.Patch("/:eventId", eventController.UpdateEvent)
+	event.Delete("/:eventId", eventController.CancelEvent)
 
 	logger.Info("EVENT routes successfully set up.")
 }
