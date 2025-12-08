@@ -10,3 +10,11 @@ type FriendshipRequest struct {
 	// URL da foto de perfil do usuário (opcional)
 	ProfilePic *string `json:"profilePicUrl" example:"https://example.com/users/42/profile.jpg"`
 }
+
+// GetFriendshipRequestsResponse representa a resposta paginada de solicitações de amizade
+// @Description Resposta com lista de solicitações de amizade, página atual e total de páginas
+type GetFriendshipRequestsResponse struct {
+	Requests    []FriendshipRequest `json:"requests"`
+	CurrentPage uint                `json:"currentPage"`
+	TotalPages  uint                `json:"totalPages"`
+}

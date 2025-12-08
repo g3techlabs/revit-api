@@ -342,7 +342,7 @@ func (uc *UserController) RemoveFriendship(ctx *fiber.Ctx) error {
 // @Produce json
 // @Security BearerAuth
 // @Param query query input.GetFriendshipRequestsQuery false "Parâmetros de filtro"
-// @Success 200 {array} response.FriendshipRequest "Lista de solicitações de amizade"
+// @Success 200 {object} response.GetFriendshipRequestsResponse "Resposta paginada com solicitações de amizade"
 // @Failure 400 {object} ValidationErrorResponse "Erro na validação dos parâmetros"
 // @Failure 401 {object} ErrorMessageResponse "Token inválido ou expirado"
 // @Router /api/user/friendship/requests [get]

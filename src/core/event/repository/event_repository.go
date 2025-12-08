@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/g3techlabs/revit-api/src/config"
@@ -23,7 +24,7 @@ type EventRepository interface {
 	InsertNewEventSubscriber(userId, eventId uint) error
 	RevokeEventSubscription(userId, eventId uint) error
 	MakeEventInvitation(eventAdminId, eventId, invitedId uint) error
-	GetPendingInvites(userId, limit, page uint) (*[]response.GetPendingInvitesResponse, error)
+	GetPendingInvites(userId, limit, page uint) (*response.GetPendingInvitesPaginatedResponse, error)
 	AcceptPendingInvite(eventId uint, userId uint) error
 	RejectPendingInvite(eventId uint, userId uint) error
 	RemoveSubscriber(eventAdminId, eventId, subscriberId uint) error
@@ -304,9 +305,37 @@ func (er *eventRepository) makeInvitation(eventAdminId, eventId, invitedId uint)
 	return err
 }
 
-func (er *eventRepository) GetPendingInvites(userId, limit, page uint) (*[]response.GetPendingInvitesResponse, error) {
-	var invites []response.GetPendingInvitesResponse
+func (er *eventRepository) GetPendingInvites(userId, limit, page uint) (*response.GetPendingInvitesPaginatedResponse, error) {
+	limitInt := 20
+	pageInt := 1
+	if limit > 0 {
+		limitInt = int(limit)
+	}
+	if page > 0 {
+		pageInt = int(page)
+	}
 
+	baseQuery := er.db.Model(&models.EventSubscriber{}).
+		Select("event_subscriber.event_id").
+		Joins("INNER JOIN event e ON e.id = event_subscriber.event_id AND e.canceled = FALSE AND e.date > NOW()").
+		Joins("INNER JOIN users u ON u.id = event_subscriber.inviter_id").
+		Where("event_subscriber.user_id = ? AND invite_status_id = ? AND left_at IS NULL AND removed_by IS NULL", userId, pendingStatusId)
+
+	// Contar total de registros
+	var totalCount int64
+	countQuery := er.db.Raw("SELECT COUNT(*) FROM (?) AS subquery", baseQuery)
+	if err := countQuery.Scan(&totalCount).Error; err != nil {
+		return nil, err
+	}
+
+	// Calcular totalPages
+	totalPages := uint(0)
+	if totalCount > 0 && limitInt > 0 {
+		totalPages = uint(math.Ceil(float64(totalCount) / float64(limitInt)))
+	}
+
+	// Buscar os dados paginados
+	var invites []response.GetPendingInvitesResponse
 	query := er.db.Model(&models.EventSubscriber{}).
 		Select("e.id AS event_id", "e.name AS event_name", "'"+cloudFrontUrl+"' || e.photo AS event_photo", "u.nickname AS invited_by").
 		Joins("INNER JOIN event e ON e.id = event_subscriber.event_id AND e.canceled = FALSE AND e.date > NOW()").
@@ -314,16 +343,24 @@ func (er *eventRepository) GetPendingInvites(userId, limit, page uint) (*[]respo
 		Where("event_subscriber.user_id = ? AND invite_status_id = ? AND left_at IS NULL AND removed_by IS NULL", userId, pendingStatusId).
 		Order("e.date ASC")
 
+	if limitInt > 0 {
+		offset := (pageInt - 1) * limitInt
+		query = query.Limit(limitInt).Offset(offset)
+	}
+
 	if err := query.Scan(&invites).Error; err != nil {
 		return nil, err
 	}
 
-	if len(invites) == 0 {
-		empty := make([]response.GetPendingInvitesResponse, 0)
-		return &empty, nil
+	if invites == nil {
+		invites = make([]response.GetPendingInvitesResponse, 0)
 	}
 
-	return &invites, nil
+	return &response.GetPendingInvitesPaginatedResponse{
+		Invites:     invites,
+		CurrentPage: uint(pageInt),
+		TotalPages:  totalPages,
+	}, nil
 }
 
 func (er *eventRepository) AcceptPendingInvite(eventId uint, userId uint) error {

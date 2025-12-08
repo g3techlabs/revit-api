@@ -18,7 +18,7 @@ type IUserService interface {
 	RequestFriendship(userId, destinataryId uint) error
 	AnswerFriendshipRequest(userId, requesterId uint, answer *input.FriendshipRequestAnswer) (*response.FriendshipRequestAnswered, error)
 	RemoveFriendship(userId, friendId uint) error
-	GetFriendshipRequests(userId uint, query *input.GetFriendshipRequestsQuery) (*[]response.FriendshipRequest, error)
+	GetFriendshipRequests(userId uint, query *input.GetFriendshipRequestsQuery) (*response.GetFriendshipRequestsResponse, error)
 }
 
 type UserService struct {

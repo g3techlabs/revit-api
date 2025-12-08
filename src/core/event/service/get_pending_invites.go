@@ -6,15 +6,15 @@ import (
 	"github.com/g3techlabs/revit-api/src/response/generics"
 )
 
-func (es *EventService) GetPendingInvites(userId uint, query *input.GetPendingInvitesFilters) (*[]response.GetPendingInvitesResponse, error) {
+func (es *EventService) GetPendingInvites(userId uint, query *input.GetPendingInvitesFilters) (*response.GetPendingInvitesPaginatedResponse, error) {
 	if err := es.validator.Validate(query); err != nil {
 		return nil, err
 	}
 
-	pendingInvites, err := es.eventRepo.GetPendingInvites(userId, query.Limit, query.Page)
+	pendingInvitesResponse, err := es.eventRepo.GetPendingInvites(userId, query.Limit, query.Page)
 	if err != nil {
 		return nil, generics.InternalError()
 	}
 
-	return pendingInvites, nil
+	return pendingInvitesResponse, nil
 }

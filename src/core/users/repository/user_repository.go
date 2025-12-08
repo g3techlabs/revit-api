@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -33,7 +34,7 @@ type UserRepository interface {
 	AcceptFriendshipRequest(userId, requesterId uint) error
 	RejectFriendshipRequest(userId, requesterId uint) error
 	RemoveFriendship(userId, friendId uint) error
-	GetFriendshipRequests(userId uint, page, limit uint) (*[]response.FriendshipRequest, error)
+	GetFriendshipRequests(userId uint, page, limit uint) (*response.GetFriendshipRequestsResponse, error)
 }
 
 type userRepository struct {
@@ -272,21 +273,45 @@ func (ur *userRepository) RemoveFriendship(userId, friendId uint) error {
 	return result.Error
 }
 
-func (ur *userRepository) GetFriendshipRequests(userId uint, page, limit uint) (*[]response.FriendshipRequest, error) {
-	requests := new([]response.FriendshipRequest)
+func (ur *userRepository) GetFriendshipRequests(userId uint, page, limit uint) (*response.GetFriendshipRequestsResponse, error) {
+	limitInt := 20
+	pageInt := 1
+	if limit > 0 {
+		limitInt = int(limit)
+	}
+	if page > 0 {
+		pageInt = int(page)
+	}
 
+	baseQuery := ur.db.
+		Model(&models.Friendship{}).
+		Select("friendship.requester_id").
+		Where("friendship.invite_status_id = ? AND receiver_id = ? AND removed_at IS NULL AND removed_by_id IS NULL", pendingStatusId, userId)
+
+	// Contar total de registros
+	var totalCount int64
+	countQuery := ur.db.Raw("SELECT COUNT(*) FROM (?) AS subquery", baseQuery)
+	if err := countQuery.Scan(&totalCount).Error; err != nil {
+		return nil, err
+	}
+
+	// Calcular totalPages
+	totalPages := uint(0)
+	if totalCount > 0 && limitInt > 0 {
+		totalPages = uint(math.Ceil(float64(totalCount) / float64(limitInt)))
+	}
+
+	// Buscar os dados paginados
+	requests := new([]response.FriendshipRequest)
 	query := ur.db.
 		Model(&models.Friendship{}).
-		Select("requester_id", "requester.nickname", "'"+cloudFrontUrl+"'|| requester.profile_pic").
+		Select("requester_id", "requester.nickname", "'"+cloudFrontUrl+"'|| requester.profile_pic AS profile_pic").
 		Joins("INNER JOIN users AS requester ON friendship.requester_id = requester.id").
 		Where("friendship.invite_status_id = ? AND receiver_id = ? AND removed_at IS NULL AND removed_by_id IS NULL", pendingStatusId, userId)
 
-	if limit > 0 {
-		offset := 0
-		if page > 0 {
-			offset = int((page - 1) * limit)
-		}
-		query = query.Limit(int(limit)).Offset(offset)
+	if limitInt > 0 {
+		offset := (pageInt - 1) * limitInt
+		query = query.Limit(limitInt).Offset(offset)
 	}
 
 	if err := query.Scan(requests).Error; err != nil {
@@ -294,9 +319,12 @@ func (ur *userRepository) GetFriendshipRequests(userId uint, page, limit uint) (
 	}
 
 	if *requests == nil {
-		empty := make([]response.FriendshipRequest, 0)
-		return &empty, nil
+		*requests = make([]response.FriendshipRequest, 0)
 	}
 
-	return requests, nil
+	return &response.GetFriendshipRequestsResponse{
+		Requests:    *requests,
+		CurrentPage: uint(pageInt),
+		TotalPages:  totalPages,
+	}, nil
 }

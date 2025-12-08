@@ -1,12 +1,14 @@
 package response
 
-// GetPendingInvites representa um convite pendente de grupo
-// @Description Informações sobre um convite pendente para participar de um grupo
 type GetPendingInvites struct {
-	// Nome do grupo
-	GroupName string `json:"groupName" example:"Honda Club"`
-	// URL da foto principal do grupo (se houver)
+	GroupID        uint    `json:"groupId" example:"123"`
+	GroupName      string  `json:"groupName" example:"Honda Club"`
 	GroupMainPhoto *string `json:"groupMainPhoto" example:"https://example.com/groups/123/main.jpg"`
-	// Apelido do usuário que enviou o convite
-	InvitedBy string `json:"invitedBy" example:"hondeiro2000"`
+	InvitedBy      string  `json:"invitedBy" example:"hondeiro2000"`
+}
+
+type GetPendingInvitesPaginatedResponse struct {
+	Invites     []GetPendingInvites `json:"invites"`
+	CurrentPage uint                `json:"currentPage"`
+	TotalPages  uint                `json:"totalPages"`
 }

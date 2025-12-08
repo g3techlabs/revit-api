@@ -19,7 +19,7 @@ type IGroupService interface {
 	JoinGroup(userId, groupId uint) error
 	QuitGroup(userId, groupId uint) error
 	InviteUser(groupAdminId, groupId, invitedId uint) error
-	GetPendingInvites(userId uint, query *input.GetPendingInvites) (*[]response.GetPendingInvites, error)
+	GetPendingInvites(userId uint, query *input.GetPendingInvites) (*response.GetPendingInvitesPaginatedResponse, error)
 	AnswerPendingInvite(userId, groupId uint, answer *input.AnswerPendingInvite) error
 	RemoveMember(adminGroupId, groupId, groupMemberId uint) error
 	GetAdminGroups(userId uint, query *input.GetAdminGroupsInput) (*response.GetAdminGroupsResponse, error)

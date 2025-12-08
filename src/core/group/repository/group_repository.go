@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"math"
 	"time"
 
 	"database/sql"
@@ -28,7 +29,7 @@ type GroupRepository interface {
 	InsertNewGroupMember(userId, groupId uint) error
 	QuitGroup(userId, groupId uint) error
 	MakeGroupInvitation(groupAdminId, groupId, invitedId uint) error
-	GetPendingInvites(userId uint, page uint, limit uint) (*[]response.GetPendingInvites, error)
+	GetPendingInvites(userId uint, page uint, limit uint) (*response.GetPendingInvitesPaginatedResponse, error)
 	AcceptPendingInvite(groupId, userId uint) error
 	RejectPendingInvite(groupId, userId uint) error
 	RemoveMember(groupAdminId, groupId, groupMemberId uint) error
@@ -293,21 +294,46 @@ func (gr *groupRepository) makeInvitation(groupAdminId, groupId, invitedId uint,
 	return err
 }
 
-func (gr *groupRepository) GetPendingInvites(userId uint, page uint, limit uint) (*[]response.GetPendingInvites, error) {
-	var pendingInvites []response.GetPendingInvites
+func (gr *groupRepository) GetPendingInvites(userId uint, page uint, limit uint) (*response.GetPendingInvitesPaginatedResponse, error) {
+	limitInt := 20
+	pageInt := 1
+	if limit > 0 {
+		limitInt = int(limit)
+	}
+	if page > 0 {
+		pageInt = int(page)
+	}
 
-	query := gr.db.Model(&models.GroupMember{}).
-		Select("g.id as group_id", "g.name AS group_name", "g.main_photo AS group_main_photo", "jsonb_build_object('name', inviter.name, 'inviterProfilePicUrl', '"+cloudFrontUrl+"'|| inviter.profile_pic)").
+	baseQuery := gr.db.Model(&models.GroupMember{}).
+		Select("group_member.group_id").
 		Joins("INNER JOIN users AS inviter ON inviter.id = group_member.inviter_id").
 		Joins("INNER JOIN groups AS g ON g.id = group_member.group_id").
 		Where("user_id = ? AND invite_status_id = ? AND left_at IS NULL AND removed_by IS NULL", userId, pendingStatusId)
 
-	if limit > 0 {
-		offset := 0
-		if page > 0 {
-			offset = int((page - 1) * limit)
-		}
-		query = query.Limit(int(limit)).Offset(offset)
+	// Contar total de registros
+	var totalCount int64
+	countQuery := gr.db.Raw("SELECT COUNT(*) FROM (?) AS subquery", baseQuery)
+	if err := countQuery.Scan(&totalCount).Error; err != nil {
+		return nil, err
+	}
+
+	// Calcular totalPages
+	totalPages := uint(0)
+	if totalCount > 0 && limitInt > 0 {
+		totalPages = uint(math.Ceil(float64(totalCount) / float64(limitInt)))
+	}
+
+	// Buscar os dados paginados
+	var pendingInvites []response.GetPendingInvites
+	query := gr.db.Model(&models.GroupMember{}).
+		Select("g.id AS group_id", "g.name AS group_name", "CASE WHEN g.main_photo IS NULL THEN NULL ELSE '"+cloudFrontUrl+"' || g.main_photo END AS group_main_photo", "inviter.nickname AS invited_by").
+		Joins("INNER JOIN users AS inviter ON inviter.id = group_member.inviter_id").
+		Joins("INNER JOIN groups AS g ON g.id = group_member.group_id").
+		Where("user_id = ? AND invite_status_id = ? AND left_at IS NULL AND removed_by IS NULL", userId, pendingStatusId)
+
+	if limitInt > 0 {
+		offset := (pageInt - 1) * limitInt
+		query = query.Limit(limitInt).Offset(offset)
 	}
 
 	if err := query.Scan(&pendingInvites).Error; err != nil {
@@ -315,11 +341,14 @@ func (gr *groupRepository) GetPendingInvites(userId uint, page uint, limit uint)
 	}
 
 	if pendingInvites == nil {
-		empty := make([]response.GetPendingInvites, 0)
-		return &empty, nil
+		pendingInvites = make([]response.GetPendingInvites, 0)
 	}
 
-	return &pendingInvites, nil
+	return &response.GetPendingInvitesPaginatedResponse{
+		Invites:     pendingInvites,
+		CurrentPage: uint(pageInt),
+		TotalPages:  totalPages,
+	}, nil
 }
 
 func (gr *groupRepository) AcceptPendingInvite(groupId uint, userId uint) error {
