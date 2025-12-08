@@ -32,9 +32,18 @@ func (as *AuthService) Login(loginCredentials *input.LoginCredentials) (*respons
 		return nil, generics.InternalError()
 	}
 
+	var profilePicUrl *string
+	if user.ProfilePic != nil {
+		profilePicUrl = utils.MountCloudFrontUrl(*user.ProfilePic)
+	}
+
 	return &response.AuthTokensResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
+		ID:           user.ID,
+		ProfilePicUrl: profilePicUrl,
+		Name:         user.Name,
+		Nickname:     user.Nickname,
 	}, nil
 }
 

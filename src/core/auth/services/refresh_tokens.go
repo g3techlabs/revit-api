@@ -3,6 +3,7 @@ package services
 import (
 	"github.com/g3techlabs/revit-api/src/core/auth/response"
 	"github.com/g3techlabs/revit-api/src/response/generics"
+	"github.com/g3techlabs/revit-api/src/utils"
 )
 
 func (as *AuthService) RefreshTokens(refreshToken string) (*response.AuthTokensResponse, error) {
@@ -24,8 +25,17 @@ func (as *AuthService) RefreshTokens(refreshToken string) (*response.AuthTokensR
 		return nil, generics.InternalError()
 	}
 
+	var profilePicUrl *string
+	if user.ProfilePic != nil {
+		profilePicUrl = utils.MountCloudFrontUrl(*user.ProfilePic)
+	}
+
 	return &response.AuthTokensResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
+		ID:           user.ID,
+		ProfilePicUrl: profilePicUrl,
+		Name:         user.Name,
+		Nickname:     user.Nickname,
 	}, nil
 }
