@@ -31,6 +31,7 @@ type EventRepository interface {
 	GetEventSubscribers(eventId uint, queryParams input.GetEventSubscribersInput) (*response.EventSubscribersResponse, error)
 	CanUserViewEvent(userId, eventId uint) (bool, error)
 	CancelEvent(userId, eventId uint) error
+	GetAdminEvents(userId uint, queryParams input.GetAdminEventsInput) (*response.GetAdminEventsResponse, error)
 }
 
 type eventRepository struct {

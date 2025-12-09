@@ -22,6 +22,7 @@ type IEventService interface {
 	RemoveSubscriber(eventAdminId, eventId, subscriberId uint) error
 	GetEventSubscribers(userId, eventId uint, query *input.GetEventSubscribersInput) (*response.EventSubscribersResponse, error)
 	CancelEvent(userId, eventId uint) error
+	GetAdminEvents(userId uint, query *input.GetAdminEventsInput) (*response.GetAdminEventsResponse, error)
 }
 
 type EventService struct {

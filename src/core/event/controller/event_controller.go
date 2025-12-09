@@ -81,6 +81,25 @@ func (c *EventController) GetEvents(ctx *fiber.Ctx) error {
 	return ctx.JSON(response)
 }
 
+func (c *EventController) GetAdminEvents(ctx *fiber.Ctx) error {
+	var query input.GetAdminEventsInput
+	if err := ctx.QueryParser(&query); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid query parameters")
+	}
+
+	userId, ok := ctx.Locals("userId").(uint)
+	if !ok {
+		return generics.Unauthorized("Invalid or non-existent auth token")
+	}
+
+	response, err := c.eventService.GetAdminEvents(userId, &query)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(response)
+}
+
 func (c *EventController) UpdateEvent(ctx *fiber.Ctx) error {
 	var data input.UpdateEventInput
 	if err := ctx.BodyParser(&data); err != nil {
