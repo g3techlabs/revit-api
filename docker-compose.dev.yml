@@ -1,14 +1,21 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
     container_name: revit-api
     ports:
-      - "${APP_PORT}:${APP_PORT}"
+      - "3000:3000"
     env_file:
       - .env
     depends_on:
-      - postgres
-      - redis
+      postgres:
+       condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app:cached
+    working_dir: /app
     restart: unless-stopped
 
   postgres:
@@ -18,13 +25,18 @@ services:
       POSTGRES_USER: ${DATABASE_USER}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: ${DATABASE_SCHEMA}
-      PGDATA: '/var/lib/postgresql/18'
+      PGDATA: /var/lib/postgresql/18
     ports:
       - "${DATABASE_PORT}:5432"
     volumes:
       - ./src/db/init:/docker-entrypoint-initdb.d
       - postgres_data:/var/lib/postgresql/
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_SCHEMA}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis
@@ -32,6 +44,11 @@ services:
     ports:
       - "${REDIS_PORT}:6379"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:

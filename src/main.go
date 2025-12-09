@@ -22,7 +22,8 @@ func main() {
 
 	router.SetupRoutes(app, logger)
 
-	logger.Fatal(app.Listen(":3000"))
+	appPort := ":" + config.Get("APP_PORT")
+	logger.Fatal(app.Listen(appPort))
 }
 
 func SetupDB(logger utils.ILogger) {
