@@ -322,20 +322,17 @@ func (er *eventRepository) GetPendingInvites(userId, limit, page uint) (*respons
 		Joins("INNER JOIN users u ON u.id = event_subscriber.inviter_id").
 		Where("event_subscriber.user_id = ? AND invite_status_id = ? AND left_at IS NULL AND removed_by IS NULL", userId, pendingStatusId)
 
-	// Contar total de registros
 	var totalCount int64
 	countQuery := er.db.Raw("SELECT COUNT(*) FROM (?) AS subquery", baseQuery)
 	if err := countQuery.Scan(&totalCount).Error; err != nil {
 		return nil, err
 	}
 
-	// Calcular totalPages
 	totalPages := uint(0)
 	if totalCount > 0 && limitInt > 0 {
 		totalPages = uint(math.Ceil(float64(totalCount) / float64(limitInt)))
 	}
 
-	// Buscar os dados paginados
 	var invites []response.GetPendingInvitesResponse
 	query := er.db.Model(&models.EventSubscriber{}).
 		Select("e.id AS event_id", "e.name AS event_name", "'"+cloudFrontUrl+"' || e.photo AS event_photo", "u.nickname AS invited_by").

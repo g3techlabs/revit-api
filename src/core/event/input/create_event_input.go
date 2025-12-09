@@ -8,25 +8,15 @@ import (
 	"gorm.io/gorm"
 )
 
-// CreateEventInput representa os dados para criação de um novo evento
-// @Description Dados necessários para criar um novo evento no sistema
 type CreateEventInput struct {
-	// Nome do evento
-	Name string `json:"name" validate:"required" example:"Pedal Noturno"`
-	// Descrição do evento
-	Description string `json:"description" validate:"required" example:"Passeio ciclístico noturno pela cidade"`
-	// Data e hora do evento no formato RFC3339 (2006-01-02T15:04:05Z07:00)
-	Date string `json:"date" validate:"required,datetime=2006-01-02T15:04:05Z07:00" example:"2024-12-25T20:00:00-03:00"`
-	// Coordenadas geográficas da localização do evento
-	Location entities.Coordinates `json:"location" validate:"required"`
-	// Tipo de conteúdo da foto do evento (opcional: image/jpeg, image/png, image/webp)
-	PhotoContentType *string `json:"photoContentType" validate:"omitempty,oneof=image/jpeg image/png image/webp" example:"image/jpeg"`
-	// ID da cidade onde o evento ocorrerá
-	CityID uint `json:"cityId" validate:"required,number,gt=0" example:"1"`
-	// Visibilidade do evento (public ou private)
-	Visibility string `json:"visibility" validate:"required,oneof=public private" example:"public"`
-	// ID do grupo associado ao evento (opcional)
-	GroupID *uint `json:"groupId" validate:"omitempty,number,gt=0" example:"5"`
+	Name             string               `json:"name" validate:"required"`
+	Description      string               `json:"description" validate:"required"`
+	Date             string               `json:"date" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
+	Location         entities.Coordinates `json:"location" validate:"required"`
+	PhotoContentType *string              `json:"photoContentType" validate:"omitempty,oneof=image/jpeg image/png image/webp"`
+	CityID           uint                 `json:"cityId" validate:"required,number,gt=0"`
+	Visibility       string               `json:"visibility" validate:"required,oneof=public private"`
+	GroupID          *uint                `json:"groupId" validate:"omitempty,number,gt=0"`
 }
 
 func (i *CreateEventInput) ToEventModel() *models.Event {

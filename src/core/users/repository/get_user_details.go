@@ -40,7 +40,6 @@ func (ur *userRepository) GetUserDetails(userId uint) (*response.GetUserResponse
 	userDetails.Since = userRow.CreatedAt
 	userDetails.ProfilePicUrl = userRow.ProfilePicUrl
 
-	// Buscar veículos
 	type VehicleRow struct {
 		ID       uint
 		Nickname string

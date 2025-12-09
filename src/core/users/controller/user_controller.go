@@ -18,30 +18,6 @@ func NewUserController(userService service.IUserService) *UserController {
 	return &UserController{userService: userService}
 }
 
-// ValidationErrorResponse representa a resposta de erro de validação
-// @Description Resposta retornada quando há erros de validação nos dados enviados
-type ValidationErrorResponse struct {
-	Errors map[string]string `json:"errors"`
-}
-
-// ErrorMessageResponse representa uma resposta de erro simples com apenas uma mensagem
-// @Description Resposta retornada quando ocorre um erro que não requer detalhes adicionais
-type ErrorMessageResponse struct {
-	Message string `json:"message"`
-}
-
-// UpdateUser godoc
-// @Summary Atualizar dados do usuário
-// @Description Atualiza os dados do usuário autenticado
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param user body input.UpdateUser true "Dados do usuário para atualização"
-// @Success 204 "Usuário atualizado com sucesso"
-// @Failure 400 {object} ValidationErrorResponse "Erro na validação dos dados. Possíveis campos: name, birthdate, removeProfilePic"
-// @Failure 401 {object} ErrorMessageResponse "Token inválido ou expirado"
-// @Router /api/user [patch]
 func (uc *UserController) UpdateUser(ctx *fiber.Ctx) error {
 	input := new(input.UpdateUser)
 
@@ -63,18 +39,6 @@ func (uc *UserController) UpdateUser(ctx *fiber.Ctx) error {
 	return ctx.SendStatus(fiber.StatusNoContent)
 }
 
-// RequestProfilePicUpdate godoc
-// @Summary Solicitar atualização de foto de perfil
-// @Description Solicita uma URL pré-assinada para upload de nova foto de perfil
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param request body input.RequestProfilePicUpdate true "Dados da requisição de atualização de foto"
-// @Success 201 {object} response.ProfilePicPresignedURL "URL pré-assinada para upload"
-// @Failure 400 {object} ValidationErrorResponse "Erro na validação dos dados"
-// @Failure 401 {object} ErrorMessageResponse "Token inválido ou expirado"
-// @Router /api/user/profile-pic/ [post]
 func (uc *UserController) RequestProfilePicUpdate(ctx *fiber.Ctx) error {
 	input := new(input.RequestProfilePicUpdate)
 
@@ -97,18 +61,6 @@ func (uc *UserController) RequestProfilePicUpdate(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusCreated).JSON(response)
 }
 
-// ConfirmNewProfilePic godoc
-// @Summary Confirmar nova foto de perfil
-// @Description Confirma o upload de uma nova foto de perfil após o upload na URL pré-assinada
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param confirmation body input.ConfirmNewProfilePic true "Confirmação do upload"
-// @Success 204 "Foto de perfil confirmada com sucesso"
-// @Failure 400 {object} ValidationErrorResponse "Erro na validação dos dados"
-// @Failure 401 {object} ErrorMessageResponse "Token inválido ou expirado"
-// @Router /api/user/profile-pic [patch]
 func (uc *UserController) ConfirmNewProfilePic(ctx *fiber.Ctx) error {
 	input := new(input.ConfirmNewProfilePic)
 
@@ -130,18 +82,6 @@ func (uc *UserController) ConfirmNewProfilePic(ctx *fiber.Ctx) error {
 	return ctx.SendStatus(fiber.StatusNoContent)
 }
 
-// GetUsers godoc
-// @Summary Listar usuários
-// @Description Retorna uma lista de usuários com filtros opcionais e paginação
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param query query input.GetUsersQuery false "Parâmetros de filtro e paginação"
-// @Success 200 {object} response.GetUsersResponse "Lista de usuários com paginação"
-// @Failure 400 {object} ValidationErrorResponse "Erro na validação dos parâmetros"
-// @Failure 401 {object} ErrorMessageResponse "Token inválido ou expirado"
-// @Router /api/user [get]
 func (uc *UserController) GetUsers(ctx *fiber.Ctx) error {
 	query := new(input.GetUsersQuery)
 
@@ -159,19 +99,6 @@ func (uc *UserController) GetUsers(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusOK).JSON(users)
 }
 
-// GetUser godoc
-// @Summary Obter usuário por ID
-// @Description Retorna os dados de um usuário específico
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param id path int true "ID do usuário"
-// @Success 200 {object} response.GetUserResponse "Dados do usuário"
-// @Failure 400 {object} ErrorMessageResponse "ID inválido"
-// @Failure 401 {object} ErrorMessageResponse "Token inválido ou expirado"
-// @Failure 404 {object} ErrorMessageResponse "Usuário não encontrado"
-// @Router /api/user/{id} [get]
 func (uc *UserController) GetUser(ctx *fiber.Ctx) error {
 	idParam := ctx.Params("id")
 
@@ -196,18 +123,6 @@ func (uc *UserController) GetUser(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusOK).JSON(response)
 }
 
-// GetFriends godoc
-// @Summary Listar amigos
-// @Description Retorna a lista de amigos do usuário autenticado
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param query query input.GetUsersQuery false "Parâmetros de filtro e paginação"
-// @Success 200 {array} response.Friend "Lista de amigos"
-// @Failure 400 {object} ValidationErrorResponse "Erro na validação dos parâmetros"
-// @Failure 401 {object} ErrorMessageResponse "Token inválido ou expirado"
-// @Router /api/user/friendship [get]
 func (uc *UserController) GetFriends(ctx *fiber.Ctx) error {
 	query := new(input.GetUsersQuery)
 
@@ -230,19 +145,6 @@ func (uc *UserController) GetFriends(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusOK).JSON(friends)
 }
 
-// RequestFriendship godoc
-// @Summary Solicitar amizade
-// @Description Envia uma solicitação de amizade para outro usuário
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param destinataryId path int true "ID do usuário destinatário"
-// @Success 204 "Solicitação de amizade enviada"
-// @Failure 400 {object} ErrorMessageResponse "ID inválido"
-// @Failure 401 {object} ErrorMessageResponse "Token inválido ou expirado"
-// @Failure 404 {object} ErrorMessageResponse "Usuário destinatário não encontrado"
-// @Router /api/user/friendship/{destinataryId} [post]
 func (uc *UserController) RequestFriendship(ctx *fiber.Ctx) error {
 	destinataryParam := ctx.Params("destinataryId")
 
@@ -264,20 +166,6 @@ func (uc *UserController) RequestFriendship(ctx *fiber.Ctx) error {
 	return ctx.SendStatus(fiber.StatusNoContent)
 }
 
-// AnswerFriendshipRequest godoc
-// @Summary Responder solicitação de amizade
-// @Description Aceita ou rejeita uma solicitação de amizade recebida
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param requesterId path int true "ID do usuário que enviou a solicitação"
-// @Param answer body input.FriendshipRequestAnswer true "Resposta à solicitação (accept/reject)"
-// @Success 204 "Resposta processada com sucesso"
-// @Failure 400 {object} ValidationErrorResponse "Erro na validação dos dados"
-// @Failure 401 {object} ErrorMessageResponse "Token inválido ou expirado"
-// @Failure 404 {object} ErrorMessageResponse "Solicitação não encontrada"
-// @Router /api/user/friendship/{requesterId} [patch]
 func (uc *UserController) AnswerFriendshipRequest(ctx *fiber.Ctx) error {
 	requesterParam := ctx.Params("requesterId")
 
@@ -305,19 +193,6 @@ func (uc *UserController) AnswerFriendshipRequest(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusNoContent).JSON(response)
 }
 
-// RemoveFriendship godoc
-// @Summary Remover amizade
-// @Description Remove a amizade entre o usuário autenticado e outro usuário
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param friendId path int true "ID do amigo a ser removido"
-// @Success 204 "Amizade removida com sucesso"
-// @Failure 400 {object} ErrorMessageResponse "ID inválido"
-// @Failure 401 {object} ErrorMessageResponse "Token inválido ou expirado"
-// @Failure 404 {object} ErrorMessageResponse "Amizade não encontrada"
-// @Router /api/user/friendship/{friendId} [delete]
 func (uc *UserController) RemoveFriendship(ctx *fiber.Ctx) error {
 	friendParam := ctx.Params("friendId")
 
@@ -339,18 +214,6 @@ func (uc *UserController) RemoveFriendship(ctx *fiber.Ctx) error {
 	return ctx.SendStatus(fiber.StatusNoContent)
 }
 
-// GetFriendshipRequests godoc
-// @Summary Listar solicitações de amizade
-// @Description Retorna as solicitações de amizade pendentes do usuário autenticado
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param query query input.GetFriendshipRequestsQuery false "Parâmetros de filtro"
-// @Success 200 {object} response.GetFriendshipRequestsResponse "Resposta paginada com solicitações de amizade"
-// @Failure 400 {object} ValidationErrorResponse "Erro na validação dos parâmetros"
-// @Failure 401 {object} ErrorMessageResponse "Token inválido ou expirado"
-// @Router /api/user/friendship/requests [get]
 func (uc *UserController) GetFriendshipRequests(ctx *fiber.Ctx) error {
 	query := new(input.GetFriendshipRequestsQuery)
 

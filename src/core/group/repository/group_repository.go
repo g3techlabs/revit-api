@@ -310,20 +310,17 @@ func (gr *groupRepository) GetPendingInvites(userId uint, page uint, limit uint)
 		Joins("INNER JOIN groups AS g ON g.id = group_member.group_id").
 		Where("user_id = ? AND invite_status_id = ? AND left_at IS NULL AND removed_by IS NULL", userId, pendingStatusId)
 
-	// Contar total de registros
 	var totalCount int64
 	countQuery := gr.db.Raw("SELECT COUNT(*) FROM (?) AS subquery", baseQuery)
 	if err := countQuery.Scan(&totalCount).Error; err != nil {
 		return nil, err
 	}
 
-	// Calcular totalPages
 	totalPages := uint(0)
 	if totalCount > 0 && limitInt > 0 {
 		totalPages = uint(math.Ceil(float64(totalCount) / float64(limitInt)))
 	}
 
-	// Buscar os dados paginados
 	var pendingInvites []response.GetPendingInvites
 	query := gr.db.Model(&models.GroupMember{}).
 		Select("g.id AS group_id", "g.name AS group_name", "CASE WHEN g.main_photo IS NULL THEN NULL ELSE '"+cloudFrontUrl+"' || g.main_photo END AS group_main_photo", "inviter.nickname AS invited_by").

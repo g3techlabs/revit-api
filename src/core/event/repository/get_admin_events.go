@@ -34,7 +34,6 @@ func (er *eventRepository) GetAdminEvents(userId uint, queryParams input.GetAdmi
 		totalPages = uint(math.Ceil(float64(totalCount) / float64(limit)))
 	}
 
-	// Query principal
 	var events []response.AdminEvent
 	mainQuery := er.db.Table("event e").
 		Select("e.id, e.name, e.date").

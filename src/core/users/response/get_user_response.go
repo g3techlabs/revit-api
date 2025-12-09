@@ -3,11 +3,11 @@ package response
 import "time"
 
 type GetUserResponse struct {
-	Name          string        `json:"name" example:"João Silva"`
-	Nickname      string        `json:"nickname" example:"joaosilva"`
-	ProfilePicUrl *string       `json:"profilePicUrl" example:"https://example.com/users/42/profile.jpg"`
-	Since         time.Time     `json:"since" example:"2024-01-15T10:30:00Z"`
-	IsFriend      bool          `json:"isFriend" example:"true"`
+	Name          string        `json:"name"`
+	Nickname      string        `json:"nickname"`
+	ProfilePicUrl *string       `json:"profilePicUrl"`
+	Since         time.Time     `json:"since"`
+	IsFriend      bool          `json:"isFriend"`
 	Vehicles      []UserVehicle `json:"vehicles"`
 	Groups        []UserGroup   `json:"groups"`
 	Events        []UserEvent   `json:"events"`
