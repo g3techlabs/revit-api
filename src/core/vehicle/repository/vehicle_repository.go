@@ -11,7 +11,8 @@ import (
 
 type VehicleRepository interface {
 	CreateVehicle(data *models.Vehicle) error
-	GetVehicles(userId, page, limit uint, nickname string) (*[]models.Vehicle, error)
+	GetVehicles(userId, page, limit uint, nickname string) (*[]models.Vehicle, int64, error)
+	GetVehicle(userId, vehicleId uint) (*models.Vehicle, error)
 	InsertPhoto(vehicleId uint, photoReference string) error
 	UpdateMainPhoto(vehicleId uint, mainPhotoKey string) error
 	UpdateVehicleInfo(vehicleId uint, data *models.Vehicle) error
@@ -39,9 +40,18 @@ func (vr *vehicleRepository) CreateVehicle(data *models.Vehicle) error {
 	return result.Error
 }
 
-func (vr *vehicleRepository) GetVehicles(userId, page, limit uint, nickname string) (*[]models.Vehicle, error) {
+func (vr *vehicleRepository) GetVehicles(userId, page, limit uint, nickname string) (*[]models.Vehicle, int64, error) {
 	vehicles := new([]models.Vehicle)
 	pattern := fmt.Sprintf("%%%s%%", strings.ToLower(nickname))
+
+	baseQuery := vr.db.Model(&models.Vehicle{}).
+		Where("user_id = ? AND deleted_at IS NULL", userId).
+		Where("nickname LIKE ?", pattern)
+
+	var totalCount int64
+	if err := baseQuery.Count(&totalCount).Error; err != nil {
+		return nil, 0, err
+	}
 
 	query := vr.db.
 		Preload("Photos", "deleted_at IS NULL").
@@ -58,10 +68,28 @@ func (vr *vehicleRepository) GetVehicles(userId, page, limit uint, nickname stri
 	}
 
 	if err := query.Find(&vehicles).Error; err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return vehicles, nil
+	return vehicles, totalCount, nil
+}
+
+func (vr *vehicleRepository) GetVehicle(userId, vehicleId uint) (*models.Vehicle, error) {
+	var vehicle models.Vehicle
+
+	result := vr.db.
+		Preload("Photos", "deleted_at IS NULL").
+		Where("id = ? AND user_id = ? AND deleted_at IS NULL", vehicleId, userId).
+		First(&vehicle)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, result.Error
+	}
+
+	return &vehicle, nil
 }
 
 func (vr *vehicleRepository) UpdateMainPhoto(vehicleId uint, mainPhotoKey string) error {
