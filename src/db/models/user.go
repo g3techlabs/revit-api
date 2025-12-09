@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/g3techlabs/revit-api/src/core/auth/response"
-	usersResponse "github.com/g3techlabs/revit-api/src/core/users/response"
 )
 
 type User struct {
@@ -37,15 +36,5 @@ func (u User) ToUserCreatedResponse() *response.UserCreatedResponse {
 		Birthdate:  u.Birthdate,
 		CreatedAt:  u.CreatedAt,
 		UpdatedAt:  u.UpdatedAt,
-	}
-}
-
-func (u User) ToGetUserResponse() *usersResponse.GetUserResponse {
-	return &usersResponse.GetUserResponse{
-		ID:            u.ID,
-		Name:          u.Name,
-		Nickname:      u.Nickname,
-		ProfilePicUrl: u.ProfilePic,
-		Since:         &u.CreatedAt,
 	}
 }

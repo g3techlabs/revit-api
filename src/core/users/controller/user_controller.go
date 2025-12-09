@@ -132,13 +132,13 @@ func (uc *UserController) ConfirmNewProfilePic(ctx *fiber.Ctx) error {
 
 // GetUsers godoc
 // @Summary Listar usuários
-// @Description Retorna uma lista de usuários com filtros opcionais
+// @Description Retorna uma lista de usuários com filtros opcionais e paginação
 // @Tags Users
 // @Accept json
 // @Produce json
 // @Security BearerAuth
 // @Param query query input.GetUsersQuery false "Parâmetros de filtro e paginação"
-// @Success 200 {array} response.GetUserResponse "Lista de usuários"
+// @Success 200 {object} response.GetUsersResponse "Lista de usuários com paginação"
 // @Failure 400 {object} ValidationErrorResponse "Erro na validação dos parâmetros"
 // @Failure 401 {object} ErrorMessageResponse "Token inválido ou expirado"
 // @Router /api/user [get]
@@ -183,7 +183,12 @@ func (uc *UserController) GetUser(ctx *fiber.Ctx) error {
 	}
 	id := uint(idUint64)
 
-	response, err := uc.userService.GetUser(id)
+	requesterId, ok := ctx.Locals("userId").(uint)
+	if !ok {
+		return generics.Unauthorized("Invalid or non-existent auth token")
+	}
+
+	response, err := uc.userService.GetUser(requesterId, id)
 	if err != nil {
 		return err
 	}

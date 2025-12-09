@@ -11,6 +11,7 @@ import (
 	"github.com/g3techlabs/revit-api/src/db"
 	"github.com/g3techlabs/revit-api/src/db/models"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 const acceptedStatusId uint = 1
@@ -27,14 +28,16 @@ type UserRepository interface {
 	UpdateUserPassword(id uint, newPassword string) error
 	UpdateUserProfilePic(id uint, newProfilePic *string) error
 	Update(id uint, name *string, birthdate *time.Time) error
-	GetUsers(page uint, limit uint, nickname string) (*[]models.User, error)
+	GetUsers(page uint, limit uint, nickname string) (*[]models.User, int64, error)
 	GetFriends(userId, page, limit uint, nickname string) (*[]response.Friend, error)
 	AreFriends(userId, destintaryId uint) (bool, error)
+	AreFriendsAccepted(userId, destinataryId uint) (bool, error)
 	RequestFriendship(userId, destinataryId uint) error
 	AcceptFriendshipRequest(userId, requesterId uint) error
 	RejectFriendshipRequest(userId, requesterId uint) error
 	RemoveFriendship(userId, friendId uint) error
 	GetFriendshipRequests(userId uint, page, limit uint) (*response.GetFriendshipRequestsResponse, error)
+	GetUserDetails(userId uint) (*response.GetUserResponse, error)
 }
 
 type userRepository struct {
@@ -126,11 +129,23 @@ func (ur *userRepository) Update(id uint, name *string, birthdate *time.Time) er
 	return result.Error
 }
 
-func (ur *userRepository) GetUsers(page uint, limit uint, nickname string) (*[]models.User, error) {
+func (ur *userRepository) GetUsers(page uint, limit uint, nickname string) (*[]models.User, int64, error) {
 	users := new([]models.User)
 	pattern := fmt.Sprintf("%%%s%%", strings.ToLower(nickname))
 
+	baseQuery := ur.db.Model(&models.User{}).Where("nickname LIKE ?", pattern)
+
+	var totalCount int64
+	if err := baseQuery.Count(&totalCount).Error; err != nil {
+		return nil, 0, err
+	}
+
 	query := ur.db.Model(users).Where("nickname LIKE ?", pattern)
+
+	// Ordenar por similaridade se nickname for fornecido
+	if nickname != "" {
+		query = query.Order(clause.Expr{SQL: "similarity(nickname, ?) DESC", Vars: []interface{}{nickname}})
+	}
 
 	if limit > 0 {
 		offset := 0
@@ -141,14 +156,10 @@ func (ur *userRepository) GetUsers(page uint, limit uint, nickname string) (*[]m
 	}
 
 	if err := query.Find(&users).Error; err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	if query.Error != nil {
-		return nil, query.Error
-	}
-
-	return users, nil
+	return users, totalCount, nil
 }
 
 func (ur *userRepository) GetFriends(userId uint, page uint, limit uint, nickname string) (*[]response.Friend, error) {
@@ -199,6 +210,21 @@ func (ur *userRepository) AreFriends(userId, destinataryId uint) (bool, error) {
 			userId, destinataryId, destinataryId, userId,
 		).
 		Where("invite_status_id IN (?, ?) AND removed_at IS NULL", acceptedStatusId, pendingStatusId).
+		Scan(&exists)
+
+	return exists, result.Error
+}
+
+func (ur *userRepository) AreFriendsAccepted(userId, destinataryId uint) (bool, error) {
+	var exists bool
+	result := ur.db.
+		Table("friendship").
+		Select("count(*) > 0").
+		Where(
+			"(requester_id = ? AND receiver_id = ?) OR (requester_id = ? AND receiver_id = ?)",
+			userId, destinataryId, destinataryId, userId,
+		).
+		Where("invite_status_id = ? AND removed_at IS NULL", acceptedStatusId).
 		Scan(&exists)
 
 	return exists, result.Error

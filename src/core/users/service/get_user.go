@@ -6,14 +6,23 @@ import (
 	"github.com/g3techlabs/revit-api/src/response/generics"
 )
 
-func (us *UserService) GetUser(userId uint) (*response.GetUserResponse, error) {
-	user, err := us.userRepo.FindUserById(userId)
+func (us *UserService) GetUser(requesterId, userId uint) (*response.GetUserResponse, error) {
+	user, err := us.userRepo.GetUserDetails(userId)
 	if err != nil {
 		return nil, generics.InternalError()
 	} else if user == nil {
 		return nil, errors.UserNotFound("User not found")
 	}
 
-	response := user.ToGetUserResponse()
-	return response, nil
+	if requesterId != userId {
+		isFriend, err := us.userRepo.AreFriendsAccepted(requesterId, userId)
+		if err != nil {
+			return nil, generics.InternalError()
+		}
+		user.IsFriend = isFriend
+	} else {
+		user.IsFriend = false
+	}
+
+	return user, nil
 }

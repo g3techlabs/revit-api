@@ -12,8 +12,8 @@ type IUserService interface {
 	Update(id uint, input *input.UpdateUser) error
 	RequestProfilePicUpdate(id uint, input *input.RequestProfilePicUpdate) (*response.ProfilePicPresignedURL, error)
 	ConfirmNewProfilePic(id uint, input *input.ConfirmNewProfilePic) error
-	GetUsers(params *input.GetUsersQuery) (*[]response.GetUserResponse, error)
-	GetUser(userId uint) (*response.GetUserResponse, error)
+	GetUsers(params *input.GetUsersQuery) (*response.GetUsersResponse, error)
+	GetUser(requesterId, userId uint) (*response.GetUserResponse, error)
 	GetFriends(userId uint, params *input.GetUsersQuery) (*[]response.Friend, error)
 	RequestFriendship(userId, destinataryId uint) error
 	AnswerFriendshipRequest(userId, requesterId uint, answer *input.FriendshipRequestAnswer) (*response.FriendshipRequestAnswered, error)

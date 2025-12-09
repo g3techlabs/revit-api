@@ -1,33 +1,58 @@
 package service
 
 import (
-	"github.com/g3techlabs/revit-api/src/config"
+	"math"
+
 	"github.com/g3techlabs/revit-api/src/core/users/input"
 	"github.com/g3techlabs/revit-api/src/core/users/response"
 	"github.com/g3techlabs/revit-api/src/response/generics"
 	"github.com/g3techlabs/revit-api/src/utils"
 )
 
-var cloudFrontUrl = config.Get("AWS_CLOUDFRONT_URL")
-
-func (us *UserService) GetUsers(params *input.GetUsersQuery) (*[]response.GetUserResponse, error) {
+func (us *UserService) GetUsers(params *input.GetUsersQuery) (*response.GetUsersResponse, error) {
 	if err := us.validator.Validate(params); err != nil {
 		return nil, err
 	}
 
-	users, err := us.userRepo.GetUsers(params.Page, params.Limit, params.Nickname)
+	users, totalCount, err := us.userRepo.GetUsers(params.Page, params.Limit, params.Nickname)
 	if err != nil {
 		return nil, generics.InternalError()
 	}
 
-	response := make([]response.GetUserResponse, 0, len(*users))
-	for i := range *users {
-		user := (*users)[i]
-		if user.ProfilePic != nil {
-			user.ProfilePic = utils.MountCloudFrontUrl(*user.ProfilePic)
-		}
-		response = append(response, *user.ToGetUserResponse())
+	limit := 20
+	if params.Limit > 0 {
+		limit = int(params.Limit)
 	}
 
-	return &response, nil
+	totalPages := uint(0)
+	if totalCount > 0 && limit > 0 {
+		totalPages = uint(math.Ceil(float64(totalCount) / float64(limit)))
+	}
+
+	currentPage := uint(1)
+	if params.Page > 0 {
+		currentPage = params.Page
+	}
+
+	usersResponse := make([]response.GetUserResponseSimple, 0, len(*users))
+	for i := range *users {
+		user := (*users)[i]
+		profilePicUrl := user.ProfilePic
+		if profilePicUrl != nil {
+			profilePicUrl = utils.MountCloudFrontUrl(*user.ProfilePic)
+		}
+		usersResponse = append(usersResponse, response.GetUserResponseSimple{
+			ID:            user.ID,
+			Name:          user.Name,
+			Nickname:      user.Nickname,
+			ProfilePicUrl: profilePicUrl,
+			Since:         &user.CreatedAt,
+		})
+	}
+
+	return &response.GetUsersResponse{
+		Users:       usersResponse,
+		CurrentPage: currentPage,
+		TotalPages:  totalPages,
+	}, nil
 }
