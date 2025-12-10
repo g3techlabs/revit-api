@@ -44,7 +44,7 @@ func (er *eventRepository) GetEvents(userId uint, filters *input.GetEventsFilter
 		Joins("INNER JOIN users u_host ON u_host.id = es_host.user_id").
 		Where("es_host.role_id = ? AND es_host.invite_status_id = ? AND es_host.left_at IS NULL AND es_host.removed_by IS NULL", ownerRoleId, acceptedStatusId)
 
-	countQuery := er.buildGetEventsBaseQuery(countSubquery, userRoleSubquery, friendsSubscribersSubquery, hostSubquery)
+	countQuery := er.buildGetEventsBaseQuery(countSubquery, userRoleSubquery, friendsSubscribersSubquery, hostSubquery, userId)
 	countQuery = er.buildWhereStatement(filters, countQuery)
 	countQuery = countQuery.Select("event.id")
 
@@ -60,7 +60,7 @@ func (er *eventRepository) GetEvents(userId uint, filters *input.GetEventsFilter
 
 	var events []response.SimpleEvent
 
-	mainQuery := er.buildGetEventsBaseQuery(countSubquery, userRoleSubquery, friendsSubscribersSubquery, hostSubquery)
+	mainQuery := er.buildGetEventsBaseQuery(countSubquery, userRoleSubquery, friendsSubscribersSubquery, hostSubquery, userId)
 	mainQuery = er.buildWhereStatement(filters, mainQuery)
 	mainQuery = er.buildOrderByStatement(mainQuery, filters)
 	mainQuery = er.buildPagination(mainQuery, uint(limit), uint(page))
@@ -80,7 +80,7 @@ func (er *eventRepository) GetEvents(userId uint, filters *input.GetEventsFilter
 	}, nil
 }
 
-func (er *eventRepository) buildGetEventsBaseQuery(countSubquery, userRoleSubquery, friendsSubscribersSubquery, hostSubquery *gorm.DB) *gorm.DB {
+func (er *eventRepository) buildGetEventsBaseQuery(countSubquery, userRoleSubquery, friendsSubscribersSubquery, hostSubquery *gorm.DB, userId uint) *gorm.DB {
 	return er.db.Model(&models.Event{}).
 		Select(
 			"event.id",
@@ -103,6 +103,7 @@ func (er *eventRepository) buildGetEventsBaseQuery(countSubquery, userRoleSubque
 		Joins("INNER JOIN city c ON c.id = event.city_id").
 		Joins("INNER JOIN state s ON s.id = c.state_id").
 		Joins("INNER JOIN country ct ON ct.id = s.country_id").
+		Joins("LEFT JOIN event_subscriber es ON es.event_id = event.id AND es.user_id = ? AND es.invite_status_id = ? AND es.left_at IS NULL AND es.removed_by IS NULL", userId, acceptedStatusId).
 		Joins("LEFT JOIN (?) AS es_count ON es_count.event_id = event.id", countSubquery).
 		Joins("LEFT JOIN (?) AS user_role ON user_role.event_id = event.id", userRoleSubquery).
 		Joins("LEFT JOIN (?) AS friends_subscribers ON friends_subscribers.event_id = event.id", friendsSubscribersSubquery).
@@ -144,6 +145,8 @@ func (er *eventRepository) buildWhereStatement(f *input.GetEventsFilters, query 
 			float64(defaultEventRadiusMeters),
 		)
 	}
+
+	query = query.Where("(event.visibility_id = ? OR es.user_id IS NOT NULL)", publicVisibility)
 
 	return query
 }
